@@ -1,15 +1,15 @@
-- 日志
+- [日志](./subpage/diary/_diary.md)
   - 感谢：CodeSheep ＆ 二营长的笔记
-- Java
+- [Java](./subpage/Java/Java.md)
   - 实验报告
     - 实验一：Java开发环境使用与面向对象编程
     - 实验二：货物进销管理系统
     - 实验三：基于GUI的网络通信程序设计
     - 实验四：Java Web编程（选做）
-- C#
+- [C#](./subpage/Csharp/Csharp.md)
   - 感谢金旭亮老师
-- C ＆ C++
+- [C＆C++](./subpage/C&C++/C&C++.md)
   - 这是个坑，大概不会填
-- 大创记录
+- [大创记录](./subpage/大创记录/大创记录.md)
   - 其他竞赛
 
