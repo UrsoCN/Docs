@@ -1,55 +1,15 @@
--
- 
-设计模式
+- 日志
+  - 感谢：CodeSheep ＆ 二营长的笔记
+- Java
+  - 实验报告
+    - 实验一：Java开发环境使用与面向对象编程
+    - 实验二：货物进销管理系统
+    - 实验三：基于GUI的网络通信程序设计
+    - 实验四：Java Web编程（选做）
+- C#
+  - 感谢金旭亮老师
+- C ＆ C++
+  - 这是个坑，大概不会填
+- 大创记录
+  - 其他竞赛
 
-
-
-  
--
- 
-[第一章节](desgin-pattern/Java面试必备：手写单例模式.md)
-
-  
--
- 
-[工厂模式](desgin-pattern/工厂模式超详解（代码示例）.md)
-
-  
--
- 
-[原型模式](desgin-pattern/设计模式之原型模式.md)
-
-  
--
- 
-[代理模式](desgin-pattern/设计模式之代理模式.md)
-
-
-
--
- 
-Spring
-框架
-
-
-
-  
--
- 
-[初识spring框架](spring/【10分钟学Spring】：（一）初识Spring框架.md)
-
-  
--
- 
-[依赖注入及示例](spring/【10分钟学Spring】：（二）一文搞懂spring依赖注入（DI）.md)
-
-  
--
- 
-[spring的条件化装配](spring/【10分钟学Spring】：（三）你了解spring的高级装配吗_条件化装配bean.md)
-
-
-
--
- 
-数据库
