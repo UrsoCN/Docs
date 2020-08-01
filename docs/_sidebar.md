@@ -1,4 +1,5 @@
 - [日志](./subpage/diary/_diary.md)
+  - [使用docsify应当注意的事情](./subpage/diary/subsubpage/使用docsify应当注意的事情.md)
   - 感谢：CodeSheep ＆ 二营长的笔记
 - [Java](./subpage/Java/Java.md)
   - 实验报告
@@ -7,6 +8,7 @@
     - 实验三：基于GUI的网络通信程序设计
     - 实验四：Java Web编程（选做）
 - [C#](./subpage/Csharp/Csharp.md)
+  - [DateTime in C#](./subpage/Csharp/subsubpage/DateTime_in_CSharp.md)
   - 感谢金旭亮老师
 - [C＆C++](./subpage/C&C++/C&C++.md)
   - 这是个坑，大概不会填
