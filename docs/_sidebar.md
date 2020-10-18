@@ -9,6 +9,7 @@
     - 实验四：Java Web编程（选做）
 - [C#](./subpage/Csharp/Csharp.md)
   - [DateTime in C#](./subpage/Csharp/subsubpage/DateTime_in_CSharp.md)
+  - [.config in C#](./subpage/Csharp/subsubpage/config_in_CSharp.md)
   - 感谢金旭亮老师
 - [C＆C++](./subpage/C&C++/C&C++.md)
   - 这是个坑，大概不会填

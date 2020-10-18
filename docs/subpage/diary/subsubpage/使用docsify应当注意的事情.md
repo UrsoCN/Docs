@@ -8,11 +8,11 @@
 
 由于docsify是根据路径作为url访问的，会使得网页中无法渲染为链接：(解决方法就是替换空格为下划线)
 
-<img src="/subpage/diary/subsubpage/1.png">
+<img src="/1.png">
 
 然而在改完之后页面显示404 - Not found了(灵光一现把#改成Sharp解决了)：
 
-<img src="/subpage/diary/subsubpage/2.png">
+<img src="./2.png">
 
 
 
@@ -20,9 +20,9 @@
 
 直接使用MarkDown语法导入图片不能正常显示：
 
-![1](E:\software\node\Docs\docs\subpage\diary\subsubpage\1.png)
+![1](E:/software/node/Docs/docs/subpage/diary/subsubpage/1.png)
 
-解决方法是使用HTML语法导入`![1](E:\software\node\Docs\docs\subpage\diary\subsubpage\1.png)`
+解决方法是使用HTML语法导入`![1](E:/software/node/Docs/docs/subpage/diary/subsubpage/1.png)`
 
 改为`<img src="/subpage/diary/subsubpage/1.png">`
 
