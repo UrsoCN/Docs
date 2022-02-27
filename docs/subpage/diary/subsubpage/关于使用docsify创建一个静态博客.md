@@ -13,7 +13,7 @@
 
 出现如下图的提示时，如果知识为了安装docsify-cli来完成创建博客，则不建议勾选，在使用过程中不需要这些工具。
 
-![Tools for Native Modules.png](./Tools%20for%20Native%20Modules.png)
+![Tools for Native Modules.png](./关于使用docsify创建一个静态博客/Tools_for_Native_Modules.png)
 
 > [关于不使用npm的手动初始化方法](https://docsify.js.org/#/zh-cn/quickstart?id=%e6%89%8b%e5%8a%a8%e5%88%9d%e5%a7%8b%e5%8c%96)
 

@@ -8,11 +8,11 @@
 
 由于docsify是根据路径作为url访问的，会使得网页中无法渲染为链接：(解决方法就是替换空格为下划线)
 
-![1.png](https://raw.githubusercontent.com/UrsoCN/Docs/master/docs/subpage/diary/subsubpage/1.png)
+![1.png](https://raw.githubusercontent.com/UrsoCN/Docs/master/docs/subpage/diary/subsubpage/%E4%BD%BF%E7%94%A8docsify%E5%BA%94%E5%BD%93%E6%B3%A8%E6%84%8F%E7%9A%84%E4%BA%8B%E6%83%85/1.png)
 
 然而在改完之后页面显示404 - Not found了(灵光一现把#改成Sharp解决了)：
 
-![2.png](https://raw.githubusercontent.com/UrsoCN/Docs/master/docs/subpage/diary/subsubpage/2.png)
+![2.png](https://raw.githubusercontent.com/UrsoCN/Docs/master/docs/subpage/diary/subsubpage/%E4%BD%BF%E7%94%A8docsify%E5%BA%94%E5%BD%93%E6%B3%A8%E6%84%8F%E7%9A%84%E4%BA%8B%E6%83%85/1.png)
 
 #### 导入图片
 
