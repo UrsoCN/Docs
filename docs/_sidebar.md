@@ -1,12 +1,6 @@
 - [日志](./subpage/diary/_diary.md)
+  - [关于使用docsify创建一个静态博客](./subpage/diary/subsubpage/关于使用docsify创建一个静态博客.md)
   - [使用docsify应当注意的事情](./subpage/diary/subsubpage/使用docsify应当注意的事情.md)
-  - 感谢：CodeSheep ＆ 二营长的笔记
-- [Java](./subpage/Java/Java.md)
-  - 实验报告
-    - 实验一：Java开发环境使用与面向对象编程
-    - 实验二：货物进销管理系统
-    - 实验三：基于GUI的网络通信程序设计
-    - 实验四：Java Web编程（选做）
 - [C#](./subpage/Csharp/Csharp.md)
   - [DateTime in C#](./subpage/Csharp/subsubpage/DateTime_in_CSharp.md)
   - [.config in C#](./subpage/Csharp/subsubpage/config_in_CSharp.md)

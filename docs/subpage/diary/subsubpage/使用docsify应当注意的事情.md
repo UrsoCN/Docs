@@ -8,22 +8,14 @@
 
 由于docsify是根据路径作为url访问的，会使得网页中无法渲染为链接：(解决方法就是替换空格为下划线)
 
-<img src="/1.png">
+![1.png](https://raw.githubusercontent.com/UrsoCN/Docs/master/docs/subpage/diary/subsubpage/1.png)
 
 然而在改完之后页面显示404 - Not found了(灵光一现把#改成Sharp解决了)：
 
-<img src="./2.png">
+![2.png](https://raw.githubusercontent.com/UrsoCN/Docs/master/docs/subpage/diary/subsubpage/2.png)
 
+#### 导入图片
 
-
-#### 导入图片应当使用HTML语法
-
-直接使用MarkDown语法导入图片不能正常显示：
-
-![1](E:/software/node/Docs/docs/subpage/diary/subsubpage/1.png)
-
-解决方法是使用HTML语法导入`![1](E:/software/node/Docs/docs/subpage/diary/subsubpage/1.png)`
-
-改为`<img src="/subpage/diary/subsubpage/1.png">`
+要使得部署在github上的静态网页能够正常显示图片，需要将GitHub当成图床，键入合适的链接，这里的第一张图链是`https://raw.githubusercontent.com/UrsoCN/Docs/master/docs/subpage/diary/subsubpage/1.png`
 
 然后添加了一个[图片缩放 - Zoom image](https://docsify.js.org/#/zh-cn/plugins?id=图片缩放-zoom-image)插件。
