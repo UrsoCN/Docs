@@ -4,8 +4,8 @@
 >
 > --M. Max Horkheimer 1895～1973
 
-
-
 博客教程：
 
 [关于使用docsify创建一个静态博客](https://ursocn.github.io/Docs/#/./subpage/diary/subsubpage/%E5%85%B3%E4%BA%8E%E4%BD%BF%E7%94%A8docsify%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2)
+
+[使用的docsify主题](https://jhildenbiddle.github.io/docsify-themeable/#/)

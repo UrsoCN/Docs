@@ -1,8 +1,9 @@
-> **来源：**
->
-> **https://www.cnblogs.com/ShaYeBlog/p/5592112.html**
+# .config in C#
 
-# 浅谈config文件的使用
+> **来源：**
+> **<https://www.cnblogs.com/ShaYeBlog/p/5592112.html>**
+
+## 浅谈config文件的使用
 
 一、缘起
 

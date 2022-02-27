@@ -3,8 +3,9 @@
 > [docsify官网](https://docsify.js.org/#/)
 
 注：
+
 1. 此文都是在Windows环境下操作
-2. 请自行将$$包括的字符换成自己设备的文件地址 
+2. 请自行将$$包括的字符换成自己设备的文件地址
 
 ## 1. 前置操作（非必要）
 
@@ -13,7 +14,7 @@
 
 出现如下图的提示时，如果知识为了安装docsify-cli来完成创建博客，则不建议勾选，在使用过程中不需要这些工具。
 
-![Tools for Native Modules.png](./关于使用docsify创建一个静态博客/Tools_for_Native_Modules.png)
+![Tools for Native Modules.png](images/Tools_for_Native_Modules.png)
 
 > [关于不使用npm的手动初始化方法](https://docsify.js.org/#/zh-cn/quickstart?id=%e6%89%8b%e5%8a%a8%e5%88%9d%e5%a7%8b%e5%8c%96)
 

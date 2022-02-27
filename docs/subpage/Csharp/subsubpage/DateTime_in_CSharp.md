@@ -1,24 +1,22 @@
+# DataTime in C#
+
 > **来源：**
 >
-> **https://stackoverflow.com/questions/3025361/c-sharp-datetime-to-yyyymmddhhmmss-format**
+> **<https://stackoverflow.com/questions/3025361/c-sharp-datetime-to-yyyymmddhhmmss-format>**
 >
-> **https://www.csharp-examples.net/string-format-datetime/**
+> **<https://www.csharp-examples.net/string-format-datetime/>**
 
-
-
-# String Format for DateTime [C#]
+## String Format for DateTime [C#]
 
 This example shows how to format [DateTime](http://msdn2.microsoft.com/en-us/library/system.datetime.aspx) using [String.Format](http://msdn2.microsoft.com/en-us/library/system.string.format.aspx) method. All formatting can be done also using [DateTime.ToString](http://msdn2.microsoft.com/en-us/library/zdtaw1bw.aspx) method.
 
-## Custom DateTime Formatting
+### Custom DateTime Formatting
 
 There are following custom format specifiers `y` (year), `M` (month), `d` (day), `h` (hour 12), `H` (hour 24), `m` (minute), `s` (second), `f` (second fraction), `F` (second fraction, trailing zeroes are trimmed), `t` (P.M or A.M) and `z` (time zone).
 
 Following examples demonstrate how are the format specifiers rewritten to the output.
 
-[C#]
-
-```
+``` C#
 // create date time 2008-03-09 16:05:07.123
 DateTime dt = new DateTime(2008, 3, 9, 16, 5, 7, 123);
 
@@ -36,9 +34,7 @@ String.Format("{0:z zz zzz}",      dt);  // "-6 -06 -06:00"   time zone
 
 You can use also **date separator** `/` (slash) and **time sepatator** `:` (colon). These characters will be rewritten to characters defined in the current [DateTimeForma­tInfo.DateSepa­rator](http://msdn2.microsoft.com/en-us/library/system.globalization.datetimeformatinfo.dateseparator.aspx) and [DateTimeForma­tInfo.TimeSepa­rator](http://msdn2.microsoft.com/en-us/library/system.globalization.datetimeformatinfo.timeseparator.aspx).
 
-[C#]
-
-```
+``` C#
 // date separator in german culture is "." (so "/" changes to ".")
 String.Format("{0:d/M/yyyy HH:mm:ss}", dt); // "9/3/2008 16:05:07" - english (en-US)
 String.Format("{0:d/M/yyyy HH:mm:ss}", dt); // "9.3.2008 16:05:07" - german (de-DE)
@@ -46,9 +42,7 @@ String.Format("{0:d/M/yyyy HH:mm:ss}", dt); // "9.3.2008 16:05:07" - german (de-
 
 Here are some examples of custom date and time formatting:
 
-[C#]
-
-```
+``` C#
 // month/day numbers without/with leading zeroes
 String.Format("{0:M/d/yyyy}", dt);            // "3/9/2008"
 String.Format("{0:MM/dd/yyyy}", dt);          // "03/09/2008"
@@ -62,7 +56,7 @@ String.Format("{0:MM/dd/yy}", dt);            // "03/09/08"
 String.Format("{0:MM/dd/yyyy}", dt);          // "03/09/2008"
 ```
 
-## Standard DateTime Formatting
+### Standard DateTime Formatting
 
 In [DateTimeForma­tInfo](http://msdn2.microsoft.com/en-us/library/system.globalization.datetimeformatinfo.aspx) there are defined standard patterns for the current culture. For example property [ShortTimePattern](http://msdn2.microsoft.com/en-us/library/system.globalization.datetimeformatinfo.shorttimepattern.aspx) is string that contains value `h:mm tt` for **en-US** culture and value `HH:mm` for **de-DE** culture.
 
@@ -87,9 +81,7 @@ Following table shows patterns defined in [DateTimeForma­tInfo](http://msdn2.mi
 
 Following examples show usage of **standard format specifiers** in [String.Format](http://msdn2.microsoft.com/en-us/library/system.string.format.aspx) method and the resulting output.
 
-[C#]
-
-```
+``` C#
 String.Format("{0:t}", dt);  // "4:05 PM"                         ShortTime
 String.Format("{0:d}", dt);  // "3/9/2008"                        ShortDate
 String.Format("{0:T}", dt);  // "4:05:07 PM"                      LongTime
