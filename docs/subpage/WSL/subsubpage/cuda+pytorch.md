@@ -80,14 +80,19 @@ torch.version.cuda
 
 选择自己设备配置，复制指令并执行
 
-```conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch```
+``` bash
+conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+```
 
-<https://crushonu.top/conda%E4%B8%B4%E6%97%B6%E6%8D%A2%E6%BA%90-conda%E5%AE%89%E8%A3%85pytorch-10/#conda%E4%B8%B4%E6%97%B6%E6%8D%A2%E6%BA%90%E5%AE%89%E8%A3%85pytorch>
+[conda临时换源 & conda安装pytorch](https://crushonu.top/conda%E4%B8%B4%E6%97%B6%E6%8D%A2%E6%BA%90-conda%E5%AE%89%E8%A3%85pytorch-10/#conda%E4%B8%B4%E6%97%B6%E6%8D%A2%E6%BA%90%E5%AE%89%E8%A3%85pytorch)
 
 1. 需要使用国内源时，把最后的```-c pytorch```去掉，就会使用你添加的源了
 
 2. 当出现以下错误时，说明你添加的源中没有某个需要的包，可以使用```-c 某个链接```替换原来的```-c pytorch```这条指令是临时使用```-c```后面的源，其他保持默认
-   >Solving environment: failed with initial frozen solve. Retrying with flexible solve.
-   >PackagesNotFoundError: The following packages are not available from current channels:    - torchaudio
+> Solving environment: failed with initial frozen solve. Retrying with flexible solve.  
+> PackagesNotFoundError: The following packages are not available from current channels:    - torchaudio
 
-3. conda换源 <https://zhuanlan.zhihu.com/p/87123943>
+3. [conda换源](https://zhuanlan.zhihu.com/p/87123943)
+
+4. [安装Pytorch如何选择CUDA的版本，看这一篇就够了](https://zhuanlan.zhihu.com/p/396344997)
+

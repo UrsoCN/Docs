@@ -28,7 +28,7 @@
 
 3. 执行指令```docsify serve $存放博客文件的位置$/docs```启动一个本地服务器，在浏览器预览博客。
 
-### 3. 部署在github上
+## 3. 部署在github上
 
 > [官方部署教程](https://docsify.js.org/#/zh-cn/deploy)
 > [其他教程](https://www.cnblogs.com/happyone/p/12152566.html)

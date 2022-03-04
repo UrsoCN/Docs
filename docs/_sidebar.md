@@ -5,17 +5,36 @@
   - [导出JabRef引文到Word](./subpage/diary/subsubpage/导出JabRef引文到Word.md)
 
 
-- [C#](./subpage/Csharp/Csharp.md)
+- [C#](./subpage/Csharp/_Csharp.md)
   - [DateTime in C#](./subpage/Csharp/subsubpage/DateTime_in_CSharp.md)
   - [.config in C#](./subpage/Csharp/subsubpage/config_in_CSharp.md)
 
 
-- [C＆C++](./subpage/C&C++/C&C++.md)
+- [C＆C++](./subpage/C&C++/_C&C++.md)
   - [Local static-单例](./subpage/C&C++/subsubpage/Local_static-单例.md)
 
 
-- [WSL](./subpage/WSL/WSL.md)
+- [WSL](./subpage/WSL/_WSL.md)
   - [记载一次安装miniconda以及jupyternotebook](./subpage/WSL/subsubpage/记载一次安装miniconda以及jupyternotebook.md)
   - [cuda+pytorch](./subpage/WSL/subsubpage/cuda+pytorch.md)
+  - [WSL2的磁盘占用问题](./subpage/WSL/subsubpage/WSL2的磁盘占用问题.md)
 
+
+- [MachineLearning](./subpage/MachineLearning/_MachineLearning.md)
+  - [3 线性神经网络](./subpage/MachineLearning/subsubpage/3_线性神经网络.md)
+  - [4 多层感知机](./subpage/MachineLearning/subsubpage/4_多层感知机.md)
+
+
+- [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)
+  - [Linux作业2](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业2)
+  - [Linux作业3](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业3)
+  - [Linux作业4](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业4)
+  - [Linux实验报告1](./subpage/Linux&嵌入式/subsubpage/Linux实验/Linux实验报告1)
+  - [Linux实验报告2](./subpage/Linux&嵌入式/subsubpage/Linux实验/Linux实验报告2)
+  - [Linux实验报告3](./subpage/Linux&嵌入式/subsubpage/Linux实验/Linux实验报告3)
+  - [Linux实验报告4](./subpage/Linux&嵌入式/subsubpage/Linux实验/Linux实验报告4)
+  - [嵌入式系统实验报告1](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告1.md)
+  - [嵌入式系统实验报告2](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告2.md)
+  - [嵌入式系统实验报告3](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告3.md)
+  - [嵌入式系统实验报告4](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告4.md)
 

@@ -1,0 +1,51 @@
+#!/bin/bash
+
+echo "2018211169-zhangxilong 20182015404-longhaoran"
+
+
+while true; do
+	read -p "please input :" var1 var2 var3
+	if [[ $var1 == quit ]];
+	then break
+	#elif [[ $var2 != @(+|-|*|\/) ]];
+	#then
+	#	echo "You should input a operator,input again"
+	#	continue
+	elif [[ $var2 == \/ &&  $var3 -eq 0 ]];
+	then
+		echo "The divider is 0,please input again."
+		continue
+	else
+		expr $var1 + 0 &> /dev/null
+		#res1 = $?
+		if [ $? -ne 0 ]
+			echo "You shuold input two number,input again"
+			continue
+		fi
+		expr $var3 + 0 &> /dev/null
+		#res2 = $?
+		if [ $? -ne 0 ]
+			echo "You shuold input two number,input again"
+			continue
+		fi
+	fi
+
+	#if [[ $res1 == 1 || $res2 == 1 ]];
+	#then
+	#	echo "You shuold input two number,input again"
+	#	continue
+	#else
+		case $var2 in
+			+) result=`expr $var1 + $var3` 
+			echo "The result is $result";;
+			-) result=`expr $var1 - $var3` 
+			echo "The result is $result";;
+			\*) result=`expr $var1 \* $var3` 
+			echo "The result is $result";;
+			\/) result=`expr $var1 \/ $var3`
+			echo "The result is $result";;
+			*) echo "You should input a operator,input again"
+		esac
+		#echo "The result is $result"
+	#fi
+done
