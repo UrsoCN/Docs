@@ -3,6 +3,7 @@
   - [使用docsify应当注意的事情](./subpage/diary/subsubpage/使用docsify应当注意的事情.md)
   - [文字与视频](./subpage/diary/subsubpage/文字与视频.md)
   - [导出JabRef引文到Word](./subpage/diary/subsubpage/导出JabRef引文到Word.md)
+  - [电磁场模拟](./subpage/diary/subsubpage/电磁场模拟.md)
 
 
 - [C#](./subpage/Csharp/_Csharp.md)
@@ -26,9 +27,6 @@
 
 
 - [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)
-  - [Linux作业2](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业2)
-  - [Linux作业3](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业3)
-  - [Linux作业4](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业4)
   - [Linux实验报告1](./subpage/Linux&嵌入式/subsubpage/Linux实验/Linux实验报告1)
   - [Linux实验报告2](./subpage/Linux&嵌入式/subsubpage/Linux实验/Linux实验报告2)
   - [Linux实验报告3](./subpage/Linux&嵌入式/subsubpage/Linux实验/Linux实验报告3)
