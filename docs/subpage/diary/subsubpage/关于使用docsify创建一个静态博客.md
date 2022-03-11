@@ -12,7 +12,7 @@
 在docsify官网上，推荐使用npm工具安装docsify-cli来创建及在本地预览生成的文档。
 而npm是随同NodeJS一起安装的包管理工具，所以我们找到[NodeJS官方网站](https://nodejs.org)下载并安装（推荐下载LTS - Long Term Support版本）
 
-出现如下图的提示时，如果知识为了安装docsify-cli来完成创建博客，则不建议勾选，在使用过程中不需要这些工具。
+出现如下图的提示时，如果只是为了安装docsify-cli来完成创建博客，则不建议勾选，在使用过程中不需要这些工具。
 
 ![Tools for Native Modules.png](images/Tools_for_Native_Modules.png)
 

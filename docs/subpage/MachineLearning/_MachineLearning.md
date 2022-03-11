@@ -7,4 +7,6 @@
 - [MachineLearning](./subpage/MachineLearning/MachineLearning.md)
   - [3 线性神经网络](./subpage/MachineLearning/subsubpage/3_线性神经网络.md)
   - [4 多层感知机](./subpage/MachineLearning/subsubpage/4_多层感知机.md)
+  - [5 深度学习计算](./subpage/MachineLearning/subsubpage/5_深度学习计算.md)
+  - [6 卷积神经网络](./subpage/MachineLearning/subsubpage/6_卷积神经网络.md)
 
