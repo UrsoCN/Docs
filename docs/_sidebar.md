@@ -4,6 +4,7 @@
   - [文字与视频](./subpage/diary/subsubpage/文字与视频.md)
   - [导出JabRef引文到Word](./subpage/diary/subsubpage/导出JabRef引文到Word.md)
   - [电磁场模拟](./subpage/diary/subsubpage/电磁场模拟.md)
+  - [让docsify支持LaTeX](./subpage/diary/subsubpage/让docsify支持LaTeX.md)
 
 
 - [C#](./subpage/Csharp/_Csharp.md)
