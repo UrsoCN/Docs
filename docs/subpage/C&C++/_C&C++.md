@@ -5,3 +5,4 @@
 
 - [C＆C++](./subpage/C&C++/C&C++.md)
   - [Local static-单例](./subpage/C&C++/subsubpage/Local_static-单例.md)
+  - [NotesofCherno](./subpage/C&C++/subsubpage/NotesofCherno.md)
