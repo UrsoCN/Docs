@@ -10,7 +10,7 @@
 
 ### 1. 首先引入`katex.js`
 
-在`index.html`的`head`里添加
+在`index.html`的`head`里添加bootcss cdn
 
 ``` html
 <link href="https://cdn.bootcss.com/KaTeX/0.10.0/katex.min.css" rel="stylesheet">
@@ -19,7 +19,7 @@
 
 或者
 
-bootcss cdn
+jsdelivr cdn
 
 ``` html
 <link href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.css" rel="stylesheet" integrity="sha384-bsHo4/LA+lkZv61JspMDQB9QP1TtO4IgOf2yYS+J6VdAYLVyx1c3XKcsHh0Vy8Ws" crossorigin="anonymous">

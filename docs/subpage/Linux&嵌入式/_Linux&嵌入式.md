@@ -4,6 +4,8 @@
 
 这里记录的是课程的作业和实验报告。
 
+source file [here](https://github.com/UrsoCN/Docs/tree/master/docs/subpage/Linux%26%E5%B5%8C%E5%85%A5%E5%BC%8F/subsubpage)
+
 - [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)
   - [Linux作业2](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业2)
   - [Linux作业3](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业3)
