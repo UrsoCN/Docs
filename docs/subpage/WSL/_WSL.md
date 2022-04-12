@@ -7,4 +7,5 @@
   - [记载一次安装miniconda以及jupyternotebook](./subpage/WSL/subsubpage/记载一次安装miniconda以及jupyternotebook.md)
   - [cuda+pytorch](./subpage/WSL/subsubpage/cuda+pytorch.md)
   - [WSL2的磁盘占用问题](./subpage/WSL/subsubpage/WSL2的磁盘占用问题.md)
+  - [cuDNN](./subpage/WSL/subsubpage/cuDNN.md)
 

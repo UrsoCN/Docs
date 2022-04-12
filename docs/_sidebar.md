@@ -5,6 +5,7 @@
   - [导出JabRef引文到Word](./subpage/diary/subsubpage/导出JabRef引文到Word.md)
   - [电磁场模拟](./subpage/diary/subsubpage/电磁场模拟.md)
   - [让docsify支持LaTeX](./subpage/diary/subsubpage/让docsify支持LaTeX.md)
+  - [pytorchMobile源码解读](./subpage/diary/subsubpage/pytorchMobile源码解读.md)
 
 
 - [C#](./subpage/Csharp/_Csharp.md)
@@ -22,6 +23,7 @@
   - [记载一次安装miniconda以及jupyternotebook](./subpage/WSL/subsubpage/记载一次安装miniconda以及jupyternotebook.md)
   - [cuda+pytorch](./subpage/WSL/subsubpage/cuda+pytorch.md)
   - [WSL2的磁盘占用问题](./subpage/WSL/subsubpage/WSL2的磁盘占用问题.md)
+  - [cuDNN](./subpage/WSL/subsubpage/cuDNN.md)
 
 
 - [MachineLearning](./subpage/MachineLearning/_MachineLearning.md)

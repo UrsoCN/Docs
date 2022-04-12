@@ -9,3 +9,4 @@
   - [导出JabRef引文到Word](./subpage/diary/subsubpage/导出JabRef引文到Word.md)
   - [电磁场模拟](./subpage/diary/subsubpage/电磁场模拟.md)
   - [让docsify支持LaTeX](./subpage/diary/subsubpage/让docsify支持LaTeX.md)
+  - [pytorchMobile源码解读](./subpage/diary/subsubpage/pytorchMobile源码解读.md)

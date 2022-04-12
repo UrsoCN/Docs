@@ -11,3 +11,14 @@ WSL2的磁盘占用问题
 这种镜像文件的特点是支持自动扩容，但是一般不会自动缩容。因此一旦Docker镜像文件过多，引起镜像扩容，即使再使用docker system prune清理虚拟机中的镜像文件，也不会释放出已经占用的系统磁盘空间了。
 
 附：[WSL备份与还原](http://www.xfy-learning.com/2020/05/30/WSL%E5%A4%87%E4%BB%BD%E4%B8%8E%E8%BF%98%E5%8E%9F/)
+
+> [conda clean](https://docs.conda.io/projects/conda/en/latest/commands/clean.html)  
+> 其中 `conda clean -t` 是安全的
+
+apt清理
+
+``` bash
+sudo apt-get autoclean #（已卸载软件的安装包）
+sudo apt-get clean #（未卸载软件的安装包）
+sudo apt-get autoremove
+```
