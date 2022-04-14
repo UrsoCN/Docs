@@ -1,1 +1,131 @@
-# pytorchMobileÔ´Âë½â¶ÁPyTorch Android Examples:> [android-demo-app](https://github.com/pytorch/android-demo-app)[PYTORCH MOBILE Ö®ANDROID DEMOÔ´Âë·ÖÎö](https://www.freesion.com/article/5678169563/)[YOLOV5Ä£ĞÍ](https://github.com/ultralytics/yolov5/releases/tag/v6.1)[YOLOv5ÍøÂçÏê½â](https://www.bilibili.com/video/BV1T3411p7zR)[7.1 MobileNetÍøÂçÏê½â](https://www.bilibili.com/video/BV1yE411p7L7)## Ô´Âë·ÖÎö-HelloWorldApp1. Ïò GRADLE Ìí¼ÓÒÀÀµ``` java    implementation 'androidx.appcompat:appcompat:1.1.0'    implementation 'org.pytorch:pytorch_android_lite:1.9.0'    implementation 'org.pytorch:pytorch_android_torchvision:1.9.0'```- org.pytorch:pytorch_android £º Pytorch Android API µÄÖ÷ÒªÒÀÀµ£¬°üº¬Îª4¸öAndroid abis (armeabi-v7a, arm64-v8a, x86, x86_64) µÄ libtorch ±¾µØ¿â¡£- org.pytorch:pytorch_android_torchvision£ºËüÊÇ¾ßÓĞ½« android.media.image ºÍ android.graphics.bitmap ×ª»»Îª Tensor µÄ¸½¼Ó¿â¡£Òª×¢ÒâĞèÒªÉèÖÃminSdkVersion 212. ¶ÁÈ¡image.jpg``` javabitmap = BitmapFactory.decodeStream(getAssets().open("image.jpg"));```[Android¼ÓÔØÍ¼Æ¬µÄ¼¸ÖÖ·½Ê½](https://blog.csdn.net/izzxacbbt/article/details/83628821)3. ¶ÁÈ¡Ä£ĞÍ``` javamodule = LiteModuleLoader.load(assetFilePath(this, "model.pt"));``````java/*** Copies specified asset to the file in /files app directory and returns this file absolute path.** @return absolute file path*/public static String assetFilePath(Context context, String assetName) throws IOException {    File file = new File(context.getFilesDir(), assetName);    if (file.exists() && file.length() > 0) {        return file.getAbsolutePath();    }    try (InputStream is = context.getAssets().open(assetName)) {        try (OutputStream os = new FileOutputStream(file)) {            byte[] buffer = new byte[4 * 1024];            int read;            while ((read = is.read(buffer)) != -1) {                os.write(buffer, 0, read);            }            os.flush();        }        return file.getAbsolutePath();    }}```×¢Òâ£º`LiteModuleLoader.load()`Ä¬ÈÏÊÇÊ¹ÓÃCPU´¦Àí£¬Ö®ºóÊÔÊÔÄÜ²»ÄÜÓÃVulkanÁíÍâ£¬assetFilePath·½·¨Ó¦¸Ã¿ÉÒÔ¸Ä½ø£¿``` java  public static Module load(final String modelPath) {    return new Module(new LiteNativePeer(modelPath, null, Device.CPU));  }```4. ½«Í¼Æ¬ÏÔÊ¾ÔÚ`ImgaeView`ÒÔ¼°½«Æä×ª»»³ÉÄ£ĞÍ¿É´¦ÀíµÄTensor``` java// showing image on UIImageView imageView = findViewById(R.id.image);imageView.setImageBitmap(bitmap);// preparing input tensorfinal Tensor inputTensor = TensorImageUtils.bitmapToFloat32Tensor(bitmap,	TensorImageUtils.TORCHVISION_NORM_MEAN_RGB, TensorImageUtils.TORCHVISION_NORM_STD_RGB, MemoryFormat.CHANNELS_LAST);```> org.pytorch.torchvision.TensorImageUtils¾ÍÊÇorg.pytorch:pytorch_android_torchvision¿âÖĞµÄÒ»²¿·Ö£¬TensorImageUtils.bitmapToFloat32Tensor ´´½¨Ò»¸öTensorÀàĞÍ¡£> inputTensor µÄ ´óĞ¡Îª 1x3xHxW, ÆäÖĞ H ºÍ W ·Ö±ğÎª Bitmap µÄ¸ßºÍ¿í¡£5. ÔËĞĞÄ£ĞÍ£¬Ô¤²â½á¹û``` java// running the modelfinal Tensor outputTensor = module.forward(IValue.from(inputTensor)).toTensor();// getting tensor content as java array of floatsfinal float[] scores = outputTensor.getDataAsFloatArray();// searching for the index with maximum scorefloat maxScore = -Float.MAX_VALUE;int maxScoreIdx = -1;for (int i = 0; i < scores.length; i++) {    if (scores[i] > maxScore) {        maxScore = scores[i];        maxScoreIdx = i;    }}String className = ImageNetClasses.IMAGENET_CLASSES[maxScoreIdx];// showing className on UITextView textView = findViewById(R.id.text);textView.setText(className);```ÆäÖĞ£º`float maxScore = -Float.MAX_VALUE;`ÔÚjavaÖĞÎª±íÊ¾floatÀàĞÍµÄ×îĞ¡ÖµµÄ³£ÓÃ·½·¨£¬¶ø·´Ö±¾õµÄÊÇ£º`Float.MAX_VALUE;`±íÊ¾µÄÊÇfloatÀàĞÍÄÜ¹»±íÊ¾µÄ×îĞ¡¾«¶È¡£TODO: ÔÚÏà²áÖĞÑ¡ÔñÍ¼Æ¬½øĞĞÔ¤²â£¬¿ÉÄÜÉæ¼°µ½Í¼Æ¬¸ñÊ½×ª»¯(PNG->jpg)|2022Äê4ÔÂ12ÈÕ||---:|
+# pytorchMobileæºç è§£è¯»
+
+PyTorch Android Examples:
+
+> [android-demo-app](https://github.com/pytorch/android-demo-app)
+
+[PYTORCH MOBILE ä¹‹ANDROID DEMOæºç åˆ†æ](https://www.freesion.com/article/5678169563/)
+
+[YOLOV5æ¨¡å‹](https://github.com/ultralytics/yolov5/releases/tag/v6.1)
+
+[YOLOv5ç½‘ç»œè¯¦è§£](https://www.bilibili.com/video/BV1T3411p7zR)
+
+[7.1 MobileNetç½‘ç»œè¯¦è§£](https://www.bilibili.com/video/BV1yE411p7L7)
+
+## æºç åˆ†æ-HelloWorldApp
+
+1. å‘ GRADLE æ·»åŠ ä¾èµ–
+
+``` java
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'org.pytorch:pytorch_android_lite:1.9.0'
+    implementation 'org.pytorch:pytorch_android_torchvision:1.9.0'
+```
+
+- org.pytorch:pytorch_android ï¼š Pytorch Android API çš„ä¸»è¦ä¾èµ–ï¼ŒåŒ…å«ä¸º4ä¸ªAndroid abis (armeabi-v7a, arm64-v8a, x86, x86_64) çš„ libtorch æœ¬åœ°åº“ã€‚
+- org.pytorch:pytorch_android_torchvisionï¼šå®ƒæ˜¯å…·æœ‰å°† android.media.image å’Œ android.graphics.bitmap è½¬æ¢ä¸º Tensor çš„é™„åŠ åº“ã€‚
+
+è¦æ³¨æ„éœ€è¦è®¾ç½®minSdkVersion 21
+
+2. è¯»å–image.jpg
+
+``` java
+bitmap = BitmapFactory.decodeStream(getAssets().open("image.jpg"));
+```
+
+[AndroidåŠ è½½å›¾ç‰‡çš„å‡ ç§æ–¹å¼](https://blog.csdn.net/izzxacbbt/article/details/83628821)
+
+3. è¯»å–æ¨¡å‹
+
+``` java
+module = LiteModuleLoader.load(assetFilePath(this, "model.pt"));
+```
+
+```java
+/**
+* Copies specified asset to the file in /files app directory and returns this file absolute path.
+*
+* @return absolute file path
+*/
+public static String assetFilePath(Context context, String assetName) throws IOException {
+    File file = new File(context.getFilesDir(), assetName);
+    if (file.exists() && file.length() > 0) {
+        return file.getAbsolutePath();
+    }
+    try (InputStream is = context.getAssets().open(assetName)) {
+        try (OutputStream os = new FileOutputStream(file)) {
+            byte[] buffer = new byte[4 * 1024];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                os.write(buffer, 0, read);
+            }
+            os.flush();
+        }
+        return file.getAbsolutePath();
+    }
+}
+```
+
+æ³¨æ„ï¼š`LiteModuleLoader.load()`é»˜è®¤æ˜¯ä½¿ç”¨CPUå¤„ç†ï¼Œä¹‹åè¯•è¯•èƒ½ä¸èƒ½ç”¨Vulkan
+
+å¦å¤–ï¼ŒassetFilePathæ–¹æ³•åº”è¯¥å¯ä»¥æ”¹è¿›ï¼Ÿ
+
+``` java
+  public static Module load(final String modelPath) {
+    return new Module(new LiteNativePeer(modelPath, null, Device.CPU));
+  }
+```
+
+4. å°†å›¾ç‰‡æ˜¾ç¤ºåœ¨`ImgaeView`ä»¥åŠå°†å…¶è½¬æ¢æˆæ¨¡å‹å¯å¤„ç†çš„Tensor
+
+``` java
+// showing image on UI
+ImageView imageView = findViewById(R.id.image);
+imageView.setImageBitmap(bitmap);
+
+// preparing input tensor
+final Tensor inputTensor = TensorImageUtils.bitmapToFloat32Tensor(bitmap,
+	TensorImageUtils.TORCHVISION_NORM_MEAN_RGB, TensorImageUtils.TORCHVISION_NORM_STD_RGB, MemoryFormat.CHANNELS_LAST);
+```
+
+> org.pytorch.torchvision.TensorImageUtilså°±æ˜¯org.pytorch:pytorch_android_torchvisionåº“ä¸­çš„ä¸€éƒ¨åˆ†ï¼ŒTensorImageUtils.bitmapToFloat32Tensor åˆ›å»ºä¸€ä¸ªTensorç±»å‹ã€‚
+
+> inputTensor çš„ å¤§å°ä¸º 1x3xHxW, å…¶ä¸­ H å’Œ W åˆ†åˆ«ä¸º Bitmap çš„é«˜å’Œå®½ã€‚
+
+5. è¿è¡Œæ¨¡å‹ï¼Œé¢„æµ‹ç»“æœ
+
+``` java
+// running the model
+final Tensor outputTensor = module.forward(IValue.from(inputTensor)).toTensor();
+// getting tensor content as java array of floats
+final float[] scores = outputTensor.getDataAsFloatArray();
+// searching for the index with maximum score
+float maxScore = -Float.MAX_VALUE;
+int maxScoreIdx = -1;
+for (int i = 0; i < scores.length; i++) {
+    if (scores[i] > maxScore) {
+        maxScore = scores[i];
+        maxScoreIdx = i;
+    }
+}
+
+String className = ImageNetClasses.IMAGENET_CLASSES[maxScoreIdx];
+
+// showing className on UI
+TextView textView = findViewById(R.id.text);
+textView.setText(className);
+```
+
+å…¶ä¸­ï¼š`float maxScore = -Float.MAX_VALUE;`åœ¨javaä¸­ä¸ºè¡¨ç¤ºfloatç±»å‹çš„æœ€å°å€¼çš„å¸¸ç”¨æ–¹æ³•ï¼Œè€Œåç›´è§‰çš„æ˜¯ï¼š`Float.MAX_VALUE;`è¡¨ç¤ºçš„æ˜¯floatç±»å‹èƒ½å¤Ÿè¡¨ç¤ºçš„æœ€å°ç²¾åº¦ã€‚
+
+TODO: åœ¨ç›¸å†Œä¸­é€‰æ‹©å›¾ç‰‡è¿›è¡Œé¢„æµ‹ï¼Œå¯èƒ½æ¶‰åŠåˆ°å›¾ç‰‡æ ¼å¼è½¬åŒ–(PNG->jpg)
+
+|2022å¹´4æœˆ12æ—¥|
+|---:|
+
+## æºç åˆ†æ-PytorchDemoApp
+
+
+
+|2022å¹´4æœˆ12æ—¥|
+|---:|

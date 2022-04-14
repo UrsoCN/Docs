@@ -10,3 +10,4 @@
   - [电磁场模拟](./subpage/diary/subsubpage/电磁场模拟.md)
   - [让docsify支持LaTeX](./subpage/diary/subsubpage/让docsify支持LaTeX.md)
   - [pytorchMobile源码解读](./subpage/diary/subsubpage/pytorchMobile源码解读.md)
+  - [目标检测Demo](./subpage/diary/subsubpage/目标检测Demo.md)
