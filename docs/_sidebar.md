@@ -7,6 +7,7 @@
   - [让docsify支持LaTeX](./subpage/diary/subsubpage/让docsify支持LaTeX.md)
   - [pytorchMobile源码解读](./subpage/diary/subsubpage/pytorchMobile源码解读.md)
   - [目标检测Demo](./subpage/diary/subsubpage/目标检测Demo.md)
+  - [目标检测人行道定制](./subpage/diary/subsubpage/目标检测人行道定制.md)
 
 
 - [C#](./subpage/Csharp/_Csharp.md)
