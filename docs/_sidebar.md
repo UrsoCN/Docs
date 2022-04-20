@@ -20,6 +20,7 @@
   - [NotesofCherno](./subpage/C&C++/subsubpage/NotesofCherno.md)
   - [面试题](./subpage/C&C++/subsubpage/面试题.md)
   - [C语言中的零长数组](./subpage/C&C++/subsubpage/C语言中的零长数组.md)
+  - [理解C和C++中的左值和右值](./subpage/C&C++/subsubpage/理解C和C++中的左值和右值.md)
 
 
 - [WSL](./subpage/WSL/_WSL.md)
