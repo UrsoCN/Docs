@@ -1,7 +1,7 @@
 # Understanding lvalues and rvalues in C and C++ 理解C和C++中的左值和右值
 
-> [https://blog.csdn.net/xuwqiang1994/article/details/79924310](https://blog.csdn.net/xuwqiang1994/article/details/79924310)  
-> [https://eli.thegreenplace.net/2011/12/15/understanding-lvalues-and-rvalues-in-c-and-c/](https://eli.thegreenplace.net/2011/12/15/understanding-lvalues-and-rvalues-in-c-and-c/)
+> **[https://eli.thegreenplace.net/2011/12/15/understanding-lvalues-and-rvalues-in-c-and-c/](https://eli.thegreenplace.net/2011/12/15/understanding-lvalues-and-rvalues-in-c-and-c/)**
+> **[https://blog.csdn.net/xuwqiang1994/article/details/79924310](https://blog.csdn.net/xuwqiang1994/article/details/79924310)**  
 
 The terms lvalue and rvalue are not something one runs into often in C/C++ programming, but when one does, it's usually not immediately clear what they mean. The most common place to run into these terms are in compiler error & warning messages. For example, compiling the following with gcc:
 
