@@ -8,6 +8,8 @@
   - [pytorchMobile源码解读](./subpage/diary/subsubpage/pytorchMobile源码解读.md)
   - [目标检测Demo](./subpage/diary/subsubpage/目标检测Demo.md)
   - [目标检测人行道定制](./subpage/diary/subsubpage/目标检测人行道定制.md)
+  - [别再自我摆烂](./subpage/diary/subsubpage/别再自我摆烂.md)
+  - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/diary/subsubpage/JabRef预览引用及在Word添加GB格式参考文献.md)
 
 
 - [C#](./subpage/Csharp/_Csharp.md)
@@ -48,4 +50,13 @@
   - [嵌入式系统实验报告2](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告2.md)
   - [嵌入式系统实验报告3](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告3.md)
   - [嵌入式系统实验报告4](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告4.md)
+  
+  
+- [OpenGL](./subpage/OpenGL/_OpenGL.md)
+  - [OpenGL配置](./subpage/OpenGL/subsubpage/OpenGL配置.md)
+  - [在c++中使用现代OpenGL](./subpage/OpenGL/subsubpage/在c++中使用现代OpenGL.md)
+  
+
+- [Rust](./subpage/Rust/_Rust.md)
+  - [Hello, Cargo!](./subpage/OpenGL/subsubpage/Hello,Cargo!.md)
 
