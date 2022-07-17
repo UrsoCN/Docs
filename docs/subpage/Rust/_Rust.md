@@ -8,6 +8,8 @@
 一本Rust社区编写的书籍(中文翻译版)：[Rust程序设计语言](https://kaisery.github.io/trpl-zh-cn/title-page.html)
 
 - [Rust](./subpage/Rust/_Rust.md)
-  - [Hello, Cargo!](./subpage/OpenGL/subsubpage/Hello,Cargo!.md)
+  - [Hello, Cargo!](./subpage/Rust/subsubpage/Hello,Cargo!.md)
+  - [Guessing Game](./subpage/Rust/subsubpage/guessing_game.md)
+
 
 

@@ -58,5 +58,6 @@
   
 
 - [Rust](./subpage/Rust/_Rust.md)
-  - [Hello, Cargo!](./subpage/OpenGL/subsubpage/Hello,Cargo!.md)
+  - [Hello, Cargo!](./subpage/Rust/subsubpage/Hello,Cargo!.md)
+  - [Guessing Game](./subpage/Rust/subsubpage/guessing_game.md)
 
