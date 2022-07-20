@@ -10,6 +10,7 @@
 - [Rust](./subpage/Rust/_Rust.md)
   - [Hello, Cargo!](./subpage/Rust/subsubpage/Hello,Cargo!.md)
   - [Guessing Game](./subpage/Rust/subsubpage/guessing_game.md)
+  - [常见编程概念](./subpage/Rust/subsubpage/常见编程概念.md)
 
 
 
