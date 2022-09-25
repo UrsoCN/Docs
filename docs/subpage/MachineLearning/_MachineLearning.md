@@ -10,4 +10,6 @@
   - [5 深度学习计算](./subpage/MachineLearning/subsubpage/5_深度学习计算.md)
   - [6 卷积神经网络](./subpage/MachineLearning/subsubpage/6_卷积神经网络.md)
   - [7 现代卷积神经网络](./subpage/MachineLearning/subsubpage/7_现代卷积神经网络.md)
+  - [8 循环神经网络](./subpage/MachineLearning/subsubpage/8_循环神经网络.md)
+  - [13 计算机视觉](./subpage/MachineLearning/subsubpage/13_计算机视觉.md)
 

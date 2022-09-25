@@ -10,6 +10,7 @@
   - [目标检测人行道定制](./subpage/diary/subsubpage/目标检测人行道定制.md)
   - [别再自我摆烂](./subpage/diary/subsubpage/别再自我摆烂.md)
   - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/diary/subsubpage/JabRef预览引用及在Word添加GB格式参考文献.md)
+  - [我的根本意见](./subpage/diary/subsubpage/我的根本意见.md)
 
 
 - [C#](./subpage/Csharp/_Csharp.md)
@@ -39,6 +40,8 @@
   - [5 深度学习计算](./subpage/MachineLearning/subsubpage/5_深度学习计算.md)
   - [6 卷积神经网络](./subpage/MachineLearning/subsubpage/6_卷积神经网络.md)
   - [7 现代卷积神经网络](./subpage/MachineLearning/subsubpage/7_现代卷积神经网络.md)
+  - [8 循环神经网络](./subpage/MachineLearning/subsubpage/8_循环神经网络.md)
+  - [13 计算机视觉](./subpage/MachineLearning/subsubpage/13_计算机视觉.md)
 
 
 - [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)

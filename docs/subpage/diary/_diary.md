@@ -14,3 +14,4 @@
   - [目标检测人行道定制](./subpage/diary/subsubpage/目标检测人行道定制.md)
   - [别再自我摆烂](./subpage/diary/subsubpage/别再自我摆烂.md)
   - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/diary/subsubpage/JabRef预览引用及在Word添加GB格式参考文献.md)
+  - [我的根本意见](./subpage/diary/subsubpage/我的根本意见.md)
