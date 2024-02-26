@@ -4,4 +4,5 @@
 
 - [AOSP](./subpage/AOSP/_AOSP.md)
   - [刷机](./subpage/AOSP/subsubpage/刷机.md)
-
+  - [Android编译系统-Android.bp篇](./subpage/AOSP/subsubpage/Android编译系统-Android.bp篇.md)
+  - [Android编译系统-Android.mk篇](./subpage/AOSP/subsubpage/Android编译系统-Android.mk篇.md)

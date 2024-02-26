@@ -10,3 +10,5 @@
   - [C语言中的零长数组](./subpage/C&C++/subsubpage/C语言中的零长数组.md)
   - [理解C和C++中的左值和右值](./subpage/C&C++/subsubpage/理解C和C++中的左值和右值.md)
   - [华为OD机试](./subpage/C&C++/subsubpage/华为OD机试.md)
+  - [机试中读取被分割开的数据的方法](./subpage/C&C++/subsubpage/机试中读取被分割开的数据的方法.md)
+  - [C++ Tips of the Week](./subpage/C&C++/subsubpage/TotW.md)
