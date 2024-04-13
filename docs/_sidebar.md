@@ -18,7 +18,9 @@
   - [Bluetooth SBC Dual Channel HD audio mode](./subpage/AOSP/subsubpage/SBC_HD.md)
   - [Android编译系统-Android.bp篇](./subpage/AOSP/subsubpage/Android编译系统-Android.bp篇.md)
   - [Android编译系统-Android.mk篇](./subpage/AOSP/subsubpage/Android编译系统-Android.mk篇.md)
-
+  - [AOSP Build System](./subpage/AOSP/subsubpage/AOSP_Build_System.md)
+  - [CTS环境搭建](./subpage/AOSP/subsubpage/CTS环境搭建.md)
+  - [CtsStrictJavaPackagesTestCases问题解决记录](./subpage/AOSP/subsubpage/CtsStrictJavaPackagesTestCases问题解决记录.md)
 
 
 - [C#](./subpage/Csharp/_Csharp.md)
