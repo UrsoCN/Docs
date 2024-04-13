@@ -1,6 +1,6 @@
 # Android编译系统-Android.mk篇
 
-本篇主要介绍Android.mk，会附带一部分makefile内容，关于makefile的详细内容可以看峰哥@王峰 的[Makefile](https://transsioner.feishu.cn/wiki/E1fawtmT5iDCiYk2Ba7cjrGZnjp)或者[Android 编译之make基础](https://www.jianshu.com/p/169397686d58)、[GNU make
+本篇主要介绍Android.mk，会附带一部分makefile内容，关于makefile的详细内容可以看[Android 编译之make基础](https://www.jianshu.com/p/169397686d58)、[GNU make
 ](https://www.gnu.org/software/make/manual/make.html#Target_002dspecific)
 
 这里也有AOSP内的介绍`build/make/README.md`：
