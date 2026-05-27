@@ -10,7 +10,6 @@ applyTo: "docs/subpage/Agent_summary/**/*.md"
 - Keep the intro blockquote at the top unless the user asks to replace it.
 - Keep a self-link entry: `[Agent_summary](./_Agent_summary.md)`.
 - Add each summary article under that self-link using file-relative links such as `./subsubpage/article.md`.
-- When adding a new summary article under `docs/subpage/Agent_summary/subsubpage/`, update `docs/_sidebar.md` in the same change.
-- In `docs/_sidebar.md`, the corresponding links should stay as standard relative links such as `./subpage/Agent_summary/subsubpage/article.md`.
+- When adding a new summary article under `docs/subpage/Agent_summary/subsubpage/`, rerun `node scripts/generate-sidebar.js` in the same change.
 - If a title is user-facing but the filename needs cleanup, keep the label readable and the filename URL-safe.
 - Do not leave Agent_summary articles orphaned from navigation.

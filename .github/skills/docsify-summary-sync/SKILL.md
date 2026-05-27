@@ -14,7 +14,7 @@ Use this skill when adding a new summary article so the article content and the 
 - Summarizing notes from Obsidian MCP into `docs/`
 - Adding a new article under `docs/subpage/*/subsubpage/`
 - Updating `docs/subpage/<Topic>/_<Topic>.md` after creating a new article
-- Updating `docs/_sidebar.md` so the new article is reachable from root navigation
+- Regenerating `docs/_sidebar.md` so the new article is reachable from root navigation
 - Writing into `docs/subpage/Agent_summary/`
 
 ## Required Output Files
@@ -23,9 +23,9 @@ For a new summary article, update all relevant files in the same change:
 
 1. The article page under `docs/subpage/<Topic>/subsubpage/`
 2. The topic index page `docs/subpage/<Topic>/_<Topic>.md`
-3. The root sidebar `docs/_sidebar.md`
+3. The generated root sidebar `docs/_sidebar.md`
 
-If the topic does not exist yet, create the topic folder and index page first, then add it to `docs/_sidebar.md`.
+If the topic does not exist yet, create the topic folder and index page first, then rerun `node scripts/generate-sidebar.js`.
 
 ## Docsify Link Rules
 
@@ -38,10 +38,10 @@ If the topic does not exist yet, create the topic folder and index page first, t
 ## Procedure
 
 1. Identify the target topic folder.
-2. Read the target topic index page and `docs/_sidebar.md` before editing.
+2. Read the target topic index page before editing.
 3. Create or update the article page under `subsubpage/`.
 4. Add or update the self-link and child article entry in the topic index page.
-5. Add or update the corresponding section in `docs/_sidebar.md`.
+5. Rerun `node scripts/generate-sidebar.js`.
 6. Keep labels human-readable, but keep filenames stable and URL-safe.
 7. Validate that local Markdown links still resolve after the change.
 
@@ -50,7 +50,7 @@ If the topic does not exist yet, create the topic folder and index page first, t
 - `docs/subpage/Agent_summary/_Agent_summary.md` should keep a short intro blockquote.
 - The page should include a self-link entry like `[Agent_summary](./_Agent_summary.md)`.
 - Each summary article should appear as a child entry under that self-link.
-- The same article should also appear under the `Agent_summary` section in `docs/_sidebar.md` using slash-prefixed routes.
+- The same article should also appear under the `Agent_summary` section in `docs/_sidebar.md` after rerunning `node scripts/generate-sidebar.js`.
 
 ## Obsidian MCP Notes
 
