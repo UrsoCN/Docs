@@ -45,6 +45,17 @@
             // 使docsify支持在markdown里渲染LaTeX
             markdown: {
                 renderer: {
+                    link: function (href, title, text) {
+                        var nextHref = href;
+
+                        // Keep docs/_sidebar.md editor-friendly while rendering root navigation
+                        // as absolute docsify routes under relativePath mode.
+                        if (typeof href === 'string' && (href.startsWith('./subpage/') || href.startsWith('subpage/'))) {
+                            nextHref = '/' + href.replace(/^\.\//, '');
+                        }
+
+                        return this.origin.link.call(this, nextHref, title, text);
+                    },
                     code: function (code, lang) {
                         if (lang === 'tex') {
                             return '<span class="tex">' + katex.renderToString(code, { throwOnError: false }) + '</span>';

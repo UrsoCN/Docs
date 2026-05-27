@@ -29,7 +29,8 @@ If the topic does not exist yet, create the topic folder and index page first, t
 
 ## Docsify Link Rules
 
-- In `docs/_sidebar.md`, use slash-prefixed docsify routes such as `/subpage/Agent_summary/_Agent_summary.md`.
+- In `docs/_sidebar.md`, keep standard relative links such as `./subpage/Agent_summary/_Agent_summary.md`.
+- The custom link renderer in `docs/index.html` rewrites rendered root-navigation links that start with `./subpage/` into absolute docsify routes.
 - In topic index pages such as `docs/subpage/Agent_summary/_Agent_summary.md`, use file-relative links such as `./subsubpage/article.md`.
 - In article pages under `docs/subpage/**/subsubpage/`, use file-relative links and image paths.
 - Keep filenames URL-safe. Prefer underscores or ASCII replacements instead of spaces or `#`.

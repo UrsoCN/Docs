@@ -21,7 +21,7 @@
 - Before changing Markdown links, check `docs/index.html` for `window.$docsify.relativePath`.
 - Current repo state: `relativePath` is enabled, so topic landing pages and article pages under `docs/subpage/**` should use file-relative links.
 - Root docs files such as `docs/README.md` and `docs/_coverpage.md` can keep links relative to the `docs/` directory.
-- `docs/_sidebar.md` is a special case: because it is aliased into nested routes, use slash-prefixed docsify routes such as `/subpage/AOSP/_AOSP.md` there.
+- `docs/_sidebar.md` is a special case: keep normal relative links such as `./subpage/AOSP/_AOSP.md`, and let the custom docsify link renderer in `docs/index.html` rewrite them to absolute routes at render time.
 - Do not partially mix link schemes during a cleanup. For `docs/subpage/**`, prefer local file-relative links like `./subsubpage/article.md`.
 - Keep `docs/_sidebar.md` aligned with the root navigation file loaded via the alias configured in `docs/index.html`.
 

@@ -23,3 +23,7 @@
 ![1.png](images/1.png)
 
 然后添加了一个[图片缩放 - Zoom image](https://docsify.js.org/#/zh-cn/plugins?id=图片缩放-zoom-image)插件。
+
+## 使用obsidian时会出现的问题
+
+在使用 obsidian 的时候，注意不要点击 _sidebar.md 文档中的超链接，由于并不存在符合一般 markdown 文件超链接格式的文件存在，obsidian会去在仓库根目录创建默认的空文件。
