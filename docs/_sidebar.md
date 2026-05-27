@@ -11,6 +11,7 @@
   - [别再自我摆烂](./subpage/diary/subsubpage/别再自我摆烂.md)
   - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/diary/subsubpage/JabRef预览引用及在Word添加GB格式参考文献.md)
   - [我的根本意见](./subpage/diary/subsubpage/我的根本意见.md)
+  - [工作备份](./subpage/diary/subsubpage/工作备份.md)
 
 - [Agent_summary](./subpage/Agent_summary/_Agent_summary.md)
   - [Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨](./subpage/Agent_summary/subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
