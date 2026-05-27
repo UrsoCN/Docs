@@ -4,7 +4,7 @@
 
 当使用空格时，例如：
 
-在`_sidebar.md`中使用`[DateTime in C#](./subpage/Csharp/subsubpage/DateTime in C#.md)`
+在`_sidebar.md`中使用`./subpage/Csharp/subsubpage/DateTime_in_CSharp.md`这样的路径
 
 由于docsify是根据路径作为url访问的，会使得网页中无法渲染为链接：(解决方法就是替换空格为下划线)
 

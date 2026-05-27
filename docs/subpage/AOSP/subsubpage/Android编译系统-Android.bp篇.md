@@ -516,10 +516,10 @@ ANDROID_BUILD_ENVIRONMENT_CONFIG_DIR=build/soong \
 
 ## Other documentation
 
-* [Best Practices](docs/best_practices.md)
-* [Build Performance](docs/perf.md)
-* [Generating CLion Projects](docs/clion.md)
-* [Generating YouCompleteMe/VSCode compile\_commands.json file](docs/compdb.md)
+* [Best Practices](https://android.googlesource.com/platform/build/soong/+/master/docs/best_practices.md)
+* [Build Performance](https://android.googlesource.com/platform/build/soong/+/master/docs/perf.md)
+* [Generating CLion Projects](https://android.googlesource.com/platform/build/soong/+/master/docs/clion.md)
+* [Generating YouCompleteMe/VSCode compile\_commands.json file](https://android.googlesource.com/platform/build/soong/+/master/docs/compdb.md)
 * Make-specific documentation: [build/make/README.md](https://android.googlesource.com/platform/build/+/master/README.md)
 
 ## Developing for Soong

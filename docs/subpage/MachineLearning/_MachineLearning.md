@@ -4,12 +4,12 @@
 
 这里记录的是学习[《动手学深度学习》](https://zh-v2.d2l.ai/)时的笔记。[视频链接](https://space.bilibili.com/1567748478/channel/seriesdetail?sid=358497)
 
-- [MachineLearning](./subpage/MachineLearning/_MachineLearning.md)
-  - [3 线性神经网络](./subpage/MachineLearning/subsubpage/3_线性神经网络.md)
-  - [4 多层感知机](./subpage/MachineLearning/subsubpage/4_多层感知机.md)
-  - [5 深度学习计算](./subpage/MachineLearning/subsubpage/5_深度学习计算.md)
-  - [6 卷积神经网络](./subpage/MachineLearning/subsubpage/6_卷积神经网络.md)
-  - [7 现代卷积神经网络](./subpage/MachineLearning/subsubpage/7_现代卷积神经网络.md)
-  - [8 循环神经网络](./subpage/MachineLearning/subsubpage/8_循环神经网络.md)
-  - [13 计算机视觉](./subpage/MachineLearning/subsubpage/13_计算机视觉.md)
+- [MachineLearning](./_MachineLearning.md)
+  - [3 线性神经网络](./subsubpage/3_线性神经网络.md)
+  - [4 多层感知机](./subsubpage/4_多层感知机.md)
+  - [5 深度学习计算](./subsubpage/5_深度学习计算.md)
+  - [6 卷积神经网络](./subsubpage/6_卷积神经网络.md)
+  - [7 现代卷积神经网络](./subsubpage/7_现代卷积神经网络.md)
+  - [8 循环神经网络](./subsubpage/8_循环神经网络.md)
+  - [13 计算机视觉](./subsubpage/13_计算机视觉.md)
 

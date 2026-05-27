@@ -14,4 +14,4 @@
 
 
 
-[GitHub](https://github.com/UrsoCN) [Docs](/README.md)
+[GitHub](https://github.com/UrsoCN) [Docs](README.md)
