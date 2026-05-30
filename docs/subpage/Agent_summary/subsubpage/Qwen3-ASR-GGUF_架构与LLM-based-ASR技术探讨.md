@@ -344,3 +344,323 @@ TTSCodec -[hidden]down-> ASRLM
 - 如果某模块本质上在做 **逐 token 自回归生成**，优先考虑 GGUF + `llama.cpp`。
 - 如果某模块本质上在做 **卷积、声学编码、CTC、codec、前馈图计算**，优先考虑 ONNX Runtime。
 - 混合部署不是折中，而是这类语音模型当前最务实、收益最高的落地方式。
+
+---
+
+## 十四、把讨论真正落到 `Fun-ASR-GGUF` 当前实现上：它不是 Qwen3-ASR-GGUF 的简单镜像
+
+上文更多是在解释 `Qwen3-ASR-GGUF` 这类“Audio Encoder + Qwen LLM Decoder”的范式。但结合最近对 `Fun-ASR-GGUF` 仓库本身的逐层梳理，需要补一个工程上的校正：
+
+`Fun-ASR-GGUF` 虽然也属于 **LLM-based ASR 的混合架构**，但它的运行时边界与 `Qwen3-ASR-GGUF` 并不完全相同。
+
+### 1. 当前 `Fun-ASR-GGUF` 的核心链路
+
+更贴近真实实现的流程是：
+
+```text
+原始音频
+  -> 特征提取（Mel + LFR）
+  -> Encoder ONNX
+  -> CTC ONNX
+  -> 粗识别 / 热词候选 / 时间戳先验
+  -> Prompt 构建
+  -> 将 adaptor audio embeddings 注入 llama.cpp 上下文
+  -> LLM 自回归文本生成
+  -> CTC 与 LLM 文本对齐，回填时间戳
+```
+
+这意味着当前工程的“共享中间表示”并不是离散 audio token，而是：
+
+- **连续的 audio embeddings**
+- **CTC 提供的文本先验与时间戳先验**
+
+所以如果把它和 TTS / codec token 方案放在同一个统一框架里看，真正的共性是：
+
+- 都把系统拆成了 “非 LLM 部分” 和 “LLM 部分”
+- 都把最适合 `llama.cpp` 的自回归部分抽离出来单独优化
+- 但不一定都使用相同形态的中间 token
+
+### 2. `Fun-ASR-GGUF` 与 `Qwen3-ASR-GGUF` 的差异重点
+
+| 维度 | Qwen3-ASR-GGUF | Fun-ASR-GGUF |
+|------|----------------|--------------|
+| 主体思路 | Audio Encoder + Qwen3 LLM | Encoder + CTC + Prompt + GGUF LLM |
+| 声学先验 | 主要来自 encoder 输出 | 明确保留 CTC 分支做先验与时间戳 |
+| 推理组织方式 | 偏多模态 LLM 输入拼接 | 明显是混合式 ASR pipeline |
+| 工程优势 | 路径更统一 | 时间戳、热词、长音频合并更容易扩展 |
+
+所以更准确的判断是：
+
+- `Qwen3-ASR-GGUF` 更像“音频接入 LLM”
+- `Fun-ASR-GGUF` 更像“CTC 和 LLM 协同工作的混合识别系统”
+
+---
+
+## 十五、关于“流式推理”的工程真相：当前 07 只是低开销伪流式，不是真 online ASR
+
+最近围绕麦克风 demo 的讨论，得到一个非常重要的结论：**当前 `Fun-ASR-GGUF` 的流式 API 更接近 sherpa-onnx 风格接口兼容，而不是状态复用意义上的真流式推理。**
+
+### 1. 为什么名字会让人误解
+
+代码里有这些很像在线识别的接口：
+
+- `RecognitionStream`
+- `create_stream()`
+- `decode_stream()`
+
+但它们当前的实际语义更接近：
+
+- 用一个 `stream` 容器承载当前音频 buffer
+- 每次对完整 buffer 做一次完整解码
+
+而不是：
+
+- chunk-by-chunk 增量维护 encoder state
+- 增量维护 decoder state
+- 每个 chunk 只做一次真正的新增计算
+
+### 2. 07 麦克风 demo 当前实际在做什么
+
+为了降低 CPU 开销，07 的 partial 路径已经做了收敛：
+
+- 只看最近固定窗口音频
+- 只在有语音块时更新 partial
+- partial 只走 greedy CTC，不做完整热词/纠错/LLM
+- final 时再对整句做完整解码
+
+因此它当前最准确的描述是：
+
+> **低开销伪流式 CTC partial + endpoint 后整句完整推理**
+
+这已经非常适合设备侧交互原型，但不应被误认为“模型已经支持在线状态复用”。
+
+### 3. 如果想做真 online，需要改哪里
+
+需要同时改两层：
+
+1. **导出/模型定义层**
+   - 导出带 cache/state 输入输出的 encoder
+2. **运行时层**
+   - 增量特征提取
+   - chunk 级 encoder state 管理
+   - chunk 级 CTC 提交策略
+
+只改 demo 脚本本身，无法把当前系统变成真正的 online ASR。
+
+---
+
+## 十六、从“能不能接 sherpa-onnx”到“其实更适合做原生 runtime”
+
+讨论里原本有一个方向是：是否可以让 `sherpa-onnx` 支持当前 `Fun-ASR-GGUF` 的推理。
+
+最后得到的更稳妥结论是：
+
+- 如果只想支持 **Encoder + CTC 的在线识别**，往 sherpa-onnx 的模型族里扩是可行的
+- 但如果目标是保留当前完整的 **CTC + hotword + Prompt + GGUF LLM + Aligner**，就不适合硬塞进 sherpa-onnx 核心
+
+原因很简单：
+
+- sherpa-onnx 擅长的是 ONNX ASR runtime
+- 当前 `Fun-ASR-GGUF` 的后半段依赖 `llama.cpp`
+- 真要完整迁进去，相当于把 sherpa-onnx 从 ONNX runtime 改造成一个混合式语音推理框架
+
+从工程边界看，这不是最优解。
+
+更务实的方向反而是：
+
+- 保留现有模型产物
+- 去掉 Python 运行环境
+- 直接把推理 runtime 改成 C++ / 原生实现
+
+---
+
+## 十七、如果部署设备不能装 Python，最合理的路线是什么？
+
+这部分是最近讨论里最清晰、也最有落地价值的结论之一：
+
+> **不需要把整个仓库重写成 C++，只需要把部署侧推理 runtime 原生化。**
+
+### 1. 开发机保留 Python，部署机只保留模型和原生 runtime
+
+最合理的职责切分是：
+
+- 开发机：继续使用 Python 做导出、量化、调试
+- 部署机：只带 ONNX、GGUF、`tokens.txt`、`hot.txt` 和 native runtime
+
+这样就不用在设备上安装大体积 Python 环境，也不用重写 01-05 工具链。
+
+### 2. 原生 runtime 应如何拆分
+
+针对当前 `Fun-ASR-GGUF`，一个可落地的 native 版本至少应拆成：
+
+- `Frontend`
+  - 复刻当前 Mel + LFR 的数值行为
+- `EncoderRunner`
+  - ONNX Runtime C++ 加载 Encoder
+- `CtcRunner`
+  - ONNX Runtime C++ 加载 CTC，支持 greedy decode
+- `PromptBuilder`
+  - 构建 prefix/suffix embeddings
+- `LlmRunner`
+  - 用 `llama.cpp` C/C++ API 做 embedding 注入与生成
+- `Aligner`
+  - 对齐 CTC 与 LLM 文本
+- `MicSession`
+  - 复刻 07 的 endpoint / partial / final 交互
+
+### 3. 为什么 `Frontend` 才是最大风险点
+
+很多人直觉会觉得最难的是 `llama.cpp` 或 ONNX Runtime API，但从当前工程经验看，**真正最容易出问题的是特征提取数值对齐**。
+
+尤其是：
+
+- mean normalization
+- pre-emphasis
+- STFT
+- mel filter
+- LFR stacking
+- padding / mask 的一致性
+
+只要这里和当前 Python 参考实现不一致，后面的 ONNX 输出就会整体漂移。
+
+### 4. 为什么 `experience/` 文档在 native 实现里仍然关键
+
+`experience/` 中关于 DirectML 和 paddable 定义的记录，表面看是在讲导出与 DML 兼容，实际上它们给 native runtime 提供了非常重要的 **行为规范**：
+
+- 不能随便换成普通 Kaldi fbank
+- 不能忽略 padding 与有效长度的影响
+- 不能低估 mask 和边界泄露对深层 Transformer 的扰动
+
+换句话说，native runtime 不是“照着模型输入输出写个 wrapper”就能跑准，而是要把这些数值一致性约束一并移植过去。
+
+### 5. 一个很务实的 MVP 顺序
+
+如果以落地为先，最值得的顺序是：
+
+1. 文件版 `CTC-only`
+2. 麦克风版 `CTC-only`
+3. 文件版 `CTC + LLM refine`
+4. 麦克风版 `CTC + LLM refine`
+
+这样可以先把“去 Python 部署”这个目标完成，再逐步补复杂能力，而不是一开始就把系统做满。
+
+---
+
+## 十八、FunASR 官方新增 speaker diarization 后，对当前路线意味着什么？
+
+官方在 2026/05 增加的能力不是“把主 ASR 模型换成另一个单模型”，而是把多条模型链编排起来：
+
+- `model`: ASR 主模型
+- `vad_model`: VAD
+- `spk_model`: speaker embedding / diarization
+- `punc_model`: 标点恢复
+
+因此，对当前 `Fun-ASR-GGUF` 路线来说，关键结论是：
+
+### 1. 主 ASR 导出链未必需要先大改
+
+如果目标只是把 diarization 能力纳入部署系统，首要工作不在 01-05，而在推理 runtime 的编排层。
+
+因为当前主模型导出链是围绕：
+
+- Encoder
+- CTC
+- GGUF Decoder
+
+这条主链组织的。
+
+官方新增的 diarization 套餐，本质上是额外增加：
+
+- 语音活动检测
+- 说话人 embedding / 聚类
+- 标点模型
+
+### 2. 真正要改得更多的是 runtime，而不是导出脚本
+
+当前 runtime 的基本假设是：
+
+- 一段音频 -> 一个文本结果
+
+但 diarization 要求中间表示升级为 sentence-level 结构：
+
+- `start`
+- `end`
+- `text`
+- `speaker_id`
+
+这会牵动：
+
+- 分段策略
+- 结果结构
+- 合并策略
+- demo 输出
+- SRT / sentence_info 组织方式
+
+### 3. 量级判断：不是小改，但也不是重做主 ASR
+
+从工程量上判断，speaker diarization 对当前路线属于：
+
+- **主 ASR 模型层：中小改**
+- **推理 pipeline 层：中到大改**
+
+最核心的新增模块会变成：
+
+- `VadRunner`
+- `SpeakerRunner`
+- `PuncRunner`
+- `SentenceAssembler`
+
+### 4. 如果目标是设备落地，正确优先级是什么
+
+还是应该先做：
+
+- 原生 `CTC-only`
+- 原生 `CTC + LLM refine`
+
+待部署主链稳定后，再把 diarization 作为第二阶段能力接入。
+
+原因很现实：
+
+- speaker diarization 提升的是结果结构和可用性
+- 去 Python 部署解决的是整个系统能否真正落地
+
+前者重要，但应该排在后者之后。
+
+---
+
+## 十九、结合这轮讨论后的最终工程判断
+
+如果只看论文或模型名，容易把 `Qwen3-ASR-GGUF`、`Fun-ASR-GGUF`、sherpa-onnx、speaker diarization、online ASR 这些概念混在一起。但落到工程上，结论其实已经非常清晰：
+
+### 1. 当前最值得坚持的路线
+
+- 保留混合架构
+- 保留 ONNX 负责声学部分
+- 保留 GGUF + `llama.cpp` 负责 LLM 自回归部分
+- 把部署 runtime 原生化，移除 Python 依赖
+
+### 2. 当前最不值得优先投入的方向
+
+- 一开始就强改 sherpa-onnx 兼容整条混合推理链
+- 一开始就为了 diarization 重做导出链
+- 把 07 的伪流式误当成模型已经支持真 online
+
+### 3. 一个更稳的工程顺序
+
+```text
+先把 native runtime 跑通
+  -> 再把 07 的交互效果迁进去
+  -> 再评估是否要补 LLM refine
+  -> 最后再扩 speaker diarization / sentence_info
+```
+
+### 4. 一句话总收束
+
+`Fun-ASR-GGUF` 当前最有价值的不是“已经具备所有高级语音能力”，而是它已经把 **混合式 LLM-based ASR 的部署边界切得足够清晰**：
+
+- 什么适合 ONNX
+- 什么适合 GGUF
+- 什么只是 demo 层的近实时效果
+- 什么需要在 runtime 编排层再继续建设
+
+对工程实现者来说，这种边界清晰，往往比单个模型名字更重要。
