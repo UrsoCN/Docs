@@ -175,7 +175,7 @@ system/libsysprop/srcs/android/sysprop/
 
 apk中的内容来自于Android.bp中的`android_app{}`项，但是要怎么从一大串依赖中找到源头呢？
 
-（是["PlatformProperties",](**/packages/modules/Bluetooth/android/app/Android.bp#311)
+（是["PlatformProperties",] (**/packages/modules/Bluetooth/android/app/Android.bp#311)
 
 正常问题处理流程应该去找Android.bp的提交记录（理论上确实可行，但是估计得排查好久😓）也可以直接就搜索 "prop" 定位到了答案，对比原生的(product/module/Bluetooth)bp脚本，确实多了这一项
 
