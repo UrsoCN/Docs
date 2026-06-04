@@ -1,3 +1,13 @@
+---
+created: 2026-05-28
+modified: 2026-05-31
+tags:
+  - ai
+  - ai-summary
+  - article
+  - cuda
+  - python
+---
 # Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨
 
 > **摘要**：本文记录了对 Qwen3-ASR-GGUF 项目的深度探讨，涵盖项目整体逻辑、LLM-based ASR 的工作原理、Audio Encoder 输出的本质、与传统 CTC 方案的对比、流式/对话场景的延伸讨论，以及离散音频 token 方案（SpeechTokenizer、EnCodec）与本项目路线的工程权衡。

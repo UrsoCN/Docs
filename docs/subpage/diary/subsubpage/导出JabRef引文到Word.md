@@ -1,3 +1,10 @@
+---
+created: 2022-02-27
+modified: 2022-02-27
+tags:
+  - academic
+  - article
+---
 # 导出JabRef引文到Word
 
 [Export to Microsoft Word - JabRef](https://docs.jabref.org/cite/export-to-microsoft-word)

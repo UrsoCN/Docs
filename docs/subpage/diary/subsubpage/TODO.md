@@ -1,4 +1,11 @@
-
+---
+created: 2026-05-28
+modified: 2026-05-28
+tags:
+  - article
+  - javascript
+  - obsidian
+---
 ## Agentic
 
 1. termux 和 opencodeui 配合安装的教程，termux需要安装github版本，否则glibc-repo安装不了；termux需要手动授予权限：文件管理以访问/sdcard文件，省电策略无限制以保持opencode等程序后台保活；pkg install nodejs；opencode常用工具 rg需要安装pkg install ripgrep

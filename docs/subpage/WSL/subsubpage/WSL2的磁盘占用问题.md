@@ -1,3 +1,12 @@
+---
+created: 2022-03-04
+modified: 2022-04-12
+tags:
+  - article
+  - docsify
+  - linux
+  - wsl
+---
 WSL2的磁盘占用问题
 
 > [https://www.cnblogs.com/enrio/p/14222648.html](https://www.cnblogs.com/enrio/p/14222648.html)  

@@ -1,3 +1,11 @@
+---
+created: 2022-04-24
+modified: 2022-04-24
+tags:
+  - article
+  - cpp
+  - interview
+---
 # 华为OD机试
 
 ## 身高体重排序

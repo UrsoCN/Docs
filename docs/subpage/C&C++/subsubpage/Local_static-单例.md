@@ -1,3 +1,10 @@
+---
+created: 2022-02-27
+modified: 2026-05-28
+tags:
+  - article
+  - cpp
+---
 # 关于局部静态（Local Static）
 
 > [【23】【Cherno C++】【中字】C++中的局部静态（Local Static）](https://www.bilibili.com/video/BV1Ny4y1D7EE/?spm_id_from=333.788)

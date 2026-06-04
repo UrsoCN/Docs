@@ -1,3 +1,11 @@
+---
+created: 2022-04-12
+modified: 2022-04-12
+tags:
+  - article
+  - cuda
+  - wsl
+---
 # cuDNN
 
 [NVIDIA CUDNN DOCUMENTATION](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html)

@@ -1,3 +1,11 @@
+---
+created: 2022-04-17
+modified: 2022-04-17
+tags:
+  - article
+  - cpp
+  - docsify
+---
 # C语言中的零长数组
 
 > **来源：https://blog.xwyam.tech:1729/index.php/archives/82/**

@@ -1,3 +1,11 @@
+---
+created: 2022-07-17
+modified: 2026-05-28
+tags:
+  - embedded
+  - rust
+  - topic-index
+---
 # Rust
 
 > Rust: 一门赋予每个人构建可靠且高效软件能力的语言。  

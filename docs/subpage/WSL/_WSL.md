@@ -1,3 +1,13 @@
+---
+created: 2022-02-27
+modified: 2026-05-28
+tags:
+  - cuda
+  - linux
+  - python
+  - topic-index
+  - wsl
+---
 # WSL
 
 > 适用于Linux的Windows子系统（英语：Windows Subsystem for Linux，简称WSL）是一个为在Windows 10和Windows Server 2019上能够原生运行Linux二进制可执行文件（ELF格式）的兼容层。  

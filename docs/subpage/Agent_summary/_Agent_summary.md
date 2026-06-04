@@ -1,3 +1,13 @@
+---
+created: 2026-05-28
+modified: 2026-06-05
+tags:
+  - ai
+  - ai-summary
+  - docsify
+  - obsidian
+  - topic-index
+---
 # Agent_summary
 > 这里是Agent协助编写的总结文档，通常会使用obsidian mcp协助生成。
 > 通常使用/docsify-summary-sync 这个skills来让LLM能够同时自动化地按照当前docsify格式完善链接跳转。

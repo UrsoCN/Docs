@@ -1,3 +1,11 @@
+---
+created: 2022-03-12
+modified: 2026-05-28
+tags:
+  - article
+  - docsify
+  - latex
+---
 # 让docsify支持LaTeX
 
 > [使用docsify并定制以使它更强大](https://www.cnblogs.com/aopstudio/p/10732512.html)

@@ -1,3 +1,10 @@
+---
+created: 2024-02-27
+modified: 2024-04-13
+tags:
+  - aosp
+  - article
+---
 # Android编译系统-Android.mk篇
 
 本篇主要介绍Android.mk，会附带一部分makefile内容，关于makefile的详细内容可以看[Android 编译之make基础](https://www.jianshu.com/p/169397686d58)、[GNU make

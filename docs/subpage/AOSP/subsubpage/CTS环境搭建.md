@@ -1,3 +1,12 @@
+---
+created: 2024-04-13
+modified: 2024-04-13
+tags:
+  - aosp
+  - article
+  - linux
+  - testing
+---
 # CTS环境搭建
 
 **注意事项：**

@@ -1,3 +1,10 @@
+---
+created: 2020-08-01
+modified: 2022-02-27
+tags:
+  - article
+  - csharp
+---
 # DataTime in C#
 
 > **来源：**

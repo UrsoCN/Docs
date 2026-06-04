@@ -1,3 +1,11 @@
+---
+created: 2022-03-04
+modified: 2026-05-28
+tags:
+  - article
+  - linux
+  - linux-embedded
+---
 # Linux操作系统2
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->

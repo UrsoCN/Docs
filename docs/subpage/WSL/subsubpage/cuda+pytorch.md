@@ -1,3 +1,13 @@
+---
+created: 2022-02-27
+modified: 2022-03-04
+tags:
+  - article
+  - cuda
+  - linux
+  - python
+  - wsl
+---
 # 记录一次安装GPU版pytorch
 
 大半夜给我气坏了

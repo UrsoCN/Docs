@@ -1,3 +1,10 @@
+---
+created: 2022-03-16
+modified: 2022-03-17
+tags:
+  - article
+  - cpp
+---
 # NotesofCherno
 
 [NotesofCherno](https://github.com/UrsoCN/NotesofCherno)

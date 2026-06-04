@@ -1,3 +1,11 @@
+---
+created: 2022-02-27
+modified: 2022-03-11
+tags:
+  - article
+  - docsify
+  - javascript
+---
 # 关于使用docsify创建一个静态博客
 
 > [docsify官网](https://docsify.js.org/#/)

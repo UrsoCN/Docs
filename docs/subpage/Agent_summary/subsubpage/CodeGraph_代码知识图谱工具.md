@@ -1,3 +1,14 @@
+---
+created: 2026-06-05
+modified: 2026-06-05
+tags:
+  - academic
+  - ai
+  - ai-summary
+  - article
+  - javascript
+  - linux
+---
 # CodeGraph: AI 代码知识图谱工具
 
 > CodeGraph 是一个开源工具，为代码库构建预索引的知识图谱，让 AI 编程助手能够以更少的 token 消耗和工具调用理解代码结构。由 colbymchenry 开发，MIT 协议开源。

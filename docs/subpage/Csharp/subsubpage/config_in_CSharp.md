@@ -1,3 +1,11 @@
+---
+created: 2020-10-18
+modified: 2022-02-27
+tags:
+  - article
+  - csharp
+  - docsify
+---
 # .config in C#
 
 > **来源：**

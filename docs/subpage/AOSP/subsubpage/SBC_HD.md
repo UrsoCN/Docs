@@ -1,3 +1,11 @@
+---
+created: 2024-04-13
+modified: 2024-04-13
+tags:
+  - aosp
+  - article
+  - bluetooth
+---
 # Bluetooth SBC Dual Channel HD audio mode
 
 > origin patch from Lineageos: <https://review.lineageos.org/q/topic:%22bt-sbc-hd-dualchannel%22>  

@@ -1,3 +1,11 @@
+---
+created: 2024-02-27
+modified: 2026-05-28
+tags:
+  - aosp
+  - article
+  - docsify
+---
 # Android编译系统-Android.bp篇
 
 > [Android.bp file introduction](https://laptrinhx.com/android-bp-file-introduction-662051062/)  

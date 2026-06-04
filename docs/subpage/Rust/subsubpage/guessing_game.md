@@ -1,3 +1,11 @@
+---
+created: 2022-07-17
+modified: 2022-07-17
+tags:
+  - article
+  - python
+  - rust
+---
 # guessing_game
 
 ## 根据输入打印输出

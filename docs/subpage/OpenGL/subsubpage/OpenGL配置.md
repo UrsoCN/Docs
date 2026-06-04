@@ -1,3 +1,11 @@
+---
+created: 2022-07-16
+modified: 2022-07-16
+tags:
+  - article
+  - graphics
+  - opengl
+---
 # OpenGL配置
 
 [https://www.bilibili.com/video/BV1Ni4y1o7Au](https://www.bilibili.com/video/BV1Ni4y1o7Au)

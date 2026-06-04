@@ -1,3 +1,11 @@
+---
+created: 2022-04-20
+modified: 2022-04-22
+tags:
+  - article
+  - cpp
+  - docsify
+---
 # Understanding lvalues and rvalues in C and C++ 理解C和C++中的左值和右值
 
 > **[https://eli.thegreenplace.net/2011/12/15/understanding-lvalues-and-rvalues-in-c-and-c/](https://eli.thegreenplace.net/2011/12/15/understanding-lvalues-and-rvalues-in-c-and-c/)**

@@ -1,3 +1,11 @@
+---
+created: 2024-04-13
+modified: 2024-04-13
+tags:
+  - aosp
+  - article
+  - docsify
+---
 # AOSP Build System
 
 介绍文档：

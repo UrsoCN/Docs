@@ -1,3 +1,13 @@
+---
+created: 2022-04-14
+modified: 2022-04-14
+tags:
+  - article
+  - computer-vision
+  - docsify
+  - linux
+  - python
+---
 # 目标检测
 
 [YOLOv5 Documentation](https://docs.ultralytics.com/tutorials/train-custom-datasets/)

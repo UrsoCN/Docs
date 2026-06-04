@@ -1,3 +1,10 @@
+---
+created: 2024-02-27
+modified: 2024-02-27
+tags:
+  - article
+  - cpp
+---
 # C++ Tips of the Week
 
 > <https://abseil.io/tips/>
