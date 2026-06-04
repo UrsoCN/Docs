@@ -2,6 +2,7 @@
 
 - [Agent_summary](./subpage/Agent_summary/_Agent_summary.md)
   - [架构设计的鸡零狗碎：多任务服务设计启示](./subpage/Agent_summary/subsubpage/架构设计的鸡零狗碎_多任务服务设计启示.md)
+  - [CodeGraph: AI 代码知识图谱工具](./subpage/Agent_summary/subsubpage/CodeGraph_代码知识图谱工具.md)
   - [Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨](./subpage/Agent_summary/subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
 
 - [AOSP](./subpage/AOSP/_AOSP.md)
@@ -33,6 +34,7 @@
   - [电磁场模拟](./subpage/diary/subsubpage/电磁场模拟.md)
   - [工作备份](./subpage/diary/subsubpage/工作备份.md)
   - [关于使用docsify创建一个静态博客](./subpage/diary/subsubpage/关于使用docsify创建一个静态博客.md)
+  - [恒生科技指数重排](./subpage/diary/subsubpage/恒生科技指数重排.md)
   - [目标检测人行道定制](./subpage/diary/subsubpage/目标检测人行道定制.md)
   - [目标检测](./subpage/diary/subsubpage/目标检测Demo.md)
   - [让docsify支持LaTeX](./subpage/diary/subsubpage/让docsify支持LaTeX.md)
@@ -62,7 +64,6 @@
 - [MachineLearning](./subpage/MachineLearning/_MachineLearning.md)
   - [3 线性神经网络](./subpage/MachineLearning/subsubpage/3_线性神经网络.md)
   - [4 多层感知机](./subpage/MachineLearning/subsubpage/4_多层感知机.md)
-  - [4.10 实战Kaggle比赛：预测房价](./subpage/MachineLearning/subsubpage/4.10_实战Kaggle比赛：预测房价.md)
   - [深度学习计算](./subpage/MachineLearning/subsubpage/5_深度学习计算.md)
   - [6 卷积神经网络](./subpage/MachineLearning/subsubpage/6_卷积神经网络.md)
   - [7 现代卷积神经网络](./subpage/MachineLearning/subsubpage/7_现代卷积神经网络.md)
