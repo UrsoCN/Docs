@@ -38,11 +38,11 @@ jsdelivr cdn
 
 bootcss cdn的显示效果，可以看到不等号渲染错位了：
 
-![bootcss](./images/bootcss.png)
+![bootcss](images/bootcss.png)
 
 jsdelivr cdn的显示效果：
 
-![jsdelivr](./images/jsdelivr.png)
+![jsdelivr](images/jsdelivr.png)
 
 ### 2. 自定义markdown配置
 
@@ -138,7 +138,7 @@ jsdelivr cdn的显示效果：
 注：上文中在代码块中显示`` ` ``反引号的技巧是：
 
 1. 行内：[转义反引号](https://markdown.com.cn/basic-syntax/code.html#%E8%BD%AC%E4%B9%89%E5%8F%8D%E5%BC%95%E5%8F%B7)，通过连续两个反引号框住的字符里，反引号能够正常显示。
-    ![反引号](./images/反引号.png)
+    ![反引号](images/反引号.png)
 2. 行间：Markdown基本语法允许通过将行缩进四个空格或一个制表符来创建代码块。再在第一行写上`` ``` ``。
-    ![反引号2](./images/反引号2.png)
+    ![反引号2](images/反引号2.png)
    图中warning是markdown lint语法检测。

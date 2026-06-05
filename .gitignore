@@ -2,5 +2,9 @@
 .obsidian/workspace-mobile.json
 .obsidian/graph.json
 
+.obsidian/plugins
+
 .trash
 
+local_docs
+__pycache__

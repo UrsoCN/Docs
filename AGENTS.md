@@ -29,5 +29,5 @@
 
 ## Useful References
 
-- Original docsify setup notes: [docs/subpage/diary/subsubpage/关于使用docsify创建一个静态博客.md](docs/subpage/diary/subsubpage/关于使用docsify创建一个静态博客.md)
-- Known docsify pitfalls in this repo: [docs/subpage/diary/subsubpage/使用docsify应当注意的事情.md](docs/subpage/diary/subsubpage/使用docsify应当注意的事情.md)
+- Original docsify setup notes: [docs/subpage/diary/subsubpage/关于使用docsify创建一个静态博客.md](docs/subpage/diary/subsubpage/文档整理_随笔/关于使用docsify创建一个静态博客.md)
+- Known docsify pitfalls in this repo: [docs/subpage/diary/subsubpage/使用docsify应当注意的事情.md](docs/subpage/diary/subsubpage/文档整理_随笔/使用docsify应当注意的事情.md)

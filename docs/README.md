@@ -8,8 +8,8 @@
 
 博客教程：
 
-[关于使用docsify创建一个静态博客](./subpage/diary/subsubpage/关于使用docsify创建一个静态博客.md)
+[关于使用docsify创建一个静态博客](subpage/diary/subsubpage/文档整理_随笔/关于使用docsify创建一个静态博客.md)
 
 [使用的docsify主题](https://jhildenbiddle.github.io/docsify-themeable/#/)
 
-[让docsify支持LaTeX](./subpage/diary/subsubpage/让docsify支持LaTeX.md)
+[让docsify支持LaTeX](subpage/diary/subsubpage/文档整理_随笔/让docsify支持LaTeX.md)

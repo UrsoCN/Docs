@@ -1,5 +1,12 @@
 {
   "attachmentFolderPath": "./images",
   "useMarkdownLinks": true,
-  "newLinkFormat": "relative"
+  "newLinkFormat": "relative",
+  "pdfExportSettings": {
+    "pageSize": "A4",
+    "landscape": false,
+    "margin": "2",
+    "downscalePercent": 100
+  },
+  "alwaysUpdateLinks": true
 }

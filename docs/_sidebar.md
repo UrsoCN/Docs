@@ -29,21 +29,26 @@
   - [DataTime in C#](./subpage/Csharp/subsubpage/DateTime_in_CSharp.md)
 
 - [日志](./subpage/diary/_diary.md)
-  - [愚者-如何看待热搜“别再自我摆烂”?](./subpage/diary/subsubpage/别再自我摆烂.md)
-  - [导出JabRef引文到Word](./subpage/diary/subsubpage/导出JabRef引文到Word.md)
-  - [电磁场模拟](./subpage/diary/subsubpage/电磁场模拟.md)
-  - [工作备份](./subpage/diary/subsubpage/工作备份.md)
-  - [关于使用docsify创建一个静态博客](./subpage/diary/subsubpage/关于使用docsify创建一个静态博客.md)
-  - [恒生科技指数重排](./subpage/diary/subsubpage/恒生科技指数重排.md)
-  - [目标检测人行道定制](./subpage/diary/subsubpage/目标检测人行道定制.md)
-  - [目标检测](./subpage/diary/subsubpage/目标检测Demo.md)
-  - [让docsify支持LaTeX](./subpage/diary/subsubpage/让docsify支持LaTeX.md)
-  - [使用docsify应当注意的事情](./subpage/diary/subsubpage/使用docsify应当注意的事情.md)
-  - [文字与视频](./subpage/diary/subsubpage/文字与视频.md)
-  - [我的根本意见](./subpage/diary/subsubpage/我的根本意见.md)
-  - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/diary/subsubpage/JabRef预览引用及在Word添加GB格式参考文献.md)
-  - [pytorchMobile源码解读](./subpage/diary/subsubpage/pytorchMobile源码解读.md)
   - [TODO](./subpage/diary/subsubpage/TODO.md)
+  - 工作_投资
+    - [工作备份](./subpage/diary/subsubpage/工作_投资/工作备份.md)
+    - [恒生科技指数重排](./subpage/diary/subsubpage/工作_投资/恒生科技指数重排.md)
+  - 文档整理_随笔
+    - [愚者-如何看待热搜“别再自我摆烂”?](./subpage/diary/subsubpage/文档整理_随笔/别再自我摆烂.md)
+    - [关于使用docsify创建一个静态博客](./subpage/diary/subsubpage/文档整理_随笔/关于使用docsify创建一个静态博客.md)
+    - [让docsify支持LaTeX](./subpage/diary/subsubpage/文档整理_随笔/让docsify支持LaTeX.md)
+    - [使用docsify应当注意的事情](./subpage/diary/subsubpage/文档整理_随笔/使用docsify应当注意的事情.md)
+    - [文字与视频](./subpage/diary/subsubpage/文档整理_随笔/文字与视频.md)
+    - [我的根本意见](./subpage/diary/subsubpage/文档整理_随笔/我的根本意见.md)
+  - 物理_模拟
+    - [电磁场模拟](./subpage/diary/subsubpage/物理_模拟/电磁场模拟.md)
+  - 学术_文献管理
+    - [导出JabRef引文到Word](./subpage/diary/subsubpage/学术_文献管理/导出JabRef引文到Word.md)
+    - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/diary/subsubpage/学术_文献管理/JabRef预览引用及在Word添加GB格式参考文献.md)
+  - AI_机器学习
+    - [目标检测人行道定制](./subpage/diary/subsubpage/AI_机器学习/目标检测人行道定制.md)
+    - [目标检测](./subpage/diary/subsubpage/AI_机器学习/目标检测Demo.md)
+    - [pytorchMobile源码解读](./subpage/diary/subsubpage/AI_机器学习/pytorchMobile源码解读.md)
 
 - [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)
   - 嵌入式

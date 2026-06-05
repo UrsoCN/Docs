@@ -433,7 +433,7 @@ if __name__ == "__main__":
 
 就能够正常地导出移动设备的进一步优化(Further optimization for mobile devices)的模型了。
 
-![export.png](./images/export.png)
+![export.png](images/export.png)
 
 打开`/home/u/TEST/Proj/yolov5/runs/train/exp5/weights`目录，就能找到我们需要的`best.torchscript.ptl`文件了。
 
