@@ -1,9 +1,8 @@
 ---
 created: 2020-06-25
-modified: 2026-05-28
+modified: 2026-06-05
 tags:
   - ai
-  - computer-vision
   - docsify
   - latex
   - obsidian

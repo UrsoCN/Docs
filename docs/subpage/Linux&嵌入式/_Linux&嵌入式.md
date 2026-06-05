@@ -1,6 +1,6 @@
 ---
 created: 2022-03-04
-modified: 2026-05-28
+modified: 2026-06-05
 tags:
   - embedded
   - linux
