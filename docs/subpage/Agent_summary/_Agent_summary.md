@@ -16,3 +16,4 @@ tags:
   - [架构设计的鸡零狗碎：多任务服务设计启示](./subsubpage/架构设计的鸡零狗碎_多任务服务设计启示.md)
   - [Qwen3-ASR-GGUF 架构与LLM-based-ASR技术探讨](./subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
   - [CodeGraph: AI 代码知识图谱工具](./subsubpage/CodeGraph_代码知识图谱工具.md)
+  - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subsubpage/reflect-hpp静态反射与JSON序列化.md)

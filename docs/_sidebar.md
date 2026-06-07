@@ -4,6 +4,7 @@
   - [架构设计的鸡零狗碎：多任务服务设计启示](./subpage/Agent_summary/subsubpage/架构设计的鸡零狗碎_多任务服务设计启示.md)
   - [CodeGraph: AI 代码知识图谱工具](./subpage/Agent_summary/subsubpage/CodeGraph_代码知识图谱工具.md)
   - [Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨](./subpage/Agent_summary/subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
+  - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subpage/Agent_summary/subsubpage/reflect-hpp静态反射与JSON序列化.md)
 
 - [AOSP](./subpage/AOSP/_AOSP.md)
   - [刷机](./subpage/AOSP/subsubpage/刷机.md)
