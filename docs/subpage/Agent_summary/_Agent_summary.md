@@ -1,6 +1,6 @@
 ---
-created: 2026-05-28
-modified: 2026-06-05
+created: 2026-05-28T00:00:00.000Z
+modified: '2026-06-09T00:00:00.000+0800'
 tags:
   - ai
   - ai-summary
@@ -17,3 +17,4 @@ tags:
   - [Qwen3-ASR-GGUF 架构与LLM-based-ASR技术探讨](./subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
   - [CodeGraph: AI 代码知识图谱工具](./subsubpage/CodeGraph_代码知识图谱工具.md)
   - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subsubpage/reflect-hpp静态反射与JSON序列化.md)
+  - [Loop Engineering: 从提示词工程到循环设计](./subsubpage/Loop-Engineering_从提示词工程到循环设计.md)
