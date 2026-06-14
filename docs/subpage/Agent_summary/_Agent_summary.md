@@ -18,3 +18,4 @@ tags:
   - [CodeGraph: AI 代码知识图谱工具](./subsubpage/CodeGraph_代码知识图谱工具.md)
   - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subsubpage/reflect-hpp静态反射与JSON序列化.md)
   - [Loop Engineering: 从提示词工程到循环设计](./subsubpage/Loop-Engineering_从提示词工程到循环设计.md)
+  - [AI-IO: 空气动力学启发的实时惯性里程计](./subsubpage/AI-IO_空气动力学启发的实时惯性里程计.md)

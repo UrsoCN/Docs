@@ -2,6 +2,7 @@
 
 - [Agent_summary](./subpage/Agent_summary/_Agent_summary.md)
   - [架构设计的鸡零狗碎：多任务服务设计启示](./subpage/Agent_summary/subsubpage/架构设计的鸡零狗碎_多任务服务设计启示.md)
+  - [AI-IO: 空气动力学启发的实时惯性里程计](./subpage/Agent_summary/subsubpage/AI-IO_空气动力学启发的实时惯性里程计.md)
   - [CodeGraph: AI 代码知识图谱工具](./subpage/Agent_summary/subsubpage/CodeGraph_代码知识图谱工具.md)
   - [Loop Engineering: 从提示词工程到循环设计](./subpage/Agent_summary/subsubpage/Loop-Engineering_从提示词工程到循环设计.md)
   - [Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨](./subpage/Agent_summary/subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
