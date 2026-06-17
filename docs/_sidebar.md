@@ -5,6 +5,7 @@
   - [架构设计的鸡零狗碎：多任务服务设计启示](./subpage/Agent_summary/subsubpage/架构设计的鸡零狗碎_多任务服务设计启示.md)
   - [AI-IO: 空气动力学启发的实时惯性里程计](./subpage/Agent_summary/subsubpage/AI-IO_空气动力学启发的实时惯性里程计.md)
   - [CodeGraph: AI 代码知识图谱工具](./subpage/Agent_summary/subsubpage/CodeGraph_代码知识图谱工具.md)
+  - [gguf_mix_inference — Fun-ASR-GGUF C++ 原生推理实现分析](./subpage/Agent_summary/subsubpage/gguf_mix_inference_Fun-ASR-GGUF-C++原生实现分析.md)
   - [Loop Engineering: 从提示词工程到循环设计](./subpage/Agent_summary/subsubpage/Loop-Engineering_从提示词工程到循环设计.md)
   - [Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨](./subpage/Agent_summary/subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
   - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subpage/Agent_summary/subsubpage/reflect-hpp静态反射与JSON序列化.md)
