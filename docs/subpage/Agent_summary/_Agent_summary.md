@@ -21,3 +21,4 @@ tags:
   - [AI-IO: 空气动力学启发的实时惯性里程计](./subsubpage/AI-IO_空气动力学启发的实时惯性里程计.md)
   - [机器狗无图惯性导航方案调研](./subsubpage/机器狗无图惯性导航方案调研.md)
   - [gguf_mix_inference: Fun-ASR-GGUF C++ 原生实现分析](./subsubpage/gguf_mix_inference_Fun-ASR-GGUF-C++原生实现分析.md)
+  - [代码检索工具选型对比：codegraph vs codebase-memory-mcp vs rg vs LSP](./subsubpage/代码检索工具选型对比_codegraph_vs_codebase_memory_vs_rg.md)
