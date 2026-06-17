@@ -92,6 +92,7 @@ Transformer 比 TCN **误差降低 22.4%**。
 **代码位置：** `src/learning/train_model_net.py` + `src/main_learning.py`
 
 **超参数：**
+
 | 参数 | 值 |
 |---|---|
 | 优化器 | Adam，lr=3e-4 |
