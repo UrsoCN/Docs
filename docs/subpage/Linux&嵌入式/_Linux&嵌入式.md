@@ -37,3 +37,7 @@ source file [here](https://github.com/UrsoCN/Docs/tree/master/docs/subpage/Linux
 - [嵌入式系统实验报告3](./subsubpage/嵌入式/嵌入式系统实验报告3.md)
 - [嵌入式系统实验报告4](./subsubpage/嵌入式/嵌入式系统实验报告4.md)
 
+## Agent 学习笔记
+
+- [嵌入式开发学习笔记](./subsubpage/嵌入式开发学习笔记.md)
+

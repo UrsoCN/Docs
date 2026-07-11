@@ -58,6 +58,8 @@
     - [pytorchMobile源码解读](./subpage/diary/subsubpage/AI_机器学习/pytorchMobile源码解读.md)
 
 - [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)
+  - Agent 学习笔记
+    - [嵌入式开发学习笔记](./subpage/Linux&嵌入式/subsubpage/嵌入式开发学习笔记.md)
   - 嵌入式
     - [嵌入式系统1](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告1.md)
     - [嵌入式系统2](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告2.md)
