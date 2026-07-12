@@ -27,6 +27,83 @@
 - Do not partially mix link schemes during a cleanup. For `docs/subpage/**`, prefer local file-relative links like `./subsubpage/article.md`.
 - Keep `docs/_sidebar.md` aligned with the root navigation file loaded via the alias configured in `docs/index.html`.
 
+## Tag Convention
+
+All notes should use a consistent three-category tag system. Tags go in the YAML frontmatter `tags:` field.
+
+### Categories
+
+Each note gets **3–5 tags** total:
+
+| Category | Format | Purpose | Examples |
+|----------|--------|---------|---------|
+| Type (1) | `type/xxx` | What kind of note | `type/article`, `type/moc`, `type/howto`, `type/diary`, `type/survey`, `type/comparison` |
+| Status (optional) | `status/xxx` | How mature it is | `status/draft`, `status/evergreen` |
+| Topic(s) (1–3) | `lang/xxx` or `topic/xxx` | What it's about | `lang/rust`, `topic/embedded`, `topic/ai` |
+
+### Naming Rules
+
+- **All lowercase**, kebab-case (`topic/embedded-linux`, not `topic/embeddedLinux`)
+- **Singular** (`type/article` not `type/articles`)
+- **Max 2 levels deep** (`lang/rust` ✅, `topic/embedded-linux` ✅, `topic/programming/languages/rust` ❌)
+- **Namespaces**: `lang/` for programming languages, `topic/` for everything else, `type/` for note classification
+
+### Current Tag Inventory
+
+After the migration (July 2026):
+
+```
+Type tags:
+  type/article (64), type/moc (10), type/learning (4),
+  type/survey (1), type/comparison (1)
+
+Language tags:
+  lang/python (12), lang/cpp (10), lang/rust (5),
+  lang/csharp (3), lang/javascript (3)
+
+Topic tags:
+  topic/linux (20), topic/docsify (13), topic/embedded-linux (12),
+  topic/embedded (10), topic/ai (9), topic/aosp (8),
+  topic/ml (8), topic/cuda (6), topic/esp32 (5), topic/wsl (5),
+  topic/testing (4), topic/xvf3800 (4), topic/academic (3),
+  topic/cv (3), topic/graphics (3), topic/interview (3),
+  topic/obsidian (3), topic/opengl (3), topic/bluetooth (2),
+  topic/latex (2), topic/robotics (2), topic/android-flashing (2),
+  topic/audio (1), topic/dev-tools (1)
+```
+
+### Granularity Rules of Thumb
+
+Good tags sit in the **5–30 note** sweet spot:
+- **≤2 notes**: too specific → delete the tag, use `[[wikilinks]]` or full-text search instead
+- **≥50 notes**: too broad → split into more specific tags
+- **New topic tags** are fine at 1 note initially; they'll grow as related notes accumulate
+
+Only add a specific sub-tag (e.g. `topic/tokio` instead of just `lang/rust`) when you have **≥3 notes** that warrant it.
+
+### Examples
+
+```yaml
+# A Rust tutorial note
+---
+tags: [type/article, lang/rust, topic/embedded]
+---
+
+# Topic landing page (Map of Content)
+---
+tags: [type/moc, topic/aosp, topic/linux]
+---
+
+# Personal journal entry
+---
+tags: [type/diary]
+---
+```
+
+### Migration Note
+
+The vault was migrated from flat tags to this convention in July 2026. The migration script is at `/tmp/migrate_tags.py`. Do not re-run it — future tags should be added directly following this convention.
+
 ## Useful References
 
 - Original docsify setup notes: [docs/subpage/diary/subsubpage/关于使用docsify创建一个静态博客.md](docs/subpage/diary/subsubpage/文档整理_随笔/关于使用docsify创建一个静态博客.md)

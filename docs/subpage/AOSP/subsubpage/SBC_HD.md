@@ -2,9 +2,9 @@
 created: 2024-04-13
 modified: 2026-06-05
 tags:
-  - aosp
-  - article
-  - bluetooth
+  - topic/aosp
+  - type/article
+  - topic/bluetooth
 ---
 # Bluetooth SBC Dual Channel HD audio mode
 

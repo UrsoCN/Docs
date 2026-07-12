@@ -2,11 +2,11 @@
 created: 2024-04-13
 modified: 2026-06-05
 tags:
-  - android-flashing
-  - aosp
-  - article
-  - bluetooth
-  - testing
+  - topic/android-flashing
+  - topic/aosp
+  - type/article
+  - topic/bluetooth
+  - topic/testing
 ---
 # CtsStrictJavaPackagesTestCases问题解决记录
 

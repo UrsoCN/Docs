@@ -2,12 +2,11 @@
 created: 2026-06-05
 modified: 2026-06-05
 tags:
-  - academic
-  - ai
-  - ai-summary
-  - article
-  - javascript
-  - linux
+  - topic/academic
+  - topic/ai
+  - type/article
+  - lang/javascript
+  - topic/linux
 ---
 # CodeGraph: AI 代码知识图谱工具
 

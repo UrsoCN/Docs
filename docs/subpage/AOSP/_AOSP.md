@@ -2,9 +2,9 @@
 created: 2023-11-24
 modified: 2026-06-05
 tags:
-  - aosp
-  - linux
-  - topic-index
+  - topic/aosp
+  - topic/linux
+  - type/moc
 ---
 # AOSP
 > Android 是一种基于 Linux 内核和其他开源软件的修改版本的移动操作系统，主要用于智能手机和平板电脑等触摸屏移动设备。Android 由一个名为 Open Handset Alliance 的开发者联盟开发，尽管其最广泛使用的版本主要由 Google 开发。它于 2007 年 11 月推出，首款商用 Android 设备 HTC Dream 于 2008 年 9 月推出。

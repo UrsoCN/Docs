@@ -1,6 +1,6 @@
 ---
 created: 2026-07-13
-tags: [embedded, esp32, learning, xvf3800, lesson-3]
+tags: [topic/embedded, topic/esp32, type/learning, topic/xvf3800]
 ---
 
 # 第 3 课：FreeRTOS 实时操作系统

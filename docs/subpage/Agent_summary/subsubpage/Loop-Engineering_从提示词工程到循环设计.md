@@ -2,11 +2,7 @@
 created: '2026-06-09'
 modified: '2026-06-09'
 tags:
-  - ai
-  - ai-summary
-  - loop-engineering
-  - coding-agent
-  - translation
+  - topic/ai
 ---
 # Loop Engineering: 从提示词工程到循环设计
 

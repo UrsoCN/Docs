@@ -2,9 +2,9 @@
 created: 2022-04-17
 modified: 2026-06-05
 tags:
-  - article
-  - cpp
-  - docsify
+  - type/article
+  - lang/cpp
+  - topic/docsify
 ---
 # C语言中的零长数组
 

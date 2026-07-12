@@ -2,8 +2,8 @@
 created: 2022-07-16
 modified: 2026-06-05
 tags:
-  - academic
-  - article
+  - topic/academic
+  - type/article
 ---
 # JabRef预览引用及在Word添加GB格式参考文献
 

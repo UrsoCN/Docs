@@ -2,8 +2,8 @@
 created: 2022-03-04
 modified: 2026-06-05
 tags:
-  - machine-learning
-  - topic-index
+  - topic/ml
+  - type/moc
 ---
 # MachineLearning
 

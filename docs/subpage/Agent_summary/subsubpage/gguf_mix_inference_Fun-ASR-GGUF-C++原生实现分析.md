@@ -2,13 +2,8 @@
 created: '2026-06-09'
 modified: '2026-06-09'
 tags:
-  - ai
-  - asr
-  - gguf
-  - cpp
-  - fun-asr
-  - llm
-  - streaming
+  - topic/ai
+  - lang/cpp
 ---
 # gguf_mix_inference — Fun-ASR-GGUF C++ 原生推理实现分析
 

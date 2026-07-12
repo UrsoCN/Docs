@@ -2,11 +2,10 @@
 created: 2026-05-28
 modified: 2026-06-05
 tags:
-  - ai
-  - ai-summary
-  - article
-  - cuda
-  - python
+  - topic/ai
+  - type/article
+  - topic/cuda
+  - lang/python
 ---
 # Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨
 

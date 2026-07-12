@@ -2,9 +2,9 @@
 created: 2020-10-18
 modified: 2026-06-05
 tags:
-  - article
-  - csharp
-  - docsify
+  - type/article
+  - lang/csharp
+  - topic/docsify
 ---
 # .config in C#
 

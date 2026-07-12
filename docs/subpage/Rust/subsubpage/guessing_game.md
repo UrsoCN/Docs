@@ -2,9 +2,9 @@
 created: 2022-07-17
 modified: 2026-06-05
 tags:
-  - article
-  - python
-  - rust
+  - type/article
+  - lang/python
+  - lang/rust
 ---
 # guessing_game
 

@@ -2,11 +2,10 @@
 created: 2026-05-28T00:00:00.000Z
 modified: '2026-06-24'
 tags:
-  - ai
-  - ai-summary
-  - docsify
-  - obsidian
-  - topic-index
+  - topic/ai
+  - topic/docsify
+  - topic/obsidian
+  - type/moc
 ---
 # Agent_summary
 > 这里是Agent协助编写的总结文档，通常会使用obsidian mcp协助生成。

@@ -2,9 +2,9 @@
 created: 2022-04-12
 modified: 2026-06-05
 tags:
-  - article
-  - computer-vision
-  - python
+  - type/article
+  - topic/cv
+  - lang/python
 ---
 # pytorchMobile源码解读
 

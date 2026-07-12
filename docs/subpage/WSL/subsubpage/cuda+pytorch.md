@@ -2,11 +2,11 @@
 created: 2022-02-27
 modified: 2026-06-05
 tags:
-  - article
-  - cuda
-  - linux
-  - python
-  - wsl
+  - type/article
+  - topic/cuda
+  - topic/linux
+  - lang/python
+  - topic/wsl
 ---
 # 记录一次安装GPU版pytorch
 

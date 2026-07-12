@@ -2,9 +2,9 @@
 created: 2022-07-16
 modified: 2026-06-05
 tags:
-  - graphics
-  - opengl
-  - topic-index
+  - topic/graphics
+  - topic/opengl
+  - type/moc
 ---
 # OpenGL
 

@@ -2,10 +2,10 @@
 created: 2022-03-04
 modified: 2026-06-05
 tags:
-  - embedded
-  - linux
-  - linux-embedded
-  - topic-index
+  - topic/embedded
+  - topic/linux
+  - topic/embedded-linux
+  - type/moc
 ---
 # Linux&嵌入式
 

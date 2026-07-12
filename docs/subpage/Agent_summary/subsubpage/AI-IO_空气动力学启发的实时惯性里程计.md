@@ -2,14 +2,8 @@
 created: '2026-06-09'
 modified: '2026-06-09'
 tags:
-  - ai
-  - robot
-  - SLAM
-  - ICRA
-  - 里程计
-  - IMU
-  - Transformer
-  - EKF
+  - topic/ai
+  - topic/robotics
 ---
 # AI-IO: 空气动力学启发的实时惯性里程计
 

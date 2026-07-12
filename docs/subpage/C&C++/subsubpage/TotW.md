@@ -2,8 +2,8 @@
 created: 2024-02-27
 modified: 2026-06-05
 tags:
-  - article
-  - cpp
+  - type/article
+  - lang/cpp
 ---
 # C++ Tips of the Week
 

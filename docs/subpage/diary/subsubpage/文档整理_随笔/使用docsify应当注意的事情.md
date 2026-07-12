@@ -2,8 +2,8 @@
 created: 2020-08-01
 modified: 2026-06-05
 tags:
-  - article
-  - docsify
+  - type/article
+  - topic/docsify
 ---
 # 使用docsify应当注意的事情
 

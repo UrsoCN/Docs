@@ -2,8 +2,8 @@
 created: 2022-02-27
 modified: 2026-06-05
 tags:
-  - academic
-  - article
+  - topic/academic
+  - type/article
 ---
 # 导出JabRef引文到Word
 

@@ -1,7 +1,9 @@
 ---
 created: 2026-06-17
 modified: 2026-06-17
-tags: [代码工具, codegraph, codebase-memory-mcp, ripgrep, LSP, 知识图谱, 选型]
+tags:
+  - type/comparison
+  - topic/dev-tools
 ---
 
 # 代码检索工具选型对比：codegraph vs codebase-memory-mcp vs rg vs LSP

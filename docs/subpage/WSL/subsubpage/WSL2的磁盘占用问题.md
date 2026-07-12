@@ -2,10 +2,10 @@
 created: 2022-03-04
 modified: 2026-06-05
 tags:
-  - article
-  - docsify
-  - linux
-  - wsl
+  - type/article
+  - topic/docsify
+  - topic/linux
+  - topic/wsl
 ---
 WSL2的磁盘占用问题
 

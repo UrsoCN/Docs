@@ -2,8 +2,8 @@
 created: 2020-06-25
 modified: 2026-06-05
 tags:
-  - csharp
-  - topic-index
+  - lang/csharp
+  - type/moc
 ---
 # C#
 

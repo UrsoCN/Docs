@@ -2,9 +2,9 @@
 created: 2022-03-04
 modified: 2026-06-05
 tags:
-  - article
-  - linux
-  - linux-embedded
+  - type/article
+  - topic/linux
+  - topic/embedded-linux
 ---
 # Linux操作系统1
 

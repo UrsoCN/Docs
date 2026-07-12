@@ -2,9 +2,9 @@
 created: 2022-03-12
 modified: 2026-06-05
 tags:
-  - article
-  - docsify
-  - latex
+  - type/article
+  - topic/docsify
+  - topic/latex
 ---
 # 让docsify支持LaTeX
 

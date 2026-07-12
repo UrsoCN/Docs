@@ -2,8 +2,8 @@
 created: 2022-07-17
 modified: 2026-06-05
 tags:
-  - article
-  - rust
+  - type/article
+  - lang/rust
 ---
 # Hello, Cargo!
 

@@ -2,9 +2,9 @@
 created: 2022-04-12
 modified: 2026-06-05
 tags:
-  - article
-  - cuda
-  - wsl
+  - type/article
+  - topic/cuda
+  - topic/wsl
 ---
 # cuDNN
 

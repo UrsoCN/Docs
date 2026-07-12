@@ -2,9 +2,9 @@
 created: 2026-05-28
 modified: 2026-06-05
 tags:
-  - article
-  - javascript
-  - obsidian
+  - type/article
+  - lang/javascript
+  - topic/obsidian
 ---
 ## Agentic
 

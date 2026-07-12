@@ -2,8 +2,8 @@
 created: 2026-06-07 21:38:44 +0800
 modified: 2026-06-07 21:38:44 +0800
 tags:
-  - ai-summary
-  - article
+  - topic/ai
+  - type/article
 ---
 # reflect-hpp: C++14 静态反射与 JSON 序列化库
 

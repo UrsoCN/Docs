@@ -2,8 +2,8 @@
 created: 2022-03-16
 modified: 2026-06-05
 tags:
-  - article
-  - cpp
+  - type/article
+  - lang/cpp
 ---
 # NotesofCherno
 

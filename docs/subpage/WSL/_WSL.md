@@ -2,11 +2,11 @@
 created: 2022-02-27
 modified: 2026-06-05
 tags:
-  - cuda
-  - linux
-  - python
-  - topic-index
-  - wsl
+  - topic/cuda
+  - topic/linux
+  - lang/python
+  - type/moc
+  - topic/wsl
 ---
 # WSL
 

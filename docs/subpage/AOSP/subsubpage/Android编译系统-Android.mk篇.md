@@ -2,8 +2,8 @@
 created: 2024-02-27
 modified: 2026-06-05
 tags:
-  - aosp
-  - article
+  - topic/aosp
+  - type/article
 ---
 # Android编译系统-Android.mk篇
 

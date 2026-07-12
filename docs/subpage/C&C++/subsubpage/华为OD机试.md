@@ -2,9 +2,9 @@
 created: 2022-04-24
 modified: 2026-06-05
 tags:
-  - article
-  - cpp
-  - interview
+  - type/article
+  - lang/cpp
+  - topic/interview
 ---
 # 华为OD机试
 

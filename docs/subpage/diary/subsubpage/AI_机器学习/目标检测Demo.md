@@ -2,11 +2,11 @@
 created: 2022-04-14
 modified: 2026-06-05
 tags:
-  - article
-  - computer-vision
-  - docsify
-  - linux
-  - python
+  - type/article
+  - topic/cv
+  - topic/docsify
+  - topic/linux
+  - lang/python
 ---
 # 目标检测
 

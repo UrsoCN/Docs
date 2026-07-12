@@ -2,8 +2,8 @@
 created: 2022-02-27
 modified: 2026-06-05
 tags:
-  - article
-  - cpp
+  - type/article
+  - lang/cpp
 ---
 # 关于局部静态（Local Static）
 

@@ -2,12 +2,12 @@
 created: 2020-06-25
 modified: 2026-06-05
 tags:
-  - ai
-  - docsify
-  - latex
-  - obsidian
-  - python
-  - topic-index
+  - topic/ai
+  - topic/docsify
+  - topic/latex
+  - topic/obsidian
+  - lang/python
+  - type/moc
 ---
 # 日志
 

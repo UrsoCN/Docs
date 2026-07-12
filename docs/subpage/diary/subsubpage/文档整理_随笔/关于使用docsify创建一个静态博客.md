@@ -2,9 +2,9 @@
 created: 2022-02-27
 modified: 2026-06-05
 tags:
-  - article
-  - docsify
-  - javascript
+  - type/article
+  - topic/docsify
+  - lang/javascript
 ---
 # 关于使用docsify创建一个静态博客
 

@@ -2,9 +2,9 @@
 created: 2022-04-20
 modified: 2026-06-05
 tags:
-  - article
-  - cpp
-  - docsify
+  - type/article
+  - lang/cpp
+  - topic/docsify
 ---
 # Understanding lvalues and rvalues in C and C++ 理解C和C++中的左值和右值
 

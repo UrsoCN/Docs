@@ -2,11 +2,11 @@
 created: 2022-02-27
 modified: 2026-06-05
 tags:
-  - article
-  - docsify
-  - linux
-  - python
-  - wsl
+  - type/article
+  - topic/docsify
+  - topic/linux
+  - lang/python
+  - topic/wsl
 ---
 # 记载一次安装miniconda以及jupyter notebook
 

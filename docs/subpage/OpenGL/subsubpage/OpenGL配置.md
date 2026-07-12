@@ -2,9 +2,9 @@
 created: 2022-07-16
 modified: 2026-06-05
 tags:
-  - article
-  - graphics
-  - opengl
+  - type/article
+  - topic/graphics
+  - topic/opengl
 ---
 # OpenGL配置
 

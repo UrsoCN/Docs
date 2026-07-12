@@ -18,7 +18,7 @@
     <script src="https://cdn.bootcss.com/KaTeX/0.10.0/katex.min.js"></script> -->
     <link href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.css" rel="stylesheet" integrity="sha384-bsHo4/LA+lkZv61JspMDQB9QP1TtO4IgOf2yYS+J6VdAYLVyx1c3XKcsHh0Vy8Ws" crossorigin="anonymous">
     <!-- Docsify Table of Contents -->
-    <link rel="stylesheet" href="https://unpkg.com/docsify-toc@1.0.0/dist/toc.css">
+    <link rel="stylesheet" href="https://unpkg.com/docsify-plugin-toc@1.3.1/dist/light.css">
 <style>
   /* 修改整个文档的字体 */
   body, 
@@ -26,6 +26,12 @@
   .sidebar,
   .content {
     font-family: "Cascadia Code";
+  }
+  /* 为右侧固定 TOC 腾出空间 */
+  @media only screen and (min-width: 1300px) {
+    section.content {
+      padding-right: 260px;
+    }
   }
 </style>
 </head>
@@ -85,9 +91,8 @@
                 namespace: 'Docs',
             },
             toc: {
-                scope: '.markdown-section',
-                headings: 'h1, h2, h3, h4, h5, h6',
-                title: 'Table of Contents',
+                tocMaxLevel: 5,
+                target: 'h2, h3, h4, h5, h6',
             },
             sidebarDisplayLevel: 0,
 
@@ -120,7 +125,7 @@
     <script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
     <!-- PlantUML support for code block diagrams -->
     <script src="//unpkg.com/docsify-plantuml@1/dist/docsify-plantuml.min.js"></script>
-    <script src="https://unpkg.com/docsify-toc@1.0.0/dist/toc.js"></script>
+    <script src="https://unpkg.com/docsify-plugin-toc@1.3.1/dist/docsify-plugin-toc.min.js"></script>
 
 
 </body>

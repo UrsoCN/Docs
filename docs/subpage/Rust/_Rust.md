@@ -2,9 +2,9 @@
 created: 2022-07-17
 modified: 2026-06-05
 tags:
-  - embedded
-  - rust
-  - topic-index
+  - topic/embedded
+  - lang/rust
+  - type/moc
 ---
 # Rust
 
