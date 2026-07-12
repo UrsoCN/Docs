@@ -40,6 +40,7 @@
   - 工作_投资
     - [工作备份](./subpage/diary/subsubpage/工作_投资/工作备份.md)
     - [恒生科技指数重排](./subpage/diary/subsubpage/工作_投资/恒生科技指数重排.md)
+    - [牧原股份（002714）2026H1 深度分析：猪周期底部与寡头逻辑](./subpage/diary/subsubpage/工作_投资/牧原股份2026H1深度分析_猪周期底部与寡头逻辑.md)
   - 文档整理_随笔
     - [愚者-如何看待热搜“别再自我摆烂”?](./subpage/diary/subsubpage/文档整理_随笔/别再自我摆烂.md)
     - [关于使用docsify创建一个静态博客](./subpage/diary/subsubpage/文档整理_随笔/关于使用docsify创建一个静态博客.md)
@@ -58,11 +59,10 @@
     - [pytorchMobile源码解读](./subpage/diary/subsubpage/AI_机器学习/pytorchMobile源码解读.md)
 
 - [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)
-  - Agent 学习笔记
-    - [嵌入式开发学习笔记（总览）](./subpage/Linux&嵌入式/subsubpage/嵌入式开发学习笔记.md)
-    - [第 1 课：嵌入式系统是什么 + 本项目全局地图](./subpage/Linux&嵌入式/subsubpage/第_1_课：嵌入式系统是什么+本项目全局地图.md)
-    - [第 2 课：ESP32-S3 芯片与外设](./subpage/Linux&嵌入式/subsubpage/第_2_课：ESP32-S3芯片与外设.md)
-    - [第 3 课：FreeRTOS 实时操作系统](./subpage/Linux&嵌入式/subsubpage/第_3_课：FreeRTOS实时操作系统.md)
+  - [第 1 课：嵌入式系统是什么 + 本项目全局地图](./subpage/Linux&嵌入式/subsubpage/第_1_课：嵌入式系统是什么+本项目全局地图.md)
+  - [第 2 课：ESP32-S3 芯片与外设](./subpage/Linux&嵌入式/subsubpage/第_2_课：ESP32-S3芯片与外设.md)
+  - [第 3 课：FreeRTOS 实时操作系统](./subpage/Linux&嵌入式/subsubpage/第_3_课：FreeRTOS实时操作系统.md)
+  - [嵌入式开发学习笔记](./subpage/Linux&嵌入式/subsubpage/嵌入式开发学习笔记.md)
   - 嵌入式
     - [嵌入式系统1](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告1.md)
     - [嵌入式系统2](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告2.md)

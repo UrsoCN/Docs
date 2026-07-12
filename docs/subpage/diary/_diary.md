@@ -45,8 +45,4 @@ tags:
 
 - [工作备份](subsubpage/工作_投资/工作备份.md)
 - [恒生科技指数重排](subsubpage/工作_投资/恒生科技指数重排.md)
-
----
-
-###### 分类导航（标签图）
-> `#docsify` `#computer-vision` `#python` `#academic` `#physics` `#latex` `#investment` `#machine-learning` `#obsidian`
+- [牧原股份2026H1深度分析_猪周期底部与寡头逻辑](subsubpage/工作_投资/牧原股份2026H1深度分析_猪周期底部与寡头逻辑.md)
