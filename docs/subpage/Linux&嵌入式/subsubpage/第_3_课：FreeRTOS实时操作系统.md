@@ -607,6 +607,507 @@ ESP-IDF 对 FreeRTOS 做了一些重要的扩展：
 
 ---
 
+## 十三、FreeRTOS 内存管理 — heap_caps_malloc 与"内存在哪"的烦恼
+
+### 13.1 FreeRTOS 的五种堆模型
+
+FreeRTOS 内核内存分配有 5 种可选方案（`heap_1.c` ~ `heap_5.c`）：
+
+| 方案 | 特点 | 适用于 |
+|:----:|------|--------|
+| `heap_1` | 只能分配不能释放，最简单 | 最小系统，对象全在创建时一次性配好 |
+| `heap_2` | 可分配可释放，但不合并相邻空闲块 | 早期 FreeRTOS 项目 |
+| `heap_3` | 包装 `malloc/free`，线程安全 | 有标准 C `malloc` 的平台 |
+| `heap_4` | 可分配释放 + **空闲块合并** | **最常见**，避免内存碎片 |
+| `heap_5` | `heap_4` + 多块非连续内存 | 同时有片内 SRAM *和* PSRAM 的系统 |
+
+> **ESP-IDF 的默认方案是 `heap_4`** ——本项目也不例外。ESP-IDF 在此基础上增加了一个重要层次：**能力标签 (caps)**。
+
+### 13.2 问题：ESP32-S3 不止一块内存
+
+回顾第 2 课的存储章节：ESP32-S3 有 512KB 片内 SRAM 和 8MB 片外 PSRAM。**标准 `malloc` 只知道从片内 SRAM 分配**——如果你的模型文件 3.7MB，`malloc(3700000)` 直接返回 NULL。
+
+```c
+// 普通 malloc → 只从片内 SRAM 分配
+void *buf = malloc(3700000);  // → NULL！512KB 装不下
+```
+
+这就是 `heap_caps_malloc()` 的用武之地——ESP-IDF 扩展，**让你指定分配在哪类内存上**。
+
+```c
+void *heap_caps_malloc(size_t size, uint32_t caps);
+
+// 常用 caps ：
+MALLOC_CAP_INTERNAL    // 片内 SRAM（快，少）
+MALLOC_CAP_SPIRAM      // 片外 PSRAM（大，慢）
+MALLOC_CAP_8BIT        // 必须支持字节寻址（PSRAM 支持）
+MALLOC_CAP_DMA         // 必须支持 DMA 访问
+```
+
+### 13.3 本项目的实战模式
+
+这是在 `xvf_multinet.c` 中加载语音识别模型的真实分配逻辑：
+
+```c
+// 第 1 步：优先用 PSRAM（容量充足）
+s_detect_buf = heap_caps_malloc(
+    s_chunk_size * sizeof(int16_t),         // ~65KB
+    MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT     // PSRAM + 字节寻址
+);
+
+// 第 2 步：PSRAM 不可用时，fallback 到片内 SRAM
+if (!s_detect_buf) {
+    s_detect_buf = malloc(s_chunk_size * sizeof(int16_t));
+}
+
+// 第 3 步：还不成功才报错
+if (!s_detect_buf) {
+    ESP_LOGE(TAG, "No memory for detect buffer");
+    return ESP_ERR_NO_MEM;
+}
+```
+
+> **关键是分层 fallback：PSRAM → 片内 SRAM → 报错**。不是直接报 `oom`。
+
+### 13.4 堆"从哪里来"的可视化
+
+```mermaid
+flowchart TD
+    API["malloc / free<br/>heap_caps_malloc / heap_caps_free<br/>calloc"]
+    API --> LAYER[ESP-IDF 堆分配层<br/>根据 caps 参数路由]
+    LAYER -->|caps=INTERNAL| INT["片内 SRAM 堆<br/>~362KB"]
+    LAYER -->|caps=SPIRAM| EXT["片外 PSRAM 堆<br/>~8MB"]
+    LAYER -->|caps混用| BOTH["两处都尝试"]
+
+    INT -->|"FreeRTOS heap_4<br/>空闲块合并"| SRAM[片内 SRAM 物理内存]
+    EXT --> PSRAM[片外 PSRAM 物理内存]
+```
+
+### 13.5 关键配置值
+
+从本项目的 `sdkconfig`：
+
+| 配置 | 值 | 含义 |
+|------|:---:|------|
+| `CONFIG_SPIRAM_USE_MALLOC` | y | `malloc()` 可自动从 PSRAM 分配（透明化） |
+| `CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL` | 16384 | 小于 16KB 的分配优先走片内 SRAM |
+| `CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL` | 32768 | 始终保留 32KB 片内 SRAM 给内核 |
+| `CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY` | y | 任务栈可分配到 PSRAM |
+| `CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM` | y | 任务 TCB 和栈可在 PSRAM 分配 |
+
+> **设计意图**：小分配（<16KB）走快内存，大分配（模型文件、DMA缓冲）走大内存。这 32KB 保留空间确保即使 PSRAM 被大量分配，内核关键操作也有片内 SRAM 可用。
+
+### 13.6 运行时查内存
+
+```c
+// 查看片内 SRAM 剩余
+size_t free_internal = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+
+// 查看 PSRAM 剩余
+size_t free_psram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+
+// 本项目在 OTA 开始前检查（xvf_ota.c:172）
+ESP_LOGI(TAG, "Free mem: internal=%lu, psram=%lu",
+         (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+         (unsigned long)heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+```
+
+---
+
+## 十四、EventGroup — 等"多个条件同时满足"
+
+### 14.1 概念
+
+队列是等一条消息。信号量是等一个信号。**EventGroup 是等一组条件中某几个同时满足**。
+
+```mermaid
+flowchart LR
+    subgraph TASK[任务 — 等待]
+        WAIT[xEventGroupWaitBits<br/>等 bit0 AND bit1]
+    end
+
+    subgraph EVT[事件组 32-bit]
+        B0[bit0: 文件系统初始化完成]
+        B1[bit1: WiFi 连接成功]
+        B2[bit2: NTP 时间同步完成]
+    end
+
+    subgraph ISR1[TASK_A 设置]
+        S1["做完初始化 → xEventGroupSetBits(evt, BIT0)"]
+    end
+    subgraph ISR2[TASK_B 设置]
+        S2["WiFi 连上 → xEventGroupSetBits(evt, BIT1)"]
+    end
+
+    S1 --> B0
+    S2 --> B1
+    B0 & B1 --> WAIT
+```
+
+### 14.2 API 概览
+
+```c
+// 创建事件组
+EventGroupHandle_t evt = xEventGroupCreate();
+
+// 设置 bit（从任务）
+xEventGroupSetBits(evt, BIT0);
+// 设置 bit（从 ISR）
+xEventGroupSetBitsFromISR(evt, BIT0, &xHigherPriorityTaskWoken);
+
+// 等待 bit（多个选项）
+EventBits_t bits = xEventGroupWaitBits(
+    evt,
+    BIT0 | BIT1,     // 等 bit0 和 bit1
+    pdTRUE,           // 消费模式：读完后清空
+    pdTRUE,           // 等 ALL bits（AND）；pdFALSE = 等 ANY bits（OR）
+    portMAX_DELAY     // 永久等待
+);
+```
+
+### 14.3 AND vs OR 逻辑
+
+| 模式 | 含义 | 例子 |
+|:----:|------|------|
+| `pdTRUE` (AND) | 所有指定位都置 1 时才返回 | 系统启动：等 SPIFFS **且** WiFi **且** PSRAM 都就绪 |
+| `pdFALSE` (OR) | 任意位被置 1 就返回 | 错误处理：等按键 **或** 网络断开 **或** 超时中任一触发 |
+
+> **AND 模式是 EventGroup 最独特的价值**——其他 IPC 机制做不到"同时等多个条件都满足才继续"。
+
+### 14.4 典型场景：启动序列同步
+
+```c
+// 三个后台任务各自做初始化，做完后"亮灯"
+void wifi_init_task(void *pv) {
+    wifi_connect();
+    xEventGroupSetBits(g_boot_evt, WIFI_READY_BIT);  // bit 0 = 1
+    vTaskDelete(NULL);
+}
+
+void filesystem_init_task(void *pv) {
+    spiffs_mount();
+    xEventGroupSetBits(g_boot_evt, FS_READY_BIT);    // bit 1 = 1
+    vTaskDelete(NULL);
+}
+
+void model_init_task(void *pv) {
+    load_model_into_psram();
+    xEventGroupSetBits(g_boot_evt, MODEL_READY_BIT);  // bit 2 = 1
+    vTaskDelete(NULL);
+}
+
+// 主任务等全部三个就绪
+void main_init_task(void *pv) {
+    xEventGroupWaitBits(g_boot_evt, 
+                        WIFI_READY_BIT | FS_READY_BIT | MODEL_READY_BIT,
+                        pdTRUE,   // 清空已消费的 bits
+                        pdTRUE,   // AND — 三个都要
+                        pdMS_TO_TICKS(30000));  // 最多等 30 秒
+        
+    ESP_LOGI("MAIN", "All subsystems ready, starting main loop");
+}
+```
+
+> 本项目**没有用 EventGroup**——它的初始化顺序是严格的串行依赖，不需要并行等。但你在开发稍复杂的系统时，EventGroup 是第一个要考虑的"多源同步"工具。
+
+---
+
+## 十五、软件定时器（Software Timer）
+
+### 15.1 概念：不用独立任务就能实现周期操作
+
+如果一个任务只做"每 X ms 检查一次某件事"，那就浪费了一个任务栈和 TCB。**软件定时器**让你注册一个回调函数，由 FreeRTOS 内核自动周期调用。
+
+```c
+// 不需要开独立任务 + 写 while(1) + vTaskDelay
+// 三行就搞定！
+TimerHandle_t timer = xTimerCreate(
+    "myTimer",                       // 名称
+    pdMS_TO_TICKS(1000),             // 周期：1000ms
+    pdTRUE,                          // pdTRUE=自动重载, pdFALSE=一次性
+    (void *)0,                       // 传入回调的参数
+    myTimerCallback                  // 回调函数
+);
+xTimerStart(timer, 0);
+```
+
+### 15.2 回调在哪里执行？
+
+```mermaid
+flowchart LR
+    TICK["Tick ISR<br/>每 1ms"] -->|"发现定时器到期"| QUEUE["定时器命令队列"]
+    QUEUE -->|"添加到"| TMR["Timer 服务任务<br/>prio 1, stack 2048"]
+    TMR -->|"串行调用"| CB["myTimerCallback()"]
+```
+
+> **回调不在 Tick ISR 中执行，也不在你的任务中执行——它在"Timer 服务任务"中执行！** 这是关键：你的回调必须快，因为**所有定时器共享这一个任务**，一个慢回调会堵住其他所有定时器。
+
+### 15.3 本项目的配置
+
+```c
+CONFIG_FREERTOS_USE_TIMERS=y
+CONFIG_FREERTOS_TIMER_TASK_PRIORITY=1        // 低优先级（不影响音频 I/O）
+CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH=2048  // 2KB 栈
+CONFIG_FREERTOS_TIMER_QUEUE_LENGTH=10        // 最多排队 10 个定时器事件
+```
+
+### 15.4 何时用 Timer vs 独立 Task？
+
+| 场景 | 用 Timer | 用独立 Task |
+|------|:--:|:--:|
+| 每 N ms 做一件很短的事（翻转 LED、看门狗喂狗） | ✅ | ❌ 重了 |
+| 操作涉及阻塞等待（等队列、等 I2C 应答） | ❌ 会堵住其他 Timer | ✅ |
+| 需要维护状态变量跨周期（计数器、滤波值） | ❌ 状态管理在回调里难做 | ✅ |
+| 需要被暂停/恢复/动态改周期 | ✅ 内置 API 支持 | ❌ 需要自己实现 |
+
+### 15.5 一次性定时器：延时执行
+
+```c
+// "3 秒后执行一次回调，然后自动删除"
+TimerHandle_t once = xTimerCreate("once", pdMS_TO_TICKS(3000), pdFALSE, 0, callback);
+xTimerStart(once, 0);
+// 3s 后 callback 被调用 → 定时器自动停止 → 只需手动 xTimerDelete()
+```
+
+> 本项目未使用软件定时器——它需要精确周期（`vTaskDelayUntil`）和阻塞等待（I2C 通信），适合独立任务而非定时器回调。
+
+---
+
+## 十六、Task 的实现细节与设计哲学
+
+这部分不是教 API，而是让你理解 **xTaskCreate 调用时，FreeRTOS 内核在背后做了什么**。理解这些能让你的任务设计更有把握。
+
+### 16.1 TCB（Task Control Block）— 任务的内核身份证
+
+每个任务的 TCB = 一个 C 结构体，约 100+ 字节（精简版）：
+
+```c
+// 简化版 TCB 结构（仅核心字段）
+typedef struct tskTaskControlBlock {
+    volatile StackType_t *pxTopOfStack;   // ① 当前栈顶指针（上下文切换的关键！）
+    ListItem_t            xStateListItem; // ② 挂在"就绪/阻塞/挂起"链表上
+    ListItem_t            xEventListItem; // ③ 挂在"等待事件"链表上（如有）
+    UBaseType_t           uxPriority;     // ④ 当前优先级
+    StackType_t           *pxStack;       // ⑤ 栈底部（起始地址）
+    char                  pcTaskName[16]; // ⑥ 任务名（调试用）
+    TaskHandle_t          xTaskHandle;    // ⑦ 自引用句柄
+    // ... SMP 扩展字段（核心亲和性等）...
+} tskTCB;
+```
+
+```mermaid
+flowchart TD
+    subgraph TCB["TCB 在内存中的关系"]
+        direction LR
+        STACK["任务专用栈
+        ┌─────────────┐
+        │ 局部变量     │ ← 栈生长方向
+        │ 函数调用帧   │
+        │ 上下文快照   │
+        │ (寄存器保存)  │
+        ├─────────────┤
+        │ 空闲区域     │
+        │ CANARY 哨兵  │
+        └─────────────┘"]
+        TCB_STRUCT["TCB 结构体
+        pxTopOfStack ──→ 栈顶
+        pxStack ───────→ 栈底
+        uxPriority=5
+        pcTaskName='ds_dsp'
+        链表节点 ─────→ 就绪/阻塞链表"]
+    end
+```
+
+### 16.2 xTaskCreate 内部：到底做了什么
+
+```c
+// xTaskCreate 的精简内核流程
+// （实际比这复杂得多，仅示核心步骤）
+
+BaseType_t xTaskCreate(...)
+{
+    // ① 分配 TCB（如 CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM=y，可能在 PSRAM）
+    TCB_t *pxNewTCB = pvPortMalloc(sizeof(TCB_t));
+
+    // ② 分配任务栈（StackType_t 是 32-bit 字）
+    //    usStackDepth=4096 → 4096 × 4 = 16384 字节
+    StackType_t *pxStack = pvPortMalloc(usStackDepth * sizeof(StackType_t));
+
+    // ③ 初始化栈：在栈顶写入"假上下文"——假装任务被某个 ISR 打断过
+    //    这样当调度器第一次"恢复"这个任务时，就会跳到任务函数的入口
+    pxNewTCB->pxTopOfStack = pxPortInitialiseStack(
+        pxStack,             // 栈底
+        pvTaskCode,          // 任务函数（要"跳"过去）
+        pvParameters         // 参数
+    );
+
+    // ④ 填充 TCB 元数据
+    pxNewTCB->uxPriority = uxPriority;
+    strncpy(pxNewTCB->pcTaskName, pcName, 16);
+    pxNewTCB->pxStack = pxStack;
+
+    // ⑤ 把 TCB 挂到对应优先级的就绪链表中
+    prvAddTaskToReadyList(pxNewTCB);
+
+    // ⑥ 如果新任务优先级 > 当前任务 → 触发 PendSV 上下文切换
+    if (uxPriority > pxCurrentTCB->uxPriority) {
+        portYIELD();  // 触发 PendSV
+    }
+
+    return pdPASS;
+}
+```
+
+> **关键洞见**：创建任务时**它还没有运行过**。内核在栈上伪造了一个"刚被中断打断"的状态——包含初始程序计数器（PC = 任务函数地址）、初始栈指针、初始状态寄存器等。当调度器通过 PendSV "恢复"这个任务时，CPU 就"回到"了任务函数的入口，开始执行。
+
+### 16.3 PendSV — 上下文切换的幕后之手
+
+上下文切换不是通过函数调用来做的——函数调用需要主动调用。**必须有一个不可抗拒的机制强制切走当前任务**。ARM Cortex-M 的答案是一个特殊异常：**PendSV（可挂起的系统调用异常）**。
+
+```mermaid
+sequenceDiagram
+    participant TICK as SysTick ISR
+    participant HW as 硬件(NVIC)
+    participant ISR as PendSV Handler
+    participant OLD as 旧任务
+    participant NEW as 新任务
+
+    Note over OLD: 正在运行
+
+    TICK->>HW: ① Tick 中断到达，发现应切换
+    TICK->>HW: ② 触发 PendSV 异常（不直接切换！）
+    TICK-->>OLD: ③ SysTick ISR 返回
+
+    Note over HW: PendSV 优先级最低<br/>等所有其他中断完成
+
+    HW->>ISR: ④ 所有中断完成，PendSV 获得执行权
+    ISR->>ISR: ⑤ 保存旧任务上下文到 old_tcb->pxTopOfStack
+    ISR->>ISR: ⑥ 从 new_tcb->pxTopOfStack 恢复新任务上下文
+    ISR-->>NEW: ⑦ PendSV 返回 → 硬件自动弹出栈帧 → 新任务开始执行
+```
+
+> **PendSV 的设计精髓**：
+> - 它是**软件可触发**的（`portYIELD()` → 置位 PendSV 挂起位）
+> - 它的优先级被设为**最低**（所有 ISR 都比它高）
+> - 结果：ISR 首先完成自己的紧急工作，然后**在 ISR 返回时顺带做任务切换**——不会阻塞硬件中断的响应
+>
+> 这就是为什么你在 ISR 结尾调用 `portYIELD_FROM_ISR()`：它不是在 ISR 内部立刻切换，而是设置一个"记得切换"的标志。PendSV 会在 ISR 完全退出后才处理。
+
+### 16.4 就绪链表 — 调度器的"任务目录"
+
+每个优先级对应一个就绪链表——调度器不需要遍历所有任务来找最高优先级：
+
+```c
+// FreeRTOS 内核中的就绪链表结构（简化）
+// 假设 configMAX_PRIORITIES = 25（本项目的值）
+
+List_t pxReadyTasksLists[25];  // pxReadyTasksLists[14] = 所有 prio 14 的就绪任务
+
+// 还有两个特殊链表：
+List_t xDelayedTaskList1;      // 正在等待延时过期的任务
+List_t xDelayedTaskList2;      // 等待队列/信号量的任务
+List_t xPendingReadyList;      // 刚从 ISR 中释放的待就绪任务
+```
+
+```
+调度的第一步：找到最高非空优先级
+    pxReadyTasksLists[24] → 空
+    pxReadyTasksLists[15] → [TinyUSB]       ← 24-bit 位图中 bit 15=1
+    pxReadyTasksLists[14] → [usb_mic → usb_spk]  ← bit 14=1
+    ...
+```
+
+> 为了加速查找，FreeRTOS 使用了一个 **32-bit 位图**：`uxTopReadyPriority` 的某个 bit = 1 表示该优先级有就绪任务。`__builtin_clz()` 一条 CPU 指令就能定位最高非零 bit。这意味着**找到下一个要跑的任务是 O(1) 操作**——不管系统有多少个任务。
+
+### 16.5 栈帧的真相 — 任务"睡着"时长什么样
+
+当一个任务不运行时，它的栈顶保存着一个完整的 CPU 上下文快照：
+
+```
+低地址（栈底）
+┌──────────────────┐
+│    任务栈内容     │  ← 局部变量、函数调用帧
+│    (实际使用)    │
+├──────────────────┤  ← pxTopOfStack 指向这里
+│    R4            │  ← 被调用者保存寄存器（自动）
+│    R5            │
+│    R6            │
+│    R7            │
+│    R8            │
+│    R9            │
+│    R10           │
+│    R11           │
+│    R0 (返回值)    │
+│    R1            │
+│    R2            │
+│    R3            │
+│    R12           │
+│    LR (返回地址)  │  ← 函数调用时的链接寄存器
+│    PC (下一条指令)│  ← 程序计数器
+│    xPSR (状态)   │  ← CPU 状态寄存器
+├──────────────────┤  ← 栈顶（高地址）
+│   未使用的空间    │
+│   ...            │
+│   CANARY (哨兵)  │  ← 溢出检测用的魔法值
+└──────────────────┘
+高地址（栈顶）
+```
+
+> **"上下文切换"的本质**：把当前 CPU 的 16 个核心寄存器值压入当前任务栈 → 切换 `pxCurrentTCB` → 从新任务栈弹出寄存器值 → `BX LR` 跳转到新任务最后停下的位置。这一切由 PendSV Handler 完成，约 **<1 μs**。
+
+### 16.6 设计哲学：为什么任务不只做一次就退出？
+
+回到 FreeRTOS 的设计精神。任务不是函数调用——它更像一个**独立的线程**。
+
+```c
+// ❌ 反模式：任务是"一次性执行"
+void bad_task(void *pv) {
+    do_something();
+    return;  // 返回后 TCB 变成僵尸——除非显式 vTaskDelete(NULL)
+}
+
+// ✅ 正确模式：任务是"永恒的循环"  
+void good_task(void *pv) {
+    // 只运行一次的初始化
+    init();
+
+    while (1) {
+        // ① 等事件（阻塞，让出 CPU）
+        wait_for_event();
+        // ② 处理事件
+        handle();
+        // ③ 回到 ① 等待下一个事件
+        //    这期间 CPU 可能去跑其他任务
+    }
+}
+```
+
+> **任务 = 事件循环**。每个任务都是"等着做某件事"的永久循环。不做任何事的时候，任务处于 Blocked 状态——不消耗 CPU。这就是 RTOS 比 Super Loop 高效的根源：**不做事的时候，CPU 完全不消耗在你身上**。
+
+### 16.7 任务删除与清理
+
+任务可以删除自己（`vTaskDelete(NULL)`），或被其他任务删除。关键问题：**谁负责释放任务的栈和 TCB？**
+
+```c
+// 删除自己
+void one_shot_task(void *pv) {
+    do_something_once();
+    vTaskDelete(NULL);   // ① 标记为删除，但栈在 *这一刻* 还被占用
+    // ② 永远不会执行到这里——vTaskDelete 不返回
+}
+
+// 删除其他任务
+void manager_task(void *pv) {
+    // ...
+    vTaskDelete(worker_handle);
+    // worker 的栈和 TCB 由空闲任务（Idle Task）负责回收
+}
+```
+
+> FreeRTOS 中，被删除任务的资源（栈、TCB）**由 Idle Task 回收**，不是被调用 `vTaskDelete` 的任务回收。这保证了即使任务是删除自己——资源也能被正确释放。ESP-IDF 还提供 `CONFIG_FREERTOS_TASK_FUNCTION_WRAPPER=y`，在任务意外返回时自动调用 `vTaskDelete(NULL)`，防止僵尸 TCB 泄漏。
+
+---
+
 ## 课后思考题
 
 1. 如果你这个项目只有一个核心（Core 1 不存在），TinyUSB 任务（prio 15）和 usb_spk_task（prio 14）在同一个核上——usb_spk_task 会饿死吗？
@@ -614,3 +1115,6 @@ ESP-IDF 对 FreeRTOS 做了一些重要的扩展：
 3. 如果 `CONFIG_FREERTOS_HZ` 改为 100（10ms tick），对系统中哪个任务影响最大？
 4. 为什么可以用 Task Notification 代替 Binary Semaphore？性能优势来自哪里？
 5. 本项目 7 个任务中，为什么 `ota_flash` 的栈（8192）是其他任务的两倍？
+6. `heap_caps_malloc(size, MALLOC_CAP_SPIRAM)` 失败后为什么还要 fallback 到 `malloc()`？两者有什么本质区别？
+7. 软件定时器的回调函数中，调用 `vTaskDelay` 会发生什么？为什么？
+8. PendSV 为什么优先级必须设为最低？如果设得比 SysTick 还高会怎样？
