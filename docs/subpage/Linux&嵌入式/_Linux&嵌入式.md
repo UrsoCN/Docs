@@ -40,4 +40,7 @@ source file [here](https://github.com/UrsoCN/Docs/tree/master/docs/subpage/Linux
 ## Agent 学习笔记
 
 - [嵌入式开发学习笔记](./subsubpage/嵌入式开发学习笔记.md)
+- [第 1 课：嵌入式系统是什么 + 本项目全局地图](./subsubpage/第_1_课：嵌入式系统是什么+本项目全局地图.md)
+- [第 2 课：ESP32-S3 芯片与外设](./subsubpage/第_2_课：ESP32-S3芯片与外设.md)
+- [第 3 课：FreeRTOS 实时操作系统](./subsubpage/第_3_课：FreeRTOS实时操作系统.md)
 

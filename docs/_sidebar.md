@@ -59,7 +59,10 @@
 
 - [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)
   - Agent 学习笔记
-    - [嵌入式开发学习笔记](./subpage/Linux&嵌入式/subsubpage/嵌入式开发学习笔记.md)
+    - [嵌入式开发学习笔记（总览）](./subpage/Linux&嵌入式/subsubpage/嵌入式开发学习笔记.md)
+    - [第 1 课：嵌入式系统是什么 + 本项目全局地图](./subpage/Linux&嵌入式/subsubpage/第_1_课：嵌入式系统是什么+本项目全局地图.md)
+    - [第 2 课：ESP32-S3 芯片与外设](./subpage/Linux&嵌入式/subsubpage/第_2_课：ESP32-S3芯片与外设.md)
+    - [第 3 课：FreeRTOS 实时操作系统](./subpage/Linux&嵌入式/subsubpage/第_3_课：FreeRTOS实时操作系统.md)
   - 嵌入式
     - [嵌入式系统1](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告1.md)
     - [嵌入式系统2](./subpage/Linux&嵌入式/subsubpage/嵌入式/嵌入式系统实验报告2.md)
