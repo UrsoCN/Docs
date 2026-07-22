@@ -43,4 +43,5 @@ source file [here](https://github.com/UrsoCN/Docs/tree/master/docs/subpage/Linux
 - [第 1 课：嵌入式系统是什么 + 本项目全局地图](./subsubpage/第_1_课：嵌入式系统是什么+本项目全局地图.md)
 - [第 2 课：ESP32-S3 芯片与外设](./subsubpage/第_2_课：ESP32-S3芯片与外设.md)
 - [第 3 课：FreeRTOS 实时操作系统](./subsubpage/第_3_课：FreeRTOS实时操作系统.md)
+- [第 4 课：ESP-IDF 开发框架与工具链](./subsubpage/第_4_课：ESP-IDF开发框架与工具链.md)
 

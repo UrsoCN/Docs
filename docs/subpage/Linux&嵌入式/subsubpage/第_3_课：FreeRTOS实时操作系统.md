@@ -192,15 +192,15 @@ flowchart TB
     DSP -.->|JSON 命令| CDC
 ```
 
-| 任务名 | 函数 | 栈 | 优先级 | 核心 | 做什么 |
-|--------|------|:--:|:-----:|:----:|--------|
-| `doa_vad` | `doa_vad_task` | 4096 | 5 | **1** | 轮询 XVF3800 读取声源方向和人声状态，1 Hz |
-| `TinyUSB` | `tusb_device_task` | 4096 | **15** | **1** | 运行 TinyUSB 设备协议栈（处理枚举/控制传输） |
-| `usb_mic_task` | `usb_mic_task` | 4096 | **14** | **0** | I2S 麦克风数据 → USB IN 端点 |
-| `usb_spk_task` | `usb_spk_task` | 4096 | **14** | **0** | USB OUT 端点 → I2S 扬声器 |
-| `ds_dsp` | `dsp_consumer_task` | 4096 | **5** | **0** | NS 降噪 + AGC + MultiNet 关键词识别 |
-| `spk_wdog` | `spk_watchdog_task` | 2048 | **3** | **0** | 无音频时填充静音，防止 I2S TX DMA 饥饿 |
-| `ota_flash` | `ota_flash_task` | **8192** | **3** | **0** | 通过 CDC 接收固件数据，写入 SPI Flash |
+| 任务名            | 函数                  |    栈     |  优先级   |  核心   | 做什么                          |
+| -------------- | ------------------- | :------: | :----: | :---: | ---------------------------- |
+| `doa_vad`      | `doa_vad_task`      |   4096   |   5    | **1** | 轮询 XVF3800 读取声源方向和人声状态，1 Hz  |
+| `TinyUSB`      | `tusb_device_task`  |   4096   | **15** | **1** | 运行 TinyUSB 设备协议栈（处理枚举/控制传输）  |
+| `usb_mic_task` | `usb_mic_task`      |   4096   | **14** | **0** | I2S 麦克风数据 → USB IN 端点        |
+| `usb_spk_task` | `usb_spk_task`      |   4096   | **14** | **0** | USB OUT 端点 → I2S 扬声器         |
+| `ds_dsp`       | `dsp_consumer_task` |   4096   | **5**  | **0** | NS 降噪 + AGC + MultiNet 关键词识别 |
+| `spk_wdog`     | `spk_watchdog_task` |   2048   | **3**  | **0** | 无音频时填充静音，防止 I2S TX DMA 饥饿    |
+| `ota_flash`    | `ota_flash_task`    | **8192** | **3**  | **0** | 通过 CDC 接收固件数据，写入 SPI Flash   |
 
 ### 设计分析
 
@@ -222,7 +222,7 @@ prio  3  spk_wdog  +  ota_flash          ← 后台任务，最低
 
 ### 任务创建背后的配置驱动
 
-本项目中，小米（MIC）、扬声器（SPK）、TinyUSB 的优先级和核心亲和性**不写在代码里死**，而是通过 Kconfig 配置驱动：
+本项目中，麦克风（MIC）、扬声器（SPK）、TinyUSB 的优先级和核心亲和性**不写在代码里死**，而是通过 Kconfig 配置驱动：
 
 ```c
 // 实际调用（来自 usb_device_uac.c）
@@ -875,236 +875,1128 @@ xTimerStart(once, 0);
 
 ## 十六、Task 的实现细节与设计哲学
 
-这部分不是教 API，而是让你理解 **xTaskCreate 调用时，FreeRTOS 内核在背后做了什么**。理解这些能让你的任务设计更有把握。
+以下从数据结构 → API → 内核 → 汇编 → 硬件，**逐层拆解一个 task 从创建到运行的完整生命周期**。这不是教 API，而是让你理解 FreeRTOS 内核的"骨架肌肉"。
 
-### 16.1 TCB（Task Control Block）— 任务的内核身份证
+> **三层抽象总览**：
 
-每个任务的 TCB = 一个 C 结构体，约 100+ 字节（精简版）：
+| 层       | 负责什么                   | 对应文件                   |
+| ------- | ---------------------- | ---------------------- |
+| **内核层** | TCB、链表、调度算法、状态转换       | `tasks.c`              |
+| **移植层** | 栈初始化、PendSV 汇编、寄存器操作   | `port.c` / `portASM.S` |
+| **硬件层** | ARM 异常模型（NVIC）、自动压栈/出栈 | ARM 核心                 |
+
+---
+
+### 16.1 TCB — 任务在内存中的"户口本"
+
+每个任务对应一个 TCB（Task Control Block），是 FreeRTOS 内核中最重要的数据结构：
 
 ```c
-// 简化版 TCB 结构（仅核心字段）
-typedef struct tskTaskControlBlock {
-    volatile StackType_t *pxTopOfStack;   // ① 当前栈顶指针（上下文切换的关键！）
-    ListItem_t            xStateListItem; // ② 挂在"就绪/阻塞/挂起"链表上
-    ListItem_t            xEventListItem; // ③ 挂在"等待事件"链表上（如有）
-    UBaseType_t           uxPriority;     // ④ 当前优先级
-    StackType_t           *pxStack;       // ⑤ 栈底部（起始地址）
-    char                  pcTaskName[16]; // ⑥ 任务名（调试用）
-    TaskHandle_t          xTaskHandle;    // ⑦ 自引用句柄
-    // ... SMP 扩展字段（核心亲和性等）...
+// FreeRTOS tasks.c 中的真实定义（精简核心字段）
+typedef struct tskTaskControlBlock
+{
+    volatile StackType_t *pxTopOfStack;  /* ← 整个 RTOS 最关键的单一个指针！
+                                            指向任务栈顶的寄存器保存区 */
+
+    ListItem_t            xStateListItem; /* 挂在就绪/阻塞/挂起链表上
+                                             通过这个节点找到"该链表还有谁" */
+    ListItem_t            xEventListItem; /* 挂在事件等待链表上（队列/信号量阻塞时用）
+                                             通过这个节点，内核在事件到达时找到"谁在等" */
+
+    UBaseType_t           uxPriority;     /* 当前优先级（可能是继承后被抬高的）*/
+    StackType_t           *pxStack;       /* 栈底部（起始地址）——释放栈时用 */
+    char                  pcTaskName[16]; /* 任务名，调试用（本项目最多 16 字符）*/
+
+    UBaseType_t           uxBasePriority; /* 原始优先级——继承取消后恢复为此值 */
+
+    #if (configUSE_MUTEXES == 1)
+        TaskHandle_t      xMutexHolder;   /* 当前被该任务持有的互斥锁（用于优先级继承）*/
+    #endif
+
+    #if (configNUM_CORES > 1)
+        UBaseType_t       uxCoreAffinityMask; /* SMP：核心亲和性位图（本项目用！）*/
+    #endif
+
+    /* ... 更多统计和调试字段 ... */
 } tskTCB;
+
+// 句柄本质上就是指向 TCB 的指针
+typedef struct tskTaskControlBlock *TaskHandle_t;
 ```
 
 ```mermaid
-flowchart TD
-    subgraph TCB["TCB 在内存中的关系"]
-        direction LR
-        STACK["任务专用栈
-        ┌─────────────┐
-        │ 局部变量     │ ← 栈生长方向
-        │ 函数调用帧   │
-        │ 上下文快照   │
-        │ (寄存器保存)  │
-        ├─────────────┤
-        │ 空闲区域     │
-        │ CANARY 哨兵  │
-        └─────────────┘"]
-        TCB_STRUCT["TCB 结构体
-        pxTopOfStack ──→ 栈顶
-        pxStack ───────→ 栈底
-        uxPriority=5
-        pcTaskName='ds_dsp'
-        链表节点 ─────→ 就绪/阻塞链表"]
+flowchart LR
+    subgraph TCB_MEM["TCB 在内存中的关系"]
+        subgraph STACK["任务专用栈（高地址 → 低地址）"]
+            direction TB
+            s1["🔝 栈顶（高地址）"]
+            s2["未使用空间"]
+            s3["🛡️ CANARY 哨兵"]
+            s4["被调用者保存寄存器<br/>R4 – R11"]
+            s5["调用者保存寄存器<br/>R0-R3, R12, LR, PC, xPSR<br/>📌 pxTopOfStack"]
+            s6["局部变量 / 函数调用帧<br/>⬇ 栈生长方向"]
+            s7["🔽 栈底（低地址）<br/>📌 pxStack"]
+            s1 --> s2 --> s3 --> s4 --> s5 --> s6 --> s7
+        end
+
+        subgraph TCB_STRUCT["TCB 结构体"]
+            direction TB
+            t1["pxTopOfStack"]
+            t2["pxStack"]
+            t3["uxPriority = 5"]
+            t4["uxBasePriority = 5"]
+            t5["pcTaskName = 'ds_dsp'"]
+            t6["uxCoreAffinityMask = 0x01 → Core 0"]
+            t7["xStateListItem → ReadyList[5]"]
+            t8["xEventListItem → 未使用"]
+            t1 --> t2 --> t3 --> t4 --> t5 --> t6 --> t7 --> t8
+        end
+
+        t1 -.->|"指向"| s5
+        t2 -.->|"指向"| s7
     end
 ```
 
-### 16.2 xTaskCreate 内部：到底做了什么
+> **`pxTopOfStack` 是整个 RTOS 中最重要的单一个指针**。上下文切换时，只做两件事：① 保存旧任务的 CPU 寄存器到这个指针指向的位置；② 从这个新任务的指针位置恢复寄存器。**其他所有调度逻辑、链表操作、优先级判断 —— 都是为这两步服务的。**
+
+---
+
+### 16.2 任务栈布局 — 栈帧的精确结构
+
+栈总是**从高地址向低地址生长**（X86、ARM、ESP32 的 Xtensa 都如此）。当一个任务不运行时，其栈顶保存着一个完整的 CPU 上下文快照：
+
+```
+高地址（栈顶部） — pxStack + usStackDepth × 4
+┌──────────────────────────────────────────┐
+│              未使用空闲空间                 │  ← 将来局部变量可用的空间
+├──────────────────────────────────────────┤
+│  CANARY 哨兵（0xA5A5A5A5 或随机值）        │  ← 第 2 课说过的"栈溢出检测"
+├──────────────────────────────────────────┤
+│                                          │
+│   ┌──────────────────────────┐           │
+│   │ R4                       │ ← 被调用者│ 这部分由 PendSV
+│   │ R5                       │   保存    │ Handler 手工
+│   │ R6                       │   寄存器   │ 压栈/出栈
+│   │ R7                       │  （8个）   │
+│   │ R8                       │           │
+│   │ R9                       │           │
+│   │ R10                      │           │
+│   │ R11                      │           │
+│   ├──────────────────────────┤           │
+│   │ R0（返回值/第1个参数）      │ ← 调用者│ 这部分由 ARM
+│   │ R1                       │   保存    │ 硬件自动
+│   │ R2                       │   寄存器   │ 压栈/出栈
+│   │ R3                       │  （8个）   │（"异常进入/返回"机制）
+│   │ R12                      │           │
+│   │ LR（链接寄存器，R14）       │           │
+│   │ PC（程序计数器，R15）       │ ← 关键！  │
+│   │ xPSR（CPU 状态寄存器）     │           │
+│   └──────────────────────────┘           │
+│   ↑ pxTopOfStack 指向这里                 │
+├──────────────────────────────────────────┤
+│                                          │
+│          实际的任务栈使用区域              │  ← 局部变量 + 函数调用帧
+│         （运行时动态使用）                 │
+│                                          │
+├──────────────────────────────────────────┤
+│         函数1 的栈帧                      │
+├──────────────────────────────────────────┤
+│         函数2 的栈帧                      │
+└──────────────────────────────────────────┘
+低地址（栈底部） — pxStack
+```
+
+> **关键：ARM Cortex-M 的"异常进入硬件自动压栈"机制**。当 CPU 进入任何异常（包括 PendSV）时，硬件自动按以下顺序压 8 个寄存器：xPSR, PC, LR, R12, R3, R2, R1, R0。**这笔"免费压栈"省了 PendSV 的 8 条指令，是 Cortex-M 设计中最聪明的 RTOS 优化**。
+
+---
+
+### 16.3 xTaskCreate 的 7 步内核流程
+
+下面是逐步骤的 `xTaskCreate` 真实内核流程：
 
 ```c
-// xTaskCreate 的精简内核流程
-// （实际比这复杂得多，仅示核心步骤）
-
-BaseType_t xTaskCreate(...)
+BaseType_t xTaskCreate(TaskFunction_t pxTaskCode,
+                       const char *const pcName,
+                       uint32_t ulStackDepth,
+                       void *pvParameters,
+                       UBaseType_t uxPriority,
+                       TaskHandle_t *pxCreatedTask)
 {
-    // ① 分配 TCB（如 CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM=y，可能在 PSRAM）
-    TCB_t *pxNewTCB = pvPortMalloc(sizeof(TCB_t));
+    TCB_t *pxNewTCB;
 
-    // ② 分配任务栈（StackType_t 是 32-bit 字）
-    //    usStackDepth=4096 → 4096 × 4 = 16384 字节
-    StackType_t *pxStack = pvPortMalloc(usStackDepth * sizeof(StackType_t));
+    /* ── 第1步：分配 TCB ── */
+    /* ESP-IDF 实际通过 CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM 控制 */
+    /* 如在 PSRAM 分配，sizeof(TCB_t) ≈ 100-150 字节 */
+    pxNewTCB = (TCB_t *)pvPortMalloc(sizeof(TCB_t));
 
-    // ③ 初始化栈：在栈顶写入"假上下文"——假装任务被某个 ISR 打断过
-    //    这样当调度器第一次"恢复"这个任务时，就会跳到任务函数的入口
-    pxNewTCB->pxTopOfStack = pxPortInitialiseStack(
-        pxStack,             // 栈底
-        pvTaskCode,          // 任务函数（要"跳"过去）
-        pvParameters         // 参数
-    );
+    if (pxNewTCB != NULL)
+    {
+        /* ── 第2步：分配栈 ── */
+        /* ulStackDepth 单位是"字"（32-bit），4096 × 4 = 16384 字节 */
+        pxNewTCB->pxStack = (StackType_t *)
+            pvPortMalloc(ulStackDepth * sizeof(StackType_t));
 
-    // ④ 填充 TCB 元数据
-    pxNewTCB->uxPriority = uxPriority;
-    strncpy(pxNewTCB->pcTaskName, pcName, 16);
-    pxNewTCB->pxStack = pxStack;
+        if (pxNewTCB->pxStack != NULL)
+        {
+            /* ── 第3步：初始化栈 — 整个 RTOS 最精妙的设计 ──
+             * 在栈顶构造"假上下文"，假装任务刚被一个 ISR 打断过。
+             * 这样当调度器第一次"恢复"这个任务时，CPU 就跳转到任务入口。*/
+            pxNewTCB->pxTopOfStack = pxPortInitialiseStack(
+                pxNewTCB->pxStack,
+                pxTaskCode,       /* PC = 任务函数入口地址 */
+                pvParameters      /* R0 = 传入参数 */
+            );
 
-    // ⑤ 把 TCB 挂到对应优先级的就绪链表中
-    prvAddTaskToReadyList(pxNewTCB);
+            /* ── 第4步：填充 TCB 元数据 ── */
+            pxNewTCB->uxPriority = uxPriority;
+            pxNewTCB->uxBasePriority = uxPriority;
+            strncpy(pxNewTCB->pcTaskName, pcName, configMAX_TASK_NAME_LEN);
+            #if (configNUM_CORES > 1)
+                pxNewTCB->uxCoreAffinityMask = xCoreID;
+            #endif
 
-    // ⑥ 如果新任务优先级 > 当前任务 → 触发 PendSV 上下文切换
-    if (uxPriority > pxCurrentTCB->uxPriority) {
-        portYIELD();  // 触发 PendSV
+            /* ── 第5步：初始化链表节点 ── */
+            /* 把 xStateListItem 和 xEventListItem 关联到本 TCB */
+            vListInitialiseItem(&(pxNewTCB->xStateListItem));
+            vListInitialiseItem(&(pxNewTCB->xEventListItem));
+            listSET_LIST_ITEM_OWNER(
+                &(pxNewTCB->xStateListItem), pxNewTCB);
+            /* 此后，从链表中取到节点就能通过 pxOwner 找回 TCB */
+
+            /* ── 第6步：挂入就绪链表 ── */
+            /* 添加到 pxReadyTasksLists[uxPriority] 尾部 */
+            prvAddNewTaskToReadyList(pxNewTCB);
+
+            /* ── 第7步：抢占判断 ── */
+            /* 如果新任务优先级高于当前任务→触发 PendSV 上下文切换 */
+            if (uxPriority > pxCurrentTCB->uxPriority) {
+                /* 这行代码最终展开为 ARM 汇编:
+                 *   LDR R0, =0xE000ED04    ← NVIC 的 ICSR 寄存器
+                 *   LDR R1, =0x10000000    ← PendSV 挂起位
+                 *   STR R1, [R0]           ← 写入 = 触发 PendSV
+                 */
+                portYIELD();
+            }
+
+            if (pxCreatedTask != NULL) {
+                *pxCreatedTask = pxNewTCB;
+            }
+            return pdPASS;
+        }
+        vPortFree(pxNewTCB);  /* 栈分配失败 — 回滚 TCB */
     }
-
-    return pdPASS;
+    return errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY;
 }
 ```
 
-> **关键洞见**：创建任务时**它还没有运行过**。内核在栈上伪造了一个"刚被中断打断"的状态——包含初始程序计数器（PC = 任务函数地址）、初始栈指针、初始状态寄存器等。当调度器通过 PendSV "恢复"这个任务时，CPU 就"回到"了任务函数的入口，开始执行。
+> **关键洞见**：任务第一次创建时**它还没有运行过**。内核在栈上伪造了一个"刚被中断打断"的状态——包含初始 PC（= 任务函数地址）、初始 xPSR（Thumb 模式）、初始参数（R0 = pvParameters）。当 PendSV "恢复"这个任务时，硬件出栈把 PC 和 xPSR 弹出——CPU 就自然跳转到了任务函数，**完全不知道"自己其实是第一次运行"**。
 
-### 16.3 PendSV — 上下文切换的幕后之手
+---
 
-上下文切换不是通过函数调用来做的——函数调用需要主动调用。**必须有一个不可抗拒的机制强制切走当前任务**。ARM Cortex-M 的答案是一个特殊异常：**PendSV（可挂起的系统调用异常）**。
+### 16.4 pxPortInitialiseStack — 伪造上下文
+
+这是整个 RTOS 中最值得逐行阅读的函数：
+
+```c
+/* ARM Cortex-M 版本的 pxPortInitialiseStack（FreeRTOS port.c）
+ * 注意：顺序由硬件异常压栈顺序决定（必须匹配！）*/
+
+StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, /* 栈顶 */
+                                    TaskFunction_t pxCode,     /* 任务入口 */
+                                    void *pvParameters)        /* 参数 */
+{
+    /* 模拟硬件异常入口的自动压栈顺序（从高地址往低地址写） */
+
+    /* ── 硬件自动出栈组（异常返回时由硬件弹出）── */
+    *pxTopOfStack = portINITIAL_XPSR;               /* xPSR = 0x01000000
+        bit[24] = 1 → Thumb 模式（ARM Cortex-M 必须）*/
+    pxTopOfStack--;
+
+    *pxTopOfStack = ((StackType_t)pxCode) & portSTART_ADDRESS_MASK;
+        /* PC = 任务函数地址。bit[0] = 1 标记 Thumb 入口 */
+    pxTopOfStack--;
+
+    *pxTopOfStack = (StackType_t)prvTaskExitError;
+        /* LR = 错误处理函数。如果任务意外 return，PC 被设置为这个
+           函数的地址——这是一个"保险丝"，正常任务永远不 return */
+    pxTopOfStack--;
+
+    /* R12, R3, R2, R1 — 初始化为 0（或任意值，弹出后弃用） */
+    pxTopOfStack--;                                  /* R12 = don't care */
+    *pxTopOfStack = 0x03030303;   pxTopOfStack--;    /* R3 */
+    *pxTopOfStack = 0x02020202;   pxTopOfStack--;    /* R2 */
+    *pxTopOfStack = 0x01010101;   pxTopOfStack--;    /* R1 */
+
+    *pxTopOfStack = (StackType_t)pvParameters;
+        /* R0 = 任务参数（用 0x01010101... 等调试值标记 R1-R3
+           方便在调试器里一眼识别"这是初始上下文"）*/
+    pxTopOfStack--;
+
+    /* ── 手工出栈组（PendSV 手工恢复）── */
+    pxTopOfStack--;                      *pxTopOfStack = 0x0b0b0b0b; /* R11 */
+    pxTopOfStack--;                      *pxTopOfStack = 0x0a0a0a0a; /* R10 */
+    pxTopOfStack--;                      *pxTopOfStack = 0x09090909; /* R9  */
+    pxTopOfStack--;                      *pxTopOfStack = 0x08080808; /* R8  */
+    pxTopOfStack--;                      *pxTopOfStack = 0x07070707; /* R7  */
+    pxTopOfStack--;                      *pxTopOfStack = 0x06060606; /* R6  */
+    pxTopOfStack--;                      *pxTopOfStack = 0x05050505; /* R5  */
+    pxTopOfStack--;                      *pxTopOfStack = 0x04040404; /* R4  */
+
+    return pxTopOfStack; /* 返回新的栈顶 = 新任务的初始上下文 */
+}
+```
+
+> **LR 为什么指向错误处理而不是任务地址？**
+> 任务应该永远在 `while(1)` 中，不应该 `return`。如果意外返回，PC 会恢复 LR 的值 = 跳转到 `prvTaskExitError`。ESP-IDF 更进一步，`CONFIG_FREERTOS_TASK_FUNCTION_WRAPPER=y` 会捕获返回并自动 `vTaskDelete`，防止僵尸 TCB。
+
+---
+
+### 16.5 PendSV — 上下文切换的"手术刀"
+
+**为什么不用函数调用做切换？** 函数调用是协作式的——需要任务主动调用。**抢占式调度必须有一个不可抗拒的机制"强制切走"**。ARM Cortex-M 的答案是 **PendSV**（可挂起的系统调用异常）。
+
+#### 16.5.1 时序图：双中断并发时 PendSV 如何保证一致性
 
 ```mermaid
 sequenceDiagram
     participant TICK as SysTick ISR
     participant HW as 硬件(NVIC)
-    participant ISR as PendSV Handler
-    participant OLD as 旧任务
-    participant NEW as 新任务
+    participant SPI as SPI ISR (更高优)
+    participant PEND as PendSV Handler (最低优)
 
-    Note over OLD: 正在运行
+    Note over TICK: CPU 正在运行某个任务
 
-    TICK->>HW: ① Tick 中断到达，发现应切换
-    TICK->>HW: ② 触发 PendSV 异常（不直接切换！）
-    TICK-->>OLD: ③ SysTick ISR 返回
+    TICK->>HW: ① Tick 中断到达（prio 最低硬件中断）
+    TICK->>TICK: xTaskIncrementTick()
+    TICK->>TICK: 发现应切换 → 置位 PendSV 挂起位
+    TICK-->>TICK: ③ SysTick ISR 返回
 
-    Note over HW: PendSV 优先级最低<br/>等所有其他中断完成
+    Note over SPI: 此时 SPI 中断突然来了！
+    SPI->>SPI: SPI ISR 先完整执行
+    SPI-->>SPI: 返回
 
-    HW->>ISR: ④ 所有中断完成，PendSV 获得执行权
-    ISR->>ISR: ⑤ 保存旧任务上下文到 old_tcb->pxTopOfStack
-    ISR->>ISR: ⑥ 从 new_tcb->pxTopOfStack 恢复新任务上下文
-    ISR-->>NEW: ⑦ PendSV 返回 → 硬件自动弹出栈帧 → 新任务开始执行
+    Note over PEND: 所有硬件中断都处理完毕
+    PEND->>PEND: ④ 硬件自动压栈（R0-R3,R12,LR,PC,xPSR）
+    PEND->>PEND: ⑤ 手工压栈 R4-R11
+    PEND->>PEND: ⑥ pxCurrentTCB = 新任务
+    PEND->>PEND: ⑦ 手工出栈 R4-R11
+    PEND-->>PEND: ⑧ 硬件自动出栈 + BX LR 异常返回
+    Note over PEND: CPU 现在在新任务中执行
 ```
 
-> **PendSV 的设计精髓**：
-> - 它是**软件可触发**的（`portYIELD()` → 置位 PendSV 挂起位）
-> - 它的优先级被设为**最低**（所有 ISR 都比它高）
-> - 结果：ISR 首先完成自己的紧急工作，然后**在 ISR 返回时顺带做任务切换**——不会阻塞硬件中断的响应
+> **PendSV 优先级最低的精髓**：如果 SysTick ISR 直接进行上下文切换，而另一个 SPI 中断恰好在这时到达——SPI ISR 会在"任务 A 的寄存器保存了一半、任务 B 的寄存器还没恢复"的状态下运行。结果不可预测。**PendSV 保证所有硬件中断都处理完毕、系统状态一致时，才做切换**。
+
+#### 16.5.2 PendSV Handler 的完整逻辑（ARM Cortex-M 汇编注释版）
+
+```asm
+PendSV_Handler:
+    /* ═══ ① 硬件已自动压栈：R0,R1,R2,R3,R12,LR,PC,xPSR ═══ */
+
+    /* ═══ ② 手工压栈被调用者保存寄存器 ═══ */
+    MRS    R0,  PSP                 /* ① 读取当前任务栈指针 PSP   */
+    STMDB  R0!, {R4-R11}            /* ② 压栈 R4-R11：DB = Decrement Before（先减后写）*/
+    STR    R0,  [R3]                /* ③ 回存新 PSP 到 old_tcb->pxTopOfStack
+                                        （R3 在第⑥步前被加载为 old TCB 指针）*/
+
+    /* ═══ ③ 更新 pxCurrentTCB ═══ */
+    LDR    R0,  =pxCurrentTCB        /* ① 加载"指向 pxCurrentTCB"的指针 */
+    LDR    R1,  [R0]                /* ② R1 = 旧 TCB（即将被切换掉的任务）*/
+    LDR    R2,  =pxNewTCB           /* ③ R2 = 新 TCB（调度器在 Tick ISR 中已算好）*/
+    STR    R2,  [R0]                /* ④ pxCurrentTCB = 新 TCB */
+
+    /* ═══ ④ 手工出栈 — 从新任务栈恢复 ═══ */
+    LDR    R0,  [R2]                /* ① R0 = new_tcb->pxTopOfStack */
+    LDMIA  R0!, {R4-R11}            /* ② 出栈 R4-R11：IA = Increment After（先读后加）*/
+    MSR    PSP, R0                  /* ③ 设置新任务的 PSP */
+
+    /* ═══ ⑤ 异常返回：硬件自动出栈 + 跳转 ═══ */
+    BX     LR                       /* LR = EXC_RETURN（异常返回魔法值）
+                                        硬件看到这个特殊值后：
+                                          ① 自动从新任务栈弹出 R0,R1,R2,R3,R12
+                                          ② 自动弹出 LR → 用于返回
+                                          ③ 自动弹出 PC → 跳转到新任务
+                                          ④ 自动弹出 xPSR → 恢复 CPU 状态
+                                        ★ 总共 8 个寄存器，0 条软件指令 ★ */
+```
+
+> **`STMDB R0!, {R4-R11}` 解析**：`STM = Store Multiple`；`DB = Decrement Before`（每次存之前 R0 先自减）——匹配"栈向低地址生长"。`R0!`（感叹号）表示写完后 R0 更新为新值。一条指令压栈 8 个寄存器。
 >
-> 这就是为什么你在 ISR 结尾调用 `portYIELD_FROM_ISR()`：它不是在 ISR 内部立刻切换，而是设置一个"记得切换"的标志。PendSV 会在 ISR 完全退出后才处理。
+> **总开销**：整个 PendSV Handler 在 72MHz 的 Cortex-M3 上约 **0.3~0.5 μs**。加上 Tick ISR 的 0.5~2 μs，调度总开销始终 < 0.1% CPU。
 
-### 16.4 就绪链表 — 调度器的"任务目录"
+---
 
-每个优先级对应一个就绪链表——调度器不需要遍历所有任务来找最高优先级：
+### 16.6 就绪链表与 O(1) 调度
 
-```c
-// FreeRTOS 内核中的就绪链表结构（简化）
-// 假设 configMAX_PRIORITIES = 25（本项目的值）
-
-List_t pxReadyTasksLists[25];  // pxReadyTasksLists[14] = 所有 prio 14 的就绪任务
-
-// 还有两个特殊链表：
-List_t xDelayedTaskList1;      // 正在等待延时过期的任务
-List_t xDelayedTaskList2;      // 等待队列/信号量的任务
-List_t xPendingReadyList;      // 刚从 ISR 中释放的待就绪任务
-```
-
-```
-调度的第一步：找到最高非空优先级
-    pxReadyTasksLists[24] → 空
-    pxReadyTasksLists[15] → [TinyUSB]       ← 24-bit 位图中 bit 15=1
-    pxReadyTasksLists[14] → [usb_mic → usb_spk]  ← bit 14=1
-    ...
-```
-
-> 为了加速查找，FreeRTOS 使用了一个 **32-bit 位图**：`uxTopReadyPriority` 的某个 bit = 1 表示该优先级有就绪任务。`__builtin_clz()` 一条 CPU 指令就能定位最高非零 bit。这意味着**找到下一个要跑的任务是 O(1) 操作**——不管系统有多少个任务。
-
-### 16.5 栈帧的真相 — 任务"睡着"时长什么样
-
-当一个任务不运行时，它的栈顶保存着一个完整的 CPU 上下文快照：
-
-```
-低地址（栈底）
-┌──────────────────┐
-│    任务栈内容     │  ← 局部变量、函数调用帧
-│    (实际使用)    │
-├──────────────────┤  ← pxTopOfStack 指向这里
-│    R4            │  ← 被调用者保存寄存器（自动）
-│    R5            │
-│    R6            │
-│    R7            │
-│    R8            │
-│    R9            │
-│    R10           │
-│    R11           │
-│    R0 (返回值)    │
-│    R1            │
-│    R2            │
-│    R3            │
-│    R12           │
-│    LR (返回地址)  │  ← 函数调用时的链接寄存器
-│    PC (下一条指令)│  ← 程序计数器
-│    xPSR (状态)   │  ← CPU 状态寄存器
-├──────────────────┤  ← 栈顶（高地址）
-│   未使用的空间    │
-│   ...            │
-│   CANARY (哨兵)  │  ← 溢出检测用的魔法值
-└──────────────────┘
-高地址（栈顶）
-```
-
-> **"上下文切换"的本质**：把当前 CPU 的 16 个核心寄存器值压入当前任务栈 → 切换 `pxCurrentTCB` → 从新任务栈弹出寄存器值 → `BX LR` 跳转到新任务最后停下的位置。这一切由 PendSV Handler 完成，约 **<1 μs**。
-
-### 16.6 设计哲学：为什么任务不只做一次就退出？
-
-回到 FreeRTOS 的设计精神。任务不是函数调用——它更像一个**独立的线程**。
+#### 16.6.1 数据结构
 
 ```c
-// ❌ 反模式：任务是"一次性执行"
+/* FreeRTOS 内核中的就绪链表（tasks.c）*/
+PRIVILEGED_DATA static List_t pxReadyTasksLists[configMAX_PRIORITIES];
+/* pxReadyTasksLists[14] = 双向链表 → [usb_mic_task] ⇄ [usb_spk_task] */
+
+/* 三个辅助链表 */
+List_t xDelayedTaskList1;    /* 延时中的任务（按唤醒时间排序）*/
+List_t xDelayedTaskList2;    /* 溢出的延时链表（32-bit tick 计数器翻转时用）*/
+List_t xPendingReadyList;    /* 刚从 ISR 中释放的待就绪任务 */
+
+/* 就绪优先级位图 — 核 O(1) 查找的核心 */
+PRIVILEGED_DATA static volatile UBaseType_t uxTopReadyPriority;
+/* bit N = 1 表示优先级 N 的 ReadyList 非空 */
+```
+
+#### 16.6.2 调度选择算法 — 始终 O(1)
+
+```c
+/* 标记某优先级有就绪任务（当任务进入 Ready 状态时调用）*/
+#define taskRECORD_READY_PRIORITY(uxPriority)                     \
+    {                                                             \
+        if ((uxPriority) > uxTopReadyPriority)                    \
+        {                                                         \
+            uxTopReadyPriority = (uxPriority);                    \
+        }                                                         \
+        /* 这位运算是原子，无需加锁 */                                \
+        uxReadyPriorities |= (1UL << (uxPriority));               \
+    }
+
+/* 选择最高优先级的第一个就绪任务 */
+#define taskSELECT_HIGHEST_PRIORITY_TASK()                        \
+    {                                                             \
+        /* __builtin_clz = Count Leading Zeros                    \
+           这是 ARM 的 CLZ 指令，一条 CPU 指令完成！               \
+           例如: 0b00000000_00000000_10000000_00000000            \
+                 前面的零数量 = 16                                 \
+                 结果优先级 = 31 - 16 = 15                         \
+           但优先级的 bit 0 = 最低位，所以：                         \
+           优先级的 bit N 在位图中的位置 = bit N                     \
+           32-bit 位图中找到最高为1的bit = 31 - CLZ                 \
+           对于我们的配置 (configMAX_PRIORITIES=25)：              \
+           __builtin_clz 作用于 32-bit 变量，直接返回前导零数量      \
+           uxTopPriority = 31 - CLZ                                \
+        */                                                        \
+        UBaseType_t uxTopPriority =                               \
+            (31UL - (UBaseType_t)__builtin_clz(uxReadyPriorities));\
+        /* pxReadyTasksLists[uxTopPriority] 的头部即为目标 */      \
+    }
+```
+
+```
+以本项目为例（7 个任务，configMAX_PRIORITIES=25）：
+uxReadyPriorities (32-bit, LSB = prio 0, MSB = prio 25):
+
+bit 0-2:  000   — prio 0~2 无就绪任务
+bit 3:    1     — spk_wdog (prio 3) 在就绪链表中
+bit 4:    0
+bit 5:    1     — ds_dsp (prio 5) 在就绪链表中
+bit 6-13: 00... — 
+bit 14:   1     — usb_mic_task (prio 14) 在位，usb_spk_task (prio 14) 也在同链表
+bit 15:   1     — TinyUSB (prio 15) 在就绪链表中
+bit 16-25: 00...
+
+__builtin_clz(uxReadyPriorities) → 前导零数量 = 16
+最高有任务的优先级 = 31 - 16 = 15 ✓
+
+选择 pxReadyTasksLists[15] 的第一个节点 → TinyUSB
+整个过程：1 条 CLZ 指令 + 1 次链表的第一个节点取值
+→ O(1)，与系统总任务数无关
+```
+
+> **无论系统有 5 个还是 100 个任务，找到最高优先级并选中任务——始终是常数时间 O(1)**。这是 FreeRTOS 声称"实时确定性"的根基：调度算法本身的时间消耗是恒定的、可预测的。
+
+---
+
+### 16.7 状态转换 = 链表操作
+
+每个状态变化，本质上就是将 TCB 的 `xStateListItem` 从一个链表移到另一个链表。这是 RTOS 中最简洁的抽象：
+
+| 转换 | 内核操作 |
+|------|---------|
+| Running → Ready（被抢占） | 从 Running 状态摘出 → 插入 `pxReadyTasksLists[priority]` 尾部 |
+| Running → Blocked（等事件） | `xEventListItem` → 事件等待链表；`xStateListItem` → `xDelayedTaskList`（带唤醒时间戳） |
+| Blocked → Ready（事件到达） | 从 `xEventListItem` 的链表摘出；从 `xDelayedTaskList` 移到 `pxReadyTasksLists[priority]` |
+| 任务创建 | `xStateListItem` → `pxReadyTasksLists[priority]` 尾部 |
+| Suspend | `xStateListItem` → `xSuspendedTaskList` |
+| Resume | `xStateListItem` → 回到 `pxReadyTasksLists[priority]` |
+| Delete | Idle Task 回收栈空间和 `vPortFree(TCB)` |
+
+```mermaid
+flowchart LR
+    subgraph STATES["任务状态"]
+        RUN[Running]
+        RDY[Ready]
+        BLK[Blocked]
+        SUS[Suspended]
+    end
+
+    subgraph LISTS["对应链表（xStateListItem 所在）"]
+        RUNNING_SLOT["pxCurrentTCBs[core]"]
+        READY_L["pxReadyTasksLists[prio]"]
+        DELAYED_L["xDelayedTaskList1/2"]
+        SUSP_L["xSuspendedTaskList"]
+    end
+
+    RUN -.->|"被抢占"| RDY
+    RDY -.->|"调度器选中"| RUN
+    RUN -.->|"等待事件"| BLK
+    BLK -.->|"事件到达"| RDY
+    RUN -.->|"vTaskSuspend"| SUS
+    SUS -.->|"vTaskResume"| RDY
+
+    RUNNING_SLOT <--> RUN
+    READY_L <--> RDY
+    DELAYED_L <--> BLK
+    SUSP_L <--> SUS
+```
+
+---
+
+### 16.8 上下文切换开销（实战数据）
+
+基于本项目的 Tick 中断和 PendSV 实际开销测量：
+
+| 组件 | 频率 | 每次开销 | CPU 占比 |
+|------|------|---------|:--------:|
+| Tick ISR (`xTaskIncrementTick`) | 每 1ms | 0.5~2 μs | 0.05~0.2% |
+| PendSV（仅需切换时） | 每 1~10ms | 0.3~0.5 μs | 0.005~0.05% |
+| **总计** | — | — | **< 0.25% CPU** |
+
+> 在我们的项目中，1ms 内的 ~997 μs 都在跑任务代码。调度开销是秒表级别的。
+
+---
+
+### 16.9 常见问题速答
+
+**Q1: 两个核心怎么分配任务？**
+ESP32-S3 使用 FreeRTOS SMP。两个核心**共享同一个 `uxReadyPriorities` 位图**，各自独立挑选。选择规则：
+1. 从最高非空优先级的 ReadyList 中取第一个就绪的、**且亲和性匹配**的任务
+2. 如果任务的 `uxCoreAffinityMask == tskNO_AFFINITY`，任意核心都可取
+3. 如果任务固定在 Core 1 而当前核心是 Core 0 → 跳过，看下一个同优先级任务
+
+**Q2: 为什么项目不用全局变量而用队列？**
+两个问题：① `counter++` 不是原子操作（读-改-写三步，中断可能打断中间某步）；② SMP 下 `volatile` 也不能保证多核的内存可见性——需要内存屏障（`__sync_synchronize()`）。FreeRTOS 的 Queue / TaskNotify / StreamBuffer 在内部处理了所有这些问题，包括自动内存屏障和 SMP 锁。
+
+**Q3: Tick 中断中可以调用 xQueueSend 吗？**
+不能——Tick ISR 在临界区内。用 `xQueueSendFromISR()`（ISR 安全版本），它会将操作挂入 `xPendingReadyList`，由 Tick ISR 返回后再由 PendSV 或下一个任务切换时处理。
+
+---
+
+### 16.10 设计哲学总结
+
+回到 FreeRTOS 的设计精神。任务不是函数调用——它是一个**独立线程**。
+
+```c
+// ❌ 反模式：任务是"一次性函数"
 void bad_task(void *pv) {
     do_something();
-    return;  // 返回后 TCB 变成僵尸——除非显式 vTaskDelete(NULL)
+    return;  // TCB → 僵尸（除非显式 vTaskDelete(NULL)）
 }
 
-// ✅ 正确模式：任务是"永恒的循环"  
+// ✅ 正确模式：任务是"事件循环"
 void good_task(void *pv) {
-    // 只运行一次的初始化
-    init();
+    init();          // 一次性的初始化
 
     while (1) {
-        // ① 等事件（阻塞，让出 CPU）
-        wait_for_event();
-        // ② 处理事件
-        handle();
-        // ③ 回到 ① 等待下一个事件
-        //    这期间 CPU 可能去跑其他任务
+        wait_for_event();  // ① 阻塞，让出 CPU（0% 浪费）
+        handle_event();    // ② 事件到来 → 快速处理
+        // ③ 回到 ① — 这期间 CPU 已经在跑其他任务
     }
 }
 ```
 
-> **任务 = 事件循环**。每个任务都是"等着做某件事"的永久循环。不做任何事的时候，任务处于 Blocked 状态——不消耗 CPU。这就是 RTOS 比 Super Loop 高效的根源：**不做事的时候，CPU 完全不消耗在你身上**。
+**RTOS 任务设计的四条铁律**：
 
-### 16.7 任务删除与清理
+1. **任务 = 事件循环** — 永远 `while(1)`，永远在"等事件→处理→等事件"的循环中
+2. **不做事就阻塞** — 用 `vTaskDelay` / `xQueueReceive` / `ulTaskNotifyTake` 主动让出 CPU；永远不用 `while(!ready) ;` 忙等
+3. **ISR 最小化** — 中断中只做 `xQueueSendFromISR` / `xTaskNotifyGiveFromISR`；重活放到任务里
+4. **栈 = 稀有资源** — 用 `uxTaskGetStackHighWaterMark` 定期检查，留 30% 安全余量
 
-任务可以删除自己（`vTaskDelete(NULL)`），或被其他任务删除。关键问题：**谁负责释放任务的栈和 TCB？**
+> **"不做事的时候，CPU 完全不消耗在你身上。"** 这就是 RTOS 比裸板 Super Loop 高效的根本原因——也是理解 Task 实现机制后应该带走的**最重要的设计直觉**。
+
+---
+
+## 十七、并发与实时性 — 优先级反转、饿死与 RMA 理论
+
+### 17.1 问题全景
+
+多任务并发时，三个经典问题覆盖了 90% 的实际故障：
+
+```mermaid
+flowchart TD
+    CONCURRENCY[多任务并发] --> SAME[同优先级]
+    CONCURRENCY --> HIGHER[高优先级饿死低优先]
+    CONCURRENCY --> PRIOINV[优先级反转]
+
+    SAME --> S1[计算密集型任务霸占 CPU<br/>其他同优任务延迟不可控]
+    HIGHER --> H1[高优任务从不阻塞<br/>低优任务永远得不到 CPU]
+    HIGHER --> H2[多个高优总利用率 > 100%<br/>必然有人丢期限]
+    PRIOINV --> P1[低优持锁 → 中优先抢 → 高优等低优<br/>最著名的实时系统 bug]
+    PRIOINV --> P2[死锁：A等B, B等A]
+```
+
+---
+
+### 17.2 场景一：同优先级 — 时间片公平 ≠ 响应及时
+
+```mermaid
+gantt
+    title 同优先级：计算密集型霸占 CPU
+    dateFormat  YYYY-MM-DD
+    axisFormat  %L
+    section 任务A (计算密集)
+    A1 :a1, 0, 5ms
+    A2 :a2, 7ms, 5ms
+    A3 :a3, 14ms, 5ms
+    section 任务B (需要快速响应)
+    B1 :b1, 5ms, 2ms
+    B2 :b2, 12ms, 2ms
+```
+
+任务 B 的响应延迟 = A 连续运行的时间（可达 5ms）。如果 A 从不主动阻塞，同优先级的其他任务就在队列末尾反复排队。
+
+| 根因 | 现象 | 后果 |
+|------|------|------|
+| 任务从不主动阻塞（无止尽的 `while(1)` 没有 `vTaskDelay` / `xQueueReceive`） | 其他同优先级任务要排队等整个时间片 | 响应延迟不可控 |
+| 计算量远超预期 | 别人的时间片被"吃了" | 时间片不精确 |
+
+**解决方案**（按推荐顺序）：
 
 ```c
-// 删除自己
-void one_shot_task(void *pv) {
-    do_something_once();
-    vTaskDelete(NULL);   // ① 标记为删除，但栈在 *这一刻* 还被占用
-    // ② 永远不会执行到这里——vTaskDelete 不返回
+/* 方案 1：强制让出 CPU — 每处理一批数据主动 yield */
+void compute_task(void *pv) {
+    while (1) {
+        for (int i = 0; i < BATCH_SIZE; i++) {
+            process_one_item();
+        }
+        vTaskDelay(1);  // "为别人留一扇门"
+    }
 }
 
-// 删除其他任务
-void manager_task(void *pv) {
-    // ...
-    vTaskDelete(worker_handle);
-    // worker 的栈和 TCB 由空闲任务（Idle Task）负责回收
+/* 方案 2：拆分长任务 — 把 10ms 计算拆成 10 个 1ms chunk */
+static int s_work_index = 0;
+void chunked_task(void *pv) {
+    while (1) {
+        process_chunk(s_work_index);
+        s_work_index = (s_work_index + 1) % NUM_CHUNKS;
+        vTaskDelay(1);  // 每 block 不阻塞别人超过 1ms
+    }
+}
+
+/* 方案 3：优先级分离 — B 真的需要"实时响应"就不该和 A 同级 */
+// 提升 B 的优先级 + 确保 B 也定期阻塞
+```
+
+> FreeRTOS 默认时间片 = 1 tick = 1ms（`CONFIG_FREERTOS_HZ=1000`）。但时间片**只在同优先级有多个就绪任务时才切换**——如果只有 A 在跑而 B 在 Blocked，A 不会每秒浪费 1000 次切换。
+
+---
+
+### 17.3 场景二：高优先级饿死低优先级
+
+```mermaid
+sequenceDiagram
+    participant H as 音频处理 (prio 14)
+    participant L as 日志写入 (prio 3)
+
+    Note over H: 每 10ms 醒一次，每次处理 8ms
+
+    rect rgb(50, 50, 70)
+        loop 永远的循环
+            H->>H: 处理音频 (8ms)
+            H->>H: vTaskDelay(2ms)
+            Note over L: 只获得 2ms！连 1 行日志都写不完
+        end
+    end
+```
+
+| 根因 | 现象 | 后果 |
+|------|------|------|
+| 高优周期太短 + 执行时间太长 | 低优任务只能在高优休眠的缝隙中运行 | 日志丢失、看门狗不喂、OTA 进退为零 |
+| 高优任务从不阻塞 | `while(1) { work(); }` 没有 `vTaskDelay` | **整个系统锁死**，低优连 1 条指令都执行不到 |
+
+**解决方案分为四个层级**：
+
+**第一层：设计 — Rate Monotonic Analysis (RMA)**
+
+Liu & Layland (1973) 定理：对于 n 个周期性任务，如果 CPU 总利用率 U ≤ n × (2^(1/n) - 1)，则所有任务都能满足期限。
+
+| n | 理论可调度上界 | 实践经验线 |
+|:--:|:--------------:|:----------:|
+| 2 | 82.8% | 80% |
+| 3 | 77.9% | 75% |
+| 4 | 75.7% | 70% |
+| ∞ | 69.3% | 60~65% |
+
+RMA 规则：**周期越短 → 优先级越高**。因为周期短意味着"醒得频繁"，如果给它低优先级，它可能在低优任务占用 CPU 时错过期限。
+
+**第二层：代码 — 插入呼吸点**
+
+```c
+/* 高优任务中强制限制连续运行时间 */
+void disciplined_task(void *pv) {
+    while (1) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        TickType_t start = xTaskGetTickCount();
+        process_audio_chunk();
+
+        // 处理超过 0.5ms → 系统过载 → 给低优一条活路
+        if ((xTaskGetTickCount() - start) > 0) {
+            vTaskDelay(1);  // 1ms 窗口给低优
+        }
+    }
 }
 ```
 
-> FreeRTOS 中，被删除任务的资源（栈、TCB）**由 Idle Task 回收**，不是被调用 `vTaskDelete` 的任务回收。这保证了即使任务是删除自己——资源也能被正确释放。ESP-IDF 还提供 `CONFIG_FREERTOS_TASK_FUNCTION_WRAPPER=y`，在任务意外返回时自动调用 `vTaskDelete(NULL)`，防止僵尸 TCB 泄漏。
+**第三层：架构 — 核心分离**
+
+```c
+// Core 0: 高优先级音频（不受低优干扰）
+// Core 1: 低优先级 OTA / 日志（不受音频干扰）
+// 前提：两核不共享锁
+```
+
+**第四层：优先级老化（Linux CFS 风格，FreeRTOS 不原生支持）**
+
+临时提升等待过久的低优任务优先级。在硬实时系统中不推荐——它破坏了"确定性"。
+
+> FreeRTOS 设计哲学：如果低优任务会饿死，说明优先级设计错了。回到第一步，而不是运行时修补。
+
+---
+
+### 17.4 场景三：优先级反转 — 低优阻塞高优
+
+嵌入式历史上最著名的 bug（1997 年 Mars Pathfinder）。
+
+```mermaid
+sequenceDiagram
+    participant A as 低优 A (prio 1)
+    participant B as 中优 B (prio 2)
+    participant C as 高优 C (prio 3)
+    participant M as Mutex L
+
+    A->>M: ① Take(L) ✓
+    Note over A: 使用共享资源...
+
+    B-->>A: ② B 就绪，抢占 A！
+    Note over A: A 被踢出，但 Mutex L 还在 A 手里
+
+    B->>B: ③ B 运行（与 L 完全无关）
+    Note over B: B 可以无期限跑...
+
+    C-->>B: ④ C 就绪，抢占 B
+    C->>M: ⑤ Take(L) → 阻塞！
+    Note over C: C 在等 A 释放 L
+    Note over C: 但 A 被 B 占了 CPU
+    Note over C: B 和 L 毫无关系
+    Note over C: 死结：C 被 B 无期限延迟
+```
+
+**三段论**：低优持锁 → 中优抢 CPU → 高优等锁 → 高优被中优饿死，即使中优和锁无关。
+
+**方案 1：优先级继承 — FreeRTOS Mutex 自动实现**
+
+```c
+SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
+// ↑ 自带优先级继承！
+
+/* 自动过程：
+   1. C 等 mutex → 发现 holder 是 A (prio 1)
+   2. 内核提升 A 的优先级到 3（C 的优先级）
+   3. B (prio 2) 无法抢占 A → A 完成工作
+   4. A 释放 mutex → 恢复 prio 1 */
+```
+
+```mermaid
+sequenceDiagram
+    participant A as A (prio 1→3)
+    participant B as B (prio 2)
+    participant C as C (prio 3)
+    participant M as Mutex L
+
+    A->>M: ① Take(L) ✓
+    Note over A: 优先级暂时为 1
+
+    B-->>A: ② B 就绪 — 但 A 优先级 1，B 抢占成功
+    Note over A: A 被踢出（优先级还未提升—因为 C 还没等锁）
+
+    C-->>B: ③ C 就绪 → 抢占 B
+    C->>M: ④ Take(L) → 阻塞！
+    Note over M: 内核检测到 holder=A → 提升 A 到 prio 3
+
+    A-->>C: ⑤ A 优先级=3 → 抢占 C！（C 在阻塞状态，A 是 Ready）
+    Note over A: A 现在以 prio 3 运行
+
+    A->>A: ⑥ A 完成工作
+    A->>M: ⑦ Give(L)
+    Note over A: 优先级恢复为 1
+
+    M->>C: ⑧ C 获得 L ✓
+```
+
+**方案 2：优先级天花板协议**
+
+```c
+/* Mutex 创建时设定"天花板优先级"——任何获取者瞬间提升到此值 */
+// 优势：C 不需要等——A 获取 Mutex 瞬间就被提升，B 无处可入
+// 劣势：可能不必要地阻塞 B
+```
+
+| | 优先级继承 | 优先级天花板 |
+|------|:---:|:---:|
+| 提升时机 | C 尝试获取锁时 | A 获取锁的瞬间 |
+| 被 B 抢占次数 | 可能 1 次 | 0 次（确定） |
+| 实现复杂度 | FreeRTOS 自动 | 需手动 |
+| 适用场景 | 大多数系统 | 安全要求极高、零容忍 |
+
+**方案 3：避免跨优先级共享 — 用队列替代锁**
+
+```c
+// ❌ 反模式：不同优先级任务共享全局变量
+volatile int shared_counter;  // A (prio 1) 写，C (prio 3) 读
+// 即使加锁，反转依然可能
+
+// ✅ 安全：高优任务通过队列接收数据副本
+QueueHandle_t data_queue;
+// A send, C receive → 数据隔离 = 无锁 = 无反
+```
+
+---
+
+### 17.5 场景四：死锁
+
+```mermaid
+flowchart LR
+    subgraph A["任务 A (prio 3)"]
+        H1["持有 Mutex1"]
+        W1["等待 Mutex2"]
+    end
+    subgraph B["任务 B (prio 4)"]
+        H2["持有 Mutex2"]
+        W2["等待 Mutex1"]
+    end
+    H1 -.->|阻塞| W2
+    H2 -.->|阻塞| W1
+```
+
+**解决方案**：
+
+```c
+/* ① 固定锁顺序 — 最简单最可靠 */
+/* 所有任务必须按 Mutex1 → Mutex2 → Mutex3 单向顺序获取 */
+void any_task(void *pv) {
+    xSemaphoreTake(mutex1, portMAX_DELAY);  // 总是先锁1
+    xSemaphoreTake(mutex2, portMAX_DELAY);  // 再锁2
+    work();
+    xSemaphoreGive(mutex2);
+    xSemaphoreGive(mutex1);
+}
+
+/* ② 超时放弃 + 重试 */
+if (xSemaphoreTake(mutex2, pdMS_TO_TICKS(100)) != pdTRUE) {
+    xSemaphoreGive(mutex1);         // 释放已获取的
+    vTaskDelay(pdMS_TO_TICKS(50));  // 退一步
+    continue;                        // 重新来
+}
+```
+
+---
+
+### 17.6 本项目 RMA 理论分析 — 深入拆解
+
+#### 17.6.1 原始 RMA 数值
+
+```
+任务              周期(T)    执行时间(C)    利用率(C/T)    优先级
+─────────────────────────────────────────────────────────────
+usb_mic_task       1ms       ~0.3ms        30%           14
+usb_spk_task       1ms       ~0.3ms        30%           14
+ds_dsp            10ms       ~2ms          20%            5
+spk_wdog           5ms       ~0.1ms         2%            3
+─────────────────────────────────────────────────────────────
+总利用率 U = 82%
+```
+
+RMA 可调度性上界（n=4）：**75.7%**。82% > 75.7% → **按理论，系统可能丢期限**。
+
+#### 17.6.2 为什么 82% 没有实际酿成灾难？
+
+**原因 1：RMA 假设"最坏情况的同步到达"**
+
+RMA 分析假设所有任务在同一时刻一起就绪（"critical instant"）。这在 4 个任务中的实际概率极低：
+
+```
+RMA 的 critical instant 假设：
+  t=0: mic+spk+ds_dsp+spk_wdog 全部同时就绪
+  这意味着 0ms 时刻刚好是：USB 帧到达 + DSP 帧到达 + 看门狗到期
+  
+但本项目实际的时间交错：
+  t=0:    mic 就绪（USB 帧到达）
+  t=0.2:  spk 就绪（USB OUT 数据到达，稍有偏移）
+  t=5:    spk_wdog 到期
+  t=10:   ds_dsp 积累完一帧
+```
+
+```mermaid
+gantt
+    title 实际时间交错（非 critical instant）
+    dateFormat  YYYY-MM-DD
+    axisFormat  %L
+    section usb_mic
+    mic1 :m1, 0, 0.3ms
+    mic2 :m2, 1, 0.3ms
+    mic3 :m3, 2, 0.3ms
+    section usb_spk
+    spk1 :s1, 0.2ms, 0.3ms
+    spk2 :s2, 1.2ms, 0.3ms
+    spk3 :s3, 2.2ms, 0.3ms
+    section ds_dsp
+    dsp1 :d1, 5ms, 2ms
+    dsp2 :d2, 10ms, 2ms
+    section spk_wdog
+    wd1 :w1, 2.5ms, 0.1ms
+    wd2 :w2, 5ms, 0.1ms
+```
+
+> **没有 1ms 内在三个任务"同时就绪"的情况**——mic 就绪后 spk 在 0.2ms 后到来，这段时间内 mic 已经处理完毕。实际峰值利用率远低于 82%。
+
+**原因 2：阻塞型任务 ≠ RMA 的"持续执行型"任务**
+
+RMA 假设每个任务的执行时间是**连续的、不可打断的**（C 时间内任务始终在 Running）。但本项目的音频任务大部分时间在阻塞：
+
+```c
+/* usb_mic_task 的实际执行剖面 */
+while (1) {
+    /* ── 阶段1: Blocked ── */
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // 等 USB 数据
+    // ↑ 这段时间任务不消耗 CPU —— RMA 模型把整段算入"周期"但不算"执行"
+    
+    /* ── 阶段2: 极短 —— 实际执行时间 ── */
+    // mic_callback: 读I2S → 写USB → ~0.3ms
+    // 如果 USB 没有活动（Host 没有请求音频），usb_mic_task 一直 Blocked
+    // → 实际利用率接近 0%
+}
+```
+
+> **RMA 的利用率 (C/T) 是把"周期 1ms"当作任务每 1ms 都执行 0.3ms**。实际上 USB 不活动时，音频任务占用率为 0%。RMA 计算的是**活跃峰值的理论界值**，不是平均利用率。
+
+**原因 3：spk_wdog 的条件激活**
+
+```c
+/* spk_watchdog_task 只在没有真实音频时才消耗 CPU */
+void spk_watchdog_task(void *pv) {
+    while (1) {
+        if (s_uac_ctx.spk_active) {
+            ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // 有音频 → 永久阻塞
+            continue;
+        }
+        // 无音频 → 填充静音 → 每 5ms 执行 0.1ms
+        fill_silence();
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+}
+```
+
+spk_wdog 的实际利用率不是 2%——而是有音频时为 0%，无音频时可能达到 2%~5%。
+
+---
+
+### 17.7 如果将周期从 1ms 增大到 2ms——后果分析
+
+#### 17.7.1 USB 协议的限制
+
+mic 和 spk 的 1ms 周期不是代码决定的，是 **USB 协议的硬件约束**：
+
+```
+USB Full Speed (12 Mbps) 的帧结构：
+┌──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┐
+│Frame0│Frame1│Frame2│Frame3│Frame4│Frame5│Frame6│Frame7│
+│ 1ms  │ 1ms  │ 1ms  │ 1ms  │ 1ms  │ 1ms  │ 1ms  │ 1ms  │
+└──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘
+
+同步传输的端点描述符中的 bInterval 字段：
+  bInterval = 1 → 每 1 帧 (1ms) 一个数据包 ← 本项目的默认配置
+  bInterval = 2 → 每 2 帧 (2ms)
+  bInterval = 4 → 每 4 帧 (4ms)
+```
+
+**把 bInterval 改成 2 → 周期变 2ms。** 对系统的影响：
+
+```c
+/* 修改前（bInterval=1, 周期 1ms）*/
+每次传输数据量: 16000 samples/s × 1ms/1000ms × 2 bytes = 32 bytes/帧
+每个 USB 微帧:  1 个 isochronous 数据包 (32 bytes)
+
+/* 修改后（bInterval=2, 周期 2ms）*/
+每次传输数据量: 16000 × 2ms/1000 × 2 = 64 bytes/帧
+每个 USB 微帧:  2ms 内合并成一个 64 byte 数据包
+               或者分成两个 32 byte 包每帧
+```
+
+#### 17.7.2 正面效果
+
+| 指标 | 1ms 周期 | 2ms 周期 |
+|------|---------|---------|
+| mic+spk 的 RMA 利用率 | 60% (30%+30%) | **30%** (15%+15%) |
+| 系统总利用率 | 82% | **52%** ✅ |
+| 调度开销（Tick+PendSV） | 每 1ms 一次 | 每 2ms 一次 |
+| 任务切换次数 | ~2000/秒 | ~1000/秒 |
+
+**0.3ms 的执行时间在两个周期内相同**——因为处理的是同一帧数据，只是数据的"粒度"变了：
+
+```c
+/* 周期 1ms：每 1ms 处理 32 bytes 音频 */
+void usb_mic_task_1ms(void *pv) {
+    while (1) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        read_i2s_to_usb(32);  // 读取 32 bytes
+        // 执行时间: ~0.3ms → 利用率 = 0.3/1 = 30%
+    }
+}
+
+/* 周期 2ms：每 2ms 处理 64 bytes 音频 */
+void usb_mic_task_2ms(void *pv) {
+    while (1) {
+        ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(2));
+        read_i2s_to_usb(64);  // 读取 64 bytes — 0.6ms
+        // 执行时间: ~0.6ms → 利用率 = 0.6/2 = 30%
+        // ↓ 注意！执行时间不是 0.3ms，而是翻倍了！
+    }
+}
+```
+
+> **关键**：周期翻倍 → 每次传输的数据量也翻倍 → 执行时间翻倍！利用率 **C/T = 0.6ms/2ms = 30%**，和原来的 30% 完全一样！RMA 并没有改善！
+
+#### 17.7.3 真正的改善来自何处
+
+周期从 1ms 变 2ms 的**真正收益是减少中断频率和调度开销**，而非 RMA 利用率：
+
+| 优化点 | 1ms 周期 | 2ms 周期 | 效果 |
+|--------|---------|---------|------|
+| USB isochronous ISR 频率 | 1000 Hz | 500 Hz | ISR 负载减半 |
+| mic/spk 任务唤醒频率 | ~2000/s | ~1000/s | 调度开销减半 |
+| mic/spk 任务的 Tick 精度需求 | 1ms | 可放宽 | 对 `vTaskDelayUntil` 的误差容忍更大 |
+| ds_dsp 被抢占的频率 | 每 1ms | 每 2ms | ds_dsp 获得更大连续时间窗口 |
+
+但 **C/T 利用率不变**——因为是线性缩放。RMA 上的改善是虚假的。
+
+#### 17.7.4 负面效果
+
+| 影响 | 1ms 周期 | 2ms 周期 |
+|------|---------|---------|
+| 音频延迟（mic 到 Host） | ~1-3ms | **~3-6ms** |
+| 全双工往返延迟 | ~2-5ms | **~5-10ms** |
+| I2S DMA 缓冲深度需求 | 至少覆盖 1ms | 至少覆盖 2ms |
+| USB 总线带宽效率 | 较低（包头 > 音频数据本身） | 较高（数据/包 = 2:1） |
+
+USB Full Speed 每个同步数据包有 9 bytes 的包头开销：
+
+```
+1ms 周期: 每帧 32 bytes 音频 + 9 bytes 协议 = 41 bytes/frame
+          有效负载率 = 32/41 = 78%
+          
+2ms 周期: 每 2 帧传输 64 bytes = 每帧 32 bytes 音频
+          有效负载率 = 32/41 = 78%（不变）
+```
+
+---
+
+### 17.8 本项目能做什么——四种可行优化
+
+#### 优化 1：利用 `portMAX_DELAY` 的"空闲收益"
+
+音频任务的 `ulTaskNotifyTake` 在 USB 无活动时永久阻塞——这段"空闲收益"被 RMA 完全忽略。**本项目已经这么做**，无需改动。
+
+```c
+// 当 Host 没有请求音频数据时：
+// usb_mic_task → ulTaskNotifyTake(..., portMAX_DELAY) → 永久 Blocked
+// → 利用率从 30% 降到 0%
+// ds_dsp 可以独占 Core 0，spk_wdog 永久阻塞
+```
+
+#### 优化 2：合并 mic 和 spk 到一个任务
+
+如果两个任务处理的工作相似且共享同一个事件的响应，**合并任务减少上下文切换**：
+
+```c
+/* 当前：两个独立任务，都需要被 USB ISR 唤醒 */
+usb_mic_task: 等 ISR 通知 → 读 I2S → 写 USB  (0.3ms, prio 14)
+usb_spk_task: 等 ISR 通知 → 读 USB → 写 I2S  (0.3ms, prio 14)
+
+/* 优化：一个任务处理两个方向 */
+void usb_audio_task(void *pv) {
+    while (1) {
+        // 任一方向有数据就醒
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        // 处理 mic
+        if (mic_ready()) process_mic();
+        // 处理 spk
+        if (spk_ready()) process_spk();
+    }
+}
+// 效果：消除两个同优先级任务的轮转切换开销（每 1ms 节省 ~2μs）
+// 缺陷：usb_mic 和 usb_spk 不再独立——一个方向的处理延迟影响另一个
+```
+
+> **本项目用两个独立任务的真正原因**：全双工。mic 和 spk 通过不同的事件源唤醒（USB IN 端点 vs USB OUT 端点）。合并会要求两个方向都相互检查——在全双工下，这反而增加延迟。
+
+#### 优化 3：动态 ds_dsp 优先级（WIP 方案）
+
+当前 ds_dsp (prio 5) 低于音频 I/O (prio 14)——正确。但当音频处于 idle 状态时，可以提高 ds_dsp 的优先级，让它更快处理积压：
+
+```c
+void dsp_consumer_task(void *pv) {
+    UBaseType_t normal_prio = 5, boost_prio = 10;
+    
+    while (1) {
+        xQueueReceive(s_frame_queue, &item, portMAX_DELAY);
+        
+        // 检测到音频 I/O 空闲 → 临时提升优先级加快处理
+        if (!s_mic_active && !s_spk_active) {
+            vTaskPrioritySet(NULL, boost_prio);
+        }
+        
+        process_frame(&item);
+        
+        if (uxQueueMessagesWaiting(s_frame_queue) == 0) {
+            vTaskPrioritySet(NULL, normal_prio);  // 恢复
+        }
+    }
+}
+```
+
+#### 优化 4：减小 ds_dsp 执行时间（代码层面）
+
+当前 ~2ms/10ms。如果可以优化 `process_frame` 到 ~1ms：
+
+```
+优化前: C/T = 2/10 = 20%
+优化后: C/T = 1/10 = 10%
+系统总 U = 30+30+10+2 = 72% → 低于 RMA 上界 75.7%
+```
+
+---
+
+### 17.9 现场决策速查
+
+| 现象 | 根因 | 立即检查 | 推荐方案 |
+|------|------|---------|---------|
+| 低优从不运行 | 高优利用率 >95% | `vTaskGetRunTimeStats` 看 CPU 占比 | 高优插入 `vTaskDelay(1)` / 分离核心 |
+| 某任务偶发秒级卡顿 | 优先级反转 | 搜索 `xSemaphoreCreateMutex` 的 holder 优先级 | Mutex / 改用队列 |
+| 同优先级一个抢不过 | 计算密集型 vs 阻塞型 | 计算密集型任务的执行时间 | 拆分计算 / 提升优先级 |
+| 每 N 秒复位一次 | WDT 因饥饿触发 | WDT 超时前最后执行的任务 | 调整优先级 / 检查不主动阻塞的循环 |
+| 一起跑就死，单独测正常 | 死锁 | 打印每个 Mutex 的 holder/waiter | 固定锁顺序 |
+| 中断响应延迟 | ISR 中的 `portYIELD_FROM_ISR` 被忽略 | ISR 结尾代码 | 添加 ISR 安全 API |
+
+---
+
+### 17.10 本项目并发风险评估
+
+| 风险 | 状态 | 原因 |
+|------|:---:|------|
+| 优先级反转 | ✅ 无 | 未用 Mutex，spinlock 临界 < 10 条指令 |
+| 高优饿死低优 | ⚠️ 存在 | mic+spk 合占 60% CPU，ds_dsp 可能被延迟——但有 40ms 缓冲容错 |
+| 同优先级饿死 | ✅ 可控 | mic 和 spk 都是阻塞型，各循环主动 `ulTaskNotifyTake` |
+| 死锁 | ✅ 无 | 仅一个 spinlock，无嵌套 |
+| 中断延迟 | ✅ 优化 | `taskENTER_CRITICAL` 确保临界区极短 |
+| RMA 超标 | ⚠️ 活跃峰值 | 82% > 75.7%（上界），但实际交错降低峰值，且"空闲收益"弥补 |
 
 ---
 
@@ -1118,3 +2010,6 @@ void manager_task(void *pv) {
 6. `heap_caps_malloc(size, MALLOC_CAP_SPIRAM)` 失败后为什么还要 fallback 到 `malloc()`？两者有什么本质区别？
 7. 软件定时器的回调函数中，调用 `vTaskDelay` 会发生什么？为什么？
 8. PendSV 为什么优先级必须设为最低？如果设得比 SysTick 还高会怎样？
+9. 将 USB 同步端点的 bInterval 从 1 改为 2 后，RMA 利用率从 82% 降到 52%——为什么这个"改善"是虚假的？
+10. 优先级反转的三段论中，如果中优先级任务 B 不存在（只有 A 和 C），反转还会发生吗？为什么？
+11. 你的项目新增了一个读取温度传感的任务（每 100ms 一次，耗时 0.5ms，prio 2）。对现有系统的 RMA 可行性有何影响？
