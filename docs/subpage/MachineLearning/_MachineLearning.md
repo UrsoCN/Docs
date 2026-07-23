@@ -22,4 +22,11 @@ tags:
 - [智能语音服务学习笔记](./subsubpage/智能语音服务学习笔记.md)
   - [第 1 课：数字音频基础与频谱分析](./subsubpage/第_1_课：数字音频基础与频谱分析.md)
   - [第 2 课：Mel域与声学特征提取](./subsubpage/第_2_课：Mel域与声学特征提取.md)
+  - [第 3 课：语音前端信号处理](./subpage/MachineLearning/subsubpage/第_3_课：语音前端信号处理.md)
+  - [第 4 课：ASR 问题建模](./subpage/MachineLearning/subsubpage/第_4_课：ASR问题建模.md)
+  - [第 5 课：CTC——无对齐的端到端训练](./subpage/MachineLearning/subsubpage/第_5_课：CTC无对齐的端到端训练.md)
+  - [第 6 课：RNN-T (Transducer)](./subpage/MachineLearning/subsubpage/第_6_课：RNN-T-Transducer.md)
+  - [第 7 课：注意力机制与 Encoder-Decoder ASR](./subpage/MachineLearning/subsubpage/第_7_课：注意力机制与Encoder-Decoder-ASR.md)
+  - [第 8 课：Whisper 与 LLM-based ASR](./subpage/MachineLearning/subsubpage/第_8_课：Whisper与LLM-based-ASR.md)
+  - [第 9 课：Kaldi 与 WFST 解码](./subpage/MachineLearning/subsubpage/第_9_课：Kaldi与WFST解码.md)
 
