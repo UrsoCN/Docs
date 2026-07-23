@@ -326,7 +326,7 @@ endmenu
 
 > 关键语法 `select USB_DEVICE_UAC_AS_PART`：当用户启用 `USB_COMPOSITE_DEVICE_CDC_UAC` 时，**自动强制启用** `USB_DEVICE_UAC_AS_PART`（usb_device_uac 组件定义的配置）。这是 Kconfig 的"依赖链"机制——项目不需要手动修改框架组件。
 
-### 4.4 idf.py menuconfig 可视化
+### 4.4 menuconfig 可视化
 
 运行 `idf.py menuconfig` 会启动 ncurses 终端 GUI：
 
@@ -397,7 +397,7 @@ flowchart TD
 
 ---
 
-## 六、编译流程 — idf.py build 内部
+## 六、编译流程 — idf build 内部
 
 ```mermaid
 sequenceDiagram
