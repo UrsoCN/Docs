@@ -37,7 +37,7 @@ source file [here](https://github.com/UrsoCN/Docs/tree/master/docs/subpage/Linux
 - [嵌入式系统实验报告3](./subsubpage/嵌入式/嵌入式系统实验报告3.md)
 - [嵌入式系统实验报告4](./subsubpage/嵌入式/嵌入式系统实验报告4.md)
 
-## Agent 学习笔记
+## 嵌入式开发 学习笔记
 
 - [嵌入式开发学习笔记](./subsubpage/嵌入式开发学习笔记.md)
 - [第 1 课：嵌入式系统是什么 + 本项目全局地图](./subsubpage/第_1_课：嵌入式系统是什么+本项目全局地图.md)
