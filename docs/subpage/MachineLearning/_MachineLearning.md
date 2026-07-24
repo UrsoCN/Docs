@@ -29,4 +29,4 @@ tags:
   - [第 7 课：注意力机制与 Encoder-Decoder ASR](./subpage/MachineLearning/subsubpage/第_7_课：注意力机制与Encoder-Decoder-ASR.md)
   - [第 8 课：Whisper 与 LLM-based ASR](./subpage/MachineLearning/subsubpage/第_8_课：Whisper与LLM-based-ASR.md)
   - [第 9 课：Kaldi 与 WFST 解码](./subpage/MachineLearning/subsubpage/第_9_课：Kaldi与WFST解码.md)
-
+  - [第 10 课：关键词检测 (KWS)](./subpage/MachineLearning/subsubpage/第_10_课：关键词检测-KWS.md)

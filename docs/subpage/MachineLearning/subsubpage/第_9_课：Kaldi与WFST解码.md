@@ -222,15 +222,12 @@ $$L_{\text{LF-MMI}} = \log \frac{P(O | W_{\text{ref}})}{P(O | W_{\text{den}})}$$
 
 ```mermaid
 graph LR
-    subgraph Kaldi-WFST
+    subgraph Kaldi-WFST["Kaldi-WFST (10GB 静态图)"]
         AK["音频"] --> BK["DNN → PDFs"] --> CK["HCLG 搜索"] --> DK["文本"]
     end
-    subgraph End-to-End (sherpa-onnx)
+    subgraph "End-to-End (sherpa-onnx) (~30MB 模型)"
         AE["音频"] --> BE["单一 ONNX 模型"] --> CE["Beam Search"] --> DE["文本"]
     end
-    
-    CK -.-|"10GB 静态图"| CK
-    CE -.-|"~30MB 模型"| CE
 ```
 
 | Kaldi WFST | sherpa-onnx E2E |
