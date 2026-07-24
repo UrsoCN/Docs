@@ -90,6 +90,8 @@
   - [第 8 课：Whisper 与 LLM-based ASR](./subpage/MachineLearning/subsubpage/第_8_课：Whisper与LLM-based-ASR.md)
   - [第 9 课：Kaldi 与 WFST 解码](./subpage/MachineLearning/subsubpage/第_9_课：Kaldi与WFST解码.md)
   - [第 10 课：关键词检测 (KWS)](./subpage/MachineLearning/subsubpage/第_10_课：关键词检测-KWS.md)
+  - [第 11 课：神经语音合成 (TTS)](./subpage/MachineLearning/subsubpage/第_11_课：神经语音合成-TTS.md)
+  - [第 12 课：语音 NLU 与 LLM Agent](./subpage/MachineLearning/subsubpage/第_12_课：语音-NLU与LLM-Agent.md)
   - [智能语音服务学习笔记](./subpage/MachineLearning/subsubpage/智能语音服务学习笔记.md)
   - d2l
     - [3 线性神经网络](./subpage/MachineLearning/subsubpage/d2l/3_线性神经网络.md)
