@@ -54,7 +54,7 @@ After the migration (July 2026):
 
 ```
 Type tags:
-  type/article (64), type/moc (10), type/learning (4),
+  type/article (68), type/moc (10), type/learning (4),
   type/survey (1), type/comparison (1)
 
 Language tags:
@@ -62,9 +62,9 @@ Language tags:
   lang/csharp (3), lang/javascript (3)
 
 Topic tags:
-  topic/linux (20), topic/docsify (13), topic/embedded-linux (12),
-  topic/embedded (10), topic/ai (9), topic/aosp (8),
-  topic/ml (8), topic/cuda (6), topic/esp32 (5), topic/wsl (5),
+  topic/linux (20), topic/docsify (13), topic/ai (13),
+  topic/embedded-linux (12), topic/ml (12), topic/embedded (10),
+  topic/aosp (8), topic/cuda (6), topic/esp32 (5), topic/wsl (5),
   topic/testing (4), topic/xvf3800 (4), topic/academic (3),
   topic/cv (3), topic/graphics (3), topic/interview (3),
   topic/obsidian (3), topic/opengl (3), topic/bluetooth (2),

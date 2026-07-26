@@ -13,14 +13,13 @@
   - [XVF3800 ESP32-S3 固件性能优化](./subpage/Agent_summary/subsubpage/XVF3800_ESP32-S3_固件性能优化.md)
 
 - [AI & 机器学习](./subpage/AI/_AI.md)
-  - 论文笔记
-    - [Better & Faster Large Language Models via Multi-token Prediction](./subpage/AI/subsubpage/论文笔记/Multi_Token_Prediction多token预测.md)
-    - [Scaling Laws for Neural Language Models](./subpage/AI/subsubpage/论文笔记/Scaling_Laws神经语言模型.md)
-    - [Sequence to Sequence Learning with Neural Networks](./subpage/AI/subsubpage/论文笔记/Seq2Seq学习与神经网络.md)
-    - [Fast Inference from Transformers via Speculative Decoding](./subpage/AI/subsubpage/论文笔记/Speculative_Decoding推测解码.md)
   - 论文
     - [导出JabRef引文到Word](./subpage/AI/subsubpage/论文/导出JabRef引文到Word.md)
     - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/AI/subsubpage/论文/JabRef预览引用及在Word添加GB格式参考文献.md)
+    - [Better & Faster Large Language Models via Multi-token Prediction](./subpage/AI/subsubpage/论文/Multi_Token_Prediction多token预测.md)
+    - [Scaling Laws for Neural Language Models](./subpage/AI/subsubpage/论文/Scaling_Laws神经语言模型.md)
+    - [Sequence to Sequence Learning with Neural Networks](./subpage/AI/subsubpage/论文/Seq2Seq学习与神经网络.md)
+    - [Fast Inference from Transformers via Speculative Decoding](./subpage/AI/subsubpage/论文/Speculative_Decoding推测解码.md)
   - 智能语音
     - [第 1 课：数字音频基础与频谱分析](./subpage/AI/subsubpage/智能语音/第_1_课：数字音频基础与频谱分析.md)
     - [第 2 课：Mel 域与声学特征提取](./subpage/AI/subsubpage/智能语音/第_2_课：Mel域与声学特征提取.md)

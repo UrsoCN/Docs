@@ -46,10 +46,10 @@ tags:
 
 ## 论文笔记
 
-- [Sequence to Sequence Learning with Neural Networks (Seq2Seq)](./subsubpage/论文笔记/Seq2Seq学习与神经网络.md)
-- [Scaling Laws for Neural Language Models](./subsubpage/论文笔记/Scaling_Laws神经语言模型.md)
-- [Fast Inference via Speculative Decoding](./subsubpage/论文笔记/Speculative_Decoding推测解码.md)
-- [Better & Faster LLMs via Multi-token Prediction](./subsubpage/论文笔记/Multi_Token_Prediction多token预测.md)
+- [Sequence to Sequence Learning with Neural Networks (Seq2Seq)](./subsubpage/论文/Seq2Seq学习与神经网络.md)
+- [Scaling Laws for Neural Language Models](./subsubpage/论文/Scaling_Laws神经语言模型.md)
+- [Fast Inference via Speculative Decoding](./subsubpage/论文/Speculative_Decoding推测解码.md)
+- [Better & Faster LLMs via Multi-token Prediction](./subsubpage/论文/Multi_Token_Prediction多token预测.md)
 
 ## 学术 / 文献管理
 
