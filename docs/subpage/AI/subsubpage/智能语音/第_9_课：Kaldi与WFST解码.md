@@ -82,7 +82,7 @@ WFST 的权重在**热带半环**下运作：
 $$\text{路径 cost} = \sum \text{各弧权重}$$
 $$\text{FST 的 cost} = \min_{\text{所有路径}} (\text{路径 cost})$$
 
-这恰好就是**有向无环图上的最短路径问题**——可以用 Viterbi 算法高效求解。
+这就是加权图上的最优路径问题。解码图通常含 HMM 自环，并不是 DAG；在线 token passing/Viterbi 通过时间展开、beam pruning 和状态 recombination 控制搜索。
 
 > **关键直觉**：WFST 把 ASR 的所有约束（声学、发音、语言）编译成**一张巨大的图**。解码 = **在这张图上找一条总 cost 最小的路径**，路径的输出标签序列就是识别结果。这是一个经典的图算法问题——不需要神经网络，不需要 GPU。
 
@@ -211,11 +211,11 @@ $$L_{\text{LF-MMI}} = \log \frac{P(O | W_{\text{ref}})}{P(O | W_{\text{den}})}$$
 
 | 问题 | 表现 |
 |------|------|
-| **固定词典** | HCLG 编译后，vocab 就固定了。要加新词 → 重新编译，可能需要数小时 |
-| **巨大的内存** | 中文 3-gram HCLG 可达 50M 状态、500M 弧，单图 > 10GB |
+| **词典/图更新成本** | 完全静态 HCLG 更新新词较重；动态 composition、replace/grammar FST 可降低成本，但实现更复杂 |
+| **内存可能较大** | 大词表、高阶 LM 的预组合图可能达到 GB 级；大小取决于词表、LM、优化与组合策略 |
 | **构建管线复杂** | 需要 GMM 训练 → 对齐 → DNN 训练 → 图编译——多阶段、多工具链 |
-| **端侧不可行** | 10GB 的解码图无法装进 Jetson 的 8GB 内存 |
-| **不支持流式增量** | HCLG 是静态的——不支持动态插入热词或根据用户行为调整 |
+| **端侧成本敏感** | 大图不适合内存紧张设备，但裁剪语法、小词表图仍可用于端侧 |
+| **动态偏置更复杂** | WFST 天然支持在线流式解码；难点是低成本修改已优化的静态大图，而不是“不支持流式” |
 | **与 DNN 割裂** | WFST 的权重是**对数概率**——无法和神经网络联合端到端优化 |
 
 ### 端到端的替代方案
@@ -248,7 +248,7 @@ graph LR
 
 sherpa-onnx 的前身 k2 尝试用**可微分的 FSA**替代 WFST。思路：FSA 的操作（compose、forward-backward）保持代数结构不变，但权重变成**可学习的参数**。这样 WFST 的数学优雅被保留了下来，同时整个 pipeline 可微分、可端到端训练。
 
-实际上，sherpa-onnx 的 Zipformer 训练就使用了 k2 的**可微分 FSA 做 LF-MMI loss**——只不过解码时不再用 WFST，而是用 RNN-T 的 beam search。
+icefall/k2 支持用可微分 FSA 训练 LF-MMI 等目标，但 Zipformer 只是 encoder 架构；常见 Zipformer Transducer recipe 使用 pruned transducer loss 和可选 CTC 辅助目标，不能据此断言训练使用 LF-MMI。
 
 **2. 工业界的混合方案**
 
@@ -353,7 +353,8 @@ e2e_model_sizes = {"Zipformer (本项目 INT8)": 0.030,
 print(f"{'方案':<30} {'状态/大小':>15} {'Jetson 可行?':>15}")
 print("-" * 62)
 for name, states in wfst_states.items():
-    size_gb = states * 8 * 4 / 1e9  # 每弧~8B in/out + 4B weight
+    # 仅作数量级情景估算；真实大小应统计实际 fst 文件和运行时内存
+    size_gb = states * 32 / 1e9
     feasible = "❌" if size_gb > 4 else "⚠️"
     print(f"{name:<30} {states/1e6:>8.0f}M 状态{size_gb:>5.1f}GB {feasible:>12}")
 
@@ -378,7 +379,7 @@ for name, size_gb in e2e_model_sizes.items():
 | **LF-MMI** | Lattice-Free Maximum Mutual Information——Kaldi chain model 的序列级判别训练准则 |
 | **分子/分母图** | MMI 训练的两张图——分子只含正确文本的路径，分母含所有可能文本的路径 |
 | **Lattice** | 词格——解码产生的候选词图，不是单一最佳路径而是一个有竞争关系的 DAG |
-| **k2** | Kaldi 第二代——将 WFST 升级为**可微分** FSA，支持端到端训练 |
+| **k2** | 面向 CPU/GPU 批处理的可微分 FSA/FST 库，继承 Kaldi 生态经验但不是简单的“Kaldi 第二代” |
 
 ---
 

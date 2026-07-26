@@ -69,7 +69,7 @@ graph LR
 | /u/ (乌) | 300 | 700 | 低沉 |
 
 **Source-Filter 理论对 TTS 的启示**：
-1. Mel 频谱的 80 维足以表示**滤波器包络**（共振峰位置+形状）——这是"什么音"的全部信息
+1. Mel 频谱紧凑表示谱包络，但会丢失相位、细粒度谐波和部分时序信息；80 维只是具体模型的工程选择
 2. 声源细节（基频、谐波结构）由声码器从 Mel 频谱中**推断**——HiFi-GAN 的判别器正是在学习这个推断
 3. 这也是为什么 Mel 频谱是 TTS 和 ASR（课程 2）的**共同中间表示**——ASR 只需要滤波器包络来识别音素，TTS 则需要从滤波器包络重建完整的声源+滤波信号
 
@@ -160,9 +160,9 @@ graph TD
 
 > **为什么纯 L1 loss 不够？** L1 在统计上趋向于预测**所有可能波形的平均**——而"所有可能波形的平均" = 模糊的、过度平滑的波形（丢失了高频细节）。GAN 的判别器迫使生成器走极端——要么"看起来完全真实"，要么被惩罚。
 
-### 2.5 最优传输 (Optimal Transport)：Matcha 轻量化的核心
+### 2.5 Optimal-Transport Conditional Flow Matching：Matcha 的生成目标
 
-Matcha 的关键创新是用 **Optimal Transport** 替代 VITS 的 MAS (Monotonic Alignment Search)。
+Matcha-TTS 的关键是 **conditional flow matching (CFM)**：学习向量场，把简单噪声分布沿概率路径运输到目标 Mel 分布。“Optimal Transport”修饰所选条件概率路径，不表示用 Sinkhorn 对齐替代 MAS。
 
 **问题形式化**：给定文本帧 $\{x_i\}_{i=1}^{N}$ 和 Mel 帧 $\{y_j\}_{j=1}^{M}$，找最优的**软对齐**（每对 $(i,j)$ 该分配多少"注意力"）。
 
@@ -175,7 +175,7 @@ $$\min_{\gamma \in \Gamma(\mu, \nu)} \sum_{i,j} \gamma_{ij} \cdot c(x_i, y_j)$$
 - $c(x_i, y_j)$ 是"将文本帧 $i$ 映射为 Mel 帧 $j$ 的代价"（通常用余弦距离）
 - $\Gamma(\mu, \nu)$ 是所有可能对齐方案的集合（满足边际分布的约束）
 
-**为什么 OT 比 MAS 快**：MAS 需要动态规划搜索最佳对齐路径——$O(NM)$。Sinkhorn 算法（带熵正则化的 OT）可以近似求解，复杂度远低于 DP，且可以用 GPU 矩阵乘法实现。
+Matcha 仍沿用 Glow-TTS 系的单调对齐来获得文本 token 与 Mel 帧的 duration。推理时由 duration predictor 展开条件，再用少量 ODE 求解步生成 Mel；速度不是来自“Sinkhorn 比 MAS 快”。
 
 ```python
 # Sinkhorn 算法的核心迭代（伪代码）
@@ -188,7 +188,7 @@ for _ in range(num_iters):
 gamma = u[:, None] * K * v[None, :]  # 最终的对齐矩阵
 ```
 
-> **Matcha 的工程智慧**：OT 对齐**只在训练时**使用（为 Duration Predictor 提供 ground truth）。推理时完全不需要对齐计算——这一步是"零延迟"的。
+> **工程边界**：训练对齐、duration prediction 和 CFM 生成是三个不同环节。推理不运行 MAS，但仍要预测 duration，并执行若干向量场/ODE 步。
 
 ### 2.6 音频编解码器：VALL-E 的 Token 化基础
 
@@ -209,7 +209,7 @@ LLM-based TTS 需要将连续波形离散化为**有限个 token**——EnCodec 
 **为什么 EnCodec 使用 75 Hz 的帧率**：
 - 语音的 Mel 频谱通常用 100 Hz 帧率（10ms hop）
 - EnCodec 的 75 Hz 意味着 ~13.3ms 一帧——比 Mel 稍稀疏，但**每帧的维度更高**（128 × 8 codebooks = 1024 bits）
-- 75 × 8 = 600 tokens/s——GPT 每秒需要生成 600 个 token 才能实时。这就是 VALL-E 生成极慢的根本原因
+- 75 × 8 表示每秒 600 个 codebook 索引，但 coarse codebook 可自回归、其余 codebook 可并行或分层预测，并不必然等于 600 次串行 LLM step
 
 ---
 
@@ -308,7 +308,7 @@ Feed-Forward Transformer → 并行生成所有帧的 Mel 频谱
 
 ## 六、VITS：第三代的端到端 TTS
 
-VITS (Kakao, 2021) 把 FastSpeech2 + HiFi-GAN 合并成一个**端到端模型**，用 VAE + Normalizing Flow 做隐变量建模。
+VITS (2021) 将条件 VAE、normalizing flow、单调对齐、随机时长预测器和 GAN waveform generator 联合训练；它不是 FastSpeech2 与 HiFi-GAN 的简单拼接。
 
 ```mermaid
 graph TD
@@ -332,7 +332,7 @@ graph TD
 2. **Flow**：将简单的先验分布映射为复杂的语音分布
 3. **GAN**：对抗训练保证高频细节的真实性（避免"过度平滑"）
 
-**VITS 对本项目的影响**：Kokoro 借鉴了 VITS 的端到端设计思路，但使用了专门的 Text2Mel encoder + HiFi-GAN vocoder 分离架构，原因是在 Jetson 上分离式架构更灵活（可以单独升级声码器）。
+**与本项目的关系**：Kokoro 的公开架构更接近 StyleTTS2 系的 text/bert encoder、duration/style conditioning 与 ISTFTNet 类 decoder。没有导出图证据时，不能称其为 VITS 的 Text2Mel + HiFi-GAN 拆分版。
 
 ---
 
@@ -367,30 +367,29 @@ sample_rate: 16000               # 16kHz，不需要重采样
 provider_name: "cpu"             # CPU 推理
 ```
 
-**架构**：基于 **Matcha-TTS**——一种轻量非自回归 TTS，使用 optimal transport 做时长匹配。比 Kokoro 快 3-5×，但音质略低。适合不需要 GPU 的场景（Jetson CPU 推理）。
+**架构**：基于 **Matcha-TTS** 的非自回归 conditional flow matching。速度和音质差异应在同一文本集、provider、线程数和 warm-up 条件下实测。
 
 #### Matcha 为什么比 Kokoro 快 3-5×？
 
 Matcha 的轻量来自三个层面（与第二节的理论基础直接对应）：
 
-**1. 对齐方式：OT 一次计算 vs MAS 迭代搜索**
+**1. 生成方式与网络规模**
 
-| | Kokoro (VITS) | Matcha |
+| | Kokoro | Matcha |
 |--|:---:|:---:|
-| 对齐算法 | MAS (DP 搜索，$O(T_{\text{text}} \times T_{\text{mel}})$) | OT (Sinkhorn 迭代，GPU 并行) |
-| 训练时 | MAS 每步都要搜索 | OT 一次性矩阵乘法 |
-| 推理时对齐 | ⚠ 仍需隐式对齐 (Flow 内部) | ✅ 完全由 Duration Predictor 替代，**零对齐计算** |
+| 训练对齐 | 以模型训练 recipe 为准 | 使用单调对齐获得 duration 监督；OT-CFM 负责生成路径 |
+| 训练时对齐 | 以训练 recipe 为准 | 使用单调对齐获得 duration 监督 |
+| 推理时 | 以导出图为准 | duration predictor + CFM/ODE 生成 |
 
-**2. Decoder 复杂度：Flow 多步 vs 单次前向**
+**2. Decoder 复杂度：必须从导出图和 profile 判断**
 
 ```
-Kokoro (VITS):
+Kokoro:
   文本 → encoder → Flow层1 → Flow层2 → ... → Flow层K → HiFi-GAN → 24kHz波形
   每层Flow都包含仿射耦合 + 1×1卷积，K=4~8层
 
 Matcha:
-  文本 → encoder → Duration Predictor → Feed-Forward Decoder(1次) → HiFi-GAN → 16kHz波形
-  没有Flow层，非自回归一次性生成所有帧
+  文本 → encoder → Duration Predictor → CFM/ODE 若干步 → Mel → vocoder
 ```
 
 **3. 采样率：24kHz vs 16kHz 的 1.5× 波形点**
@@ -403,7 +402,7 @@ Kokoro 每秒生成 24000 个采样点，Matcha 生成 16000 个——HiFi-GAN �
 
 **退化 1：自回归循环——"巡巡巡..."**
 
-Kokoro 的 Text2Mel decoder 如果采用自回归模式，量化噪声会引发 stuck-in-loop：
+若某个 TTS 的 Text2Mel decoder 采用自回归模式，量化噪声可能引发 stuck-in-loop；但这不是 Kokoro 的已知结构，不能把下面的假设例子当作本项目故障根因：
 
 ```
 FP16 正常:
@@ -438,7 +437,7 @@ Duration Predictor 预测的是**小整数**（2-8），量化误差的波动很
 
 **为什么 Kokoro 比 Matcha 更抗量化？**
 
-- Kokoro (VITS)：时长是**隐式**学习的（在 Flow 层的内部表示中），没有显式的 Duration Predictor。量化噪声被多层 Flow 变换"稀释"了。
+- Kokoro：是否存在显式 duration predictor、量化哪些子图，应从实际 ONNX graph 和导出 recipe 核验；不能按 VITS flow 推断误差会被“稀释”。
 - Matcha：时长是**显式**预测的（一个独立的 Duration Predictor 模块），量化直接作用在这个模块的输出上——误差无处可逃。
 
 #### 多音字消歧：TTS 的 NLU 问题
@@ -703,7 +702,7 @@ graph LR
 $$ \text{ASR: } \text{波形} \xrightarrow{\text{STFT+Mel}} \text{80-dim FBank} \xrightarrow{\text{Encoder}} \text{文本} $$
 $$ \text{TTS: } \text{文本} \xrightarrow{\text{Encoder}} \text{80-dim Mel} \xrightarrow{\text{Vocoder}} \text{波形} $$
 
-Mel 频谱是 ASR 的"终点"（特征提取的最终输出）也是 TTS 的"起点"（声码器的输入）。ASR 要的是**保持音素区分度的最少信息**（80 维正是这个最小充分统计量），TTS 要从这个最小表示**反推完整波形**。
+Mel 频谱是许多 ASR 的输入特征，也是许多两阶段 TTS 声码器的条件表示。80 维并非理论上的最小充分统计量，声码器恢复的相位和细节来自训练先验。
 
 **共享表示推动的联合模型**：如果在 ASR 中发现了更好的声学表示（如 wav2vec 2.0 的 latent features），TTS 可以反过来用这个特征做条件生成。这就是 **SpeechT5** 的核心思路——一个预训练 encoder 同时服务 ASR 和 TTS。
 
@@ -914,8 +913,8 @@ print("→ 这就是为什么 SID 15 和 SID 30 发音差异大")
 | **Normalizing Flow** | 可逆变换链——将简单分布逐步"扭曲"为复杂的语音分布 |
 | **Change of Variables** | $\log p_X = \log p_Z + \sum \log \|\det \partial f^{-1}/\partial z\|$——Flow 的概率归一化公式 |
 | **GAN Minimax** | $\min_G \max_D$——生成器和判别器的零和博弈，对抗训练保证高频细节 |
-| **Optimal Transport** | $\min_\gamma \sum \gamma_{ij} c(x_i, y_j)$——Matcha 替代 MAS 的对齐算法 |
-| **Sinkhorn 算法** | 带熵正则化的 OT 近似解——GPU 矩阵乘法实现，比 DP 快数十倍 |
+| **OT-CFM** | Matcha 用于学习噪声到 Mel 分布的条件向量场，不是文本-Mel 对齐器 |
+| **MAS** | Monotonic Alignment Search——训练阶段估计文本 token 与声学帧的硬单调对齐 |
 | **EnCodec / RVQ** | 残差向量量化——将连续波形分层离散化为 token，VALL-E 的前置编码器 |
 | **Stuck-in-Loop** | 量化后 logit 分布退化导致自回归 decoder 重复输出相同 token |
 | **多音字消歧** | G2P 中的 NLU 问题——"为"在"保存为"中读 wèi，在"为什么"中读 wéi |
@@ -951,7 +950,7 @@ print("→ 这就是为什么 SID 15 和 SID 30 发音差异大")
 - **Shen et al. (2018)** — "Natural TTS Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions" — Tacotron2 论文（Google）
 - **Ren et al. (2019)** — "FastSpeech: Fast, Robust and Controllable Text to Speech" — Duration Predictor 的发明（Microsoft）
 - **Kim et al. (2021)** — "Conditional Variational Autoencoder with Adversarial Learning for End-to-End Text-to-Speech" — VITS 论文（Kakao）
-- **Mehta et al. (2024)** — "Matcha-TTS: A Fast TTS Architecture with Conditional Flow Matching" — Optimal Transport 对齐的轻量 TTS 方案
+- **Mehta et al. (2024)** — "Matcha-TTS: A Fast TTS Architecture with Conditional Flow Matching" — OT-CFM 生成路径与单调对齐相结合的 TTS
 
 #### LLM-based TTS 与语音 Tokenization
 
@@ -988,7 +987,7 @@ print("→ 这就是为什么 SID 15 和 SID 30 发音差异大")
 |:--|------|:--:|-----------|
 | 6 | **Kong et al.** — "HiFi-GAN: Generative Adversarial Networks for Efficient and High Fidelity Speech Synthesis" | 2020 | 当前工业界首选声码器。MSD/MPD 多尺度判别器的设计哲学 |
 | 7 | **Kim et al.** — "Conditional VAE with Adversarial Learning for End-to-End TTS" | 2021 | VITS 论文。VAE+Flow+GAN 的一体化——现代 TTS 的"统一场论" |
-| 8 | **Mehta et al.** — "Matcha-TTS: A Fast TTS Architecture with Conditional Flow Matching" | 2024 | OT 对齐替代 MAS——理解本课程中 Matcha 的轻量化原理 |
+| 8 | **Mehta et al.** — "Matcha-TTS: A Fast TTS Architecture with Conditional Flow Matching" | 2024 | 区分 OT-CFM 生成路径、MAS 对齐和 ODE 推理 |
 | 9 | **Rezende & Mohamed** — "Variational Inference with Normalizing Flows" | 2015 | Flow-based 生成的原始论文。理解 Change of Variables 和 Jacobian 行列式 |
 | 10 | **Tan et al.** — "A Survey on Neural Speech Synthesis" | 2021 | 200+ 参考文献的综述——从 Tacotron 到 VITS 的完整地图 |
 
@@ -1009,6 +1008,6 @@ print("→ 这就是为什么 SID 15 和 SID 30 发音差异大")
 
 ### 下节预告
 
-[**第 12 课：语音 NLU**](./第_12_课：语音-NLU.md) — Phase 3 的收官。语音 NLU vs 文本 NLU 的特殊性（ASR 误差传播）、经典方案（pyhanlp 分词+词性标注）、BERT 系 SLU（joint intent+slot）、LLM 直接理解。NLU 在语音管道中的定位——它决定了"听懂了什么"到"该做什么"的转化。
+[**第 12 课：语音 NLU 与 LLM Agent**](./第_12_课：语音-NLU与LLM-Agent.md) — Phase 3 的收官。语音 NLU、意图槽位、工具调用与流式 Agent 的安全状态管理。
 
 > **有疑问？** 可以问我 HiFi-GAN 的 MPD/MSD 判别器设计、VALL-E 为什么用 EnCodec 而不是 Mel 频谱作为中间表示、或者 LLM-based TTS 为什么比 LLM 文本生成更容易 hallucinate。

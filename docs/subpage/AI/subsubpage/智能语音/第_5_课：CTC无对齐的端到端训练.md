@@ -18,7 +18,7 @@ tags: [type/learning, topic/speech, topic/ml]
 HMM 方法:
   已知：音频 O = [o1, o2, ..., oT]，文本 "你好"
   需要：强制对齐 → 哪帧对应 n，哪帧对应 i3，哪帧对应 h...
-  问题：需要多轮迭代，初始误差传播，无法用无标注数据
+  问题：经典 recipe 工程链较长；监督训练仍需要转写
   
 CTC 方法:
   已知：音频 O = [o1, o2, ..., oT]，文本 "你好"
@@ -90,7 +90,7 @@ graph LR
 
 $$P(\pi | O) = \prod_{t=1}^{T} y_{\pi_t}^t$$
 
-即：每帧的输出独立于其他帧（给定音频特征）。这是 CTC 的**"马尔可夫"假设**——也是它最主要的局限。
+即：各路径位置在给定整段输入 $O$ 后条件独立。每个 $y^t$ 可由能看到长上下文甚至整句的 encoder 产生；这不是 Markov 假设，限制在于输出标签之间没有显式依赖。
 
 ### 边际化：对所有路径求和
 
@@ -180,7 +180,7 @@ CTC:  [  ε  ε ][ n  ε  ][  ε  ε  ][ i3  ε  ][  ε  ε  ][ h  ε  ][  ε  �
 - 但由于 blank 的"自环"在格子中有更多路径支持，模型倾向于用 blank 来消耗时间
 - 结果：每个字符只在一帧"喊"出来，其余帧保持沉默
 
-**工程含义**：尖峰分布意味着 CTC 解码时可以**直接取每帧的 argmax**，不需要 beam search——因为 blank 会"自动"过滤掉无关帧。这是 CTC 流式推理速度优势的来源之一。
+**工程含义**：尖峰分布使 greedy collapse 很便宜，但 greedy 只取单条最优路径，不保证得到边际概率最大的文本。CTC 是否流式主要取决于 encoder 的右上下文和状态缓存，而不是尖峰本身。
 
 ---
 
@@ -221,7 +221,7 @@ for each prefix p:
 - 如果 $k \neq \epsilon$ 且 $k \neq \text{prefix 的最后一个字符}$：延长 prefix  $\rightarrow$ 创建新候选
 - 如果 $k = \text{prefix 的最后一个字符}$（重复字符）：需要中间有 blank  $\rightarrow$ 显式处理
 
-prefix search 是**精确的 CTC 解码**（不考虑 beam pruning），复杂度 $O(T \cdot 2^{|V|})$——对中文这种大词表（~6000+ 字）不可行。因此工程中几乎总是用 beam search。
+完整维护所有可达前缀时可精确求最优文本，但候选数随时间呈指数增长，并不是 $O(T\cdot2^{|V|})$。工程实现采用 prefix beam search，在 token 和前缀两个层面剪枝。
 
 ### 3. Beam Search
 
@@ -244,7 +244,7 @@ CTC 的独立假设意味着它输出的文本序列在语言上可能不流畅�
 
 $$\text{score}(\mathbf{l}) = \underbrace{\log P_{\text{CTC}}(\mathbf{l}|O)}_{\text{声学得分}} + \alpha \cdot \underbrace{\log P_{\text{LM}}(\mathbf{l})}_{\text{语言模型得分}} + \beta \cdot |\mathbf{l}|$$
 
-> **本项目**的 Zipformer 使用 `modified_beam_search` 作为解码方法，正是 CTC beam search + LM shallow fusion 的联合方案。
+> **架构边界**：sherpa-onnx 的 `modified_beam_search` 通常指 **Transducer** beam search；它不是 CTC prefix beam search，也不自动等于“CTC + 外部 LM”。
 
 #### 工程注意事项：Beam Search 的延迟代价与优化策略
 
@@ -323,7 +323,7 @@ LM 计算次数从 $O(K \cdot T)$ 降为 $O(N)$。
 
 ### 标准 CTC 的问题
 
-标准 CTC 在整句音频上做 encoder → softmax → 解码。如果要流式识别（边听边出字），encoder 不能看到未来帧——否则 CTC 在开头就可能"作弊"（通过未来信息预测当前字符）。
+CTC loss 本身不规定 encoder 是离线还是流式。在线识别要求 encoder 限制未来上下文并正确维护 chunk 缓存；离线 CTC 使用双向或全注意力 encoder 完全合法。
 
 ### 解决方案：Chunk-based CTC
 
@@ -370,7 +370,7 @@ $$P(\pi|O) = \prod_t y_{\pi_t}^t$$
 
 RNN-T（第 6 课）在 CTC 的基础上增加了一个 **Prediction Network**——一个内置的语言模型，使得当前输出不仅取决于声学帧，还取决于**已经输出的字符序列**：
 
-$$\text{CTC: } P(\pi_t|o_t) \quad \text{vs} \quad \text{RNN-T: } P(y_u|\mathbf{y}_{1:u-1}, \mathbf{o}_{1:t})$$
+$$\text{CTC: } P(\pi_t|O) \quad \text{vs} \quad \text{RNN-T: } P(y_u|\mathbf{y}_{1:u-1}, \mathbf{o}_{1:t})$$
 
 这就是从"条件独立"到"自回归"的跨越。
 
@@ -602,7 +602,7 @@ if (utterance_duration < 2000ms) {
 }
 ```
 
-**流式化的代价**：增量编码在长句中累积的特征缓存越来越大，导致 CTC 解码的 $O(T)$ 复杂度随时间增长。这是纯 CTC greedy 方案的固有局限——**没有 beam search 的剪枝来限制搜索空间，解码复杂度随句长线性增长**。这也是为什么真正的生产系统（如 Zipformer）使用 RNN-T：它可以在不重新处理历史帧的情况下逐帧输出。
+**流式化的代价**：如果每次 partial 都对累计的全部 logits 重新 collapse，总工作量会随多次刷新累积；但这属于实现策略，不是 CTC 的固有局限。带状态的流式 CTC encoder 可以只编码新帧，greedy decoder 也只需保存上一 token 和已输出前缀。beam search 不会让 $O(T)$ 的 greedy 更快。
 
 ### 10.5 Hotword 偏置的 CTC 实现
 

@@ -37,9 +37,9 @@ graph LR
 |------|---------------------|-------------------|
 | **输入质量** | 用户打字，标点完整，句式规整 | **ASR 误差传播**——"天气晴朗"可能被 ASR 误识别为"天气晴ang" |
 | **句式** | 完整句（"我想查询明天的天气"） | **口语化、碎片化**（"那个...明天...天气？"） |
-| **歧义** | 打字有上下文（聊天记录） | 只有当前一句——没有历史文本做消歧 |
+| **歧义** | 可回看聊天记录 | 同样可以维护历史，但用户看不到完整上下文，指代与误听更难察觉 |
 | **延迟要求** | 1-3 秒可接受 | **< 500ms**——用户说完就期望系统开始回应 |
-| **容错** | 可以要求用户澄清 | 不能反复问"你说什么？"——体验灾难 |
+| **容错** | 可以要求用户澄清 | 应做最小化、针对性的澄清；盲目执行错误意图通常比追问一次代价更高 |
 
 ### ASR 误差传播：NLU 必须面对的噪声
 
@@ -135,10 +135,12 @@ response = llm.generate(prompt)
 ```
 
 **LLM-based NLU 的独特优势**：
-1. **零样本**：不需要为每个意图训练分类器——描述意图的 prompt 就是"训练数据"
+1. **少样本迁移方便**：不必为每个意图单独训练分类器，但能力来自 LLM 预训练，生产效果仍需带噪验证集和示例/约束调优
 2. **槽位消歧**：LLM 能理解"明天"在当前日期（2026-07-24）背景下指 "2026-07-25"
 3. **处理 ASR 噪声**：LLM 能从"帮我查一下明天的田七"中推断用户可能说的是"天气"
-4. **自然语言槽位**：不需要预定义槽位 schema——"帮我查一下上次去过的那个餐厅"中 "上次去过的那个" 是 LLM 可以解析的
+4. **自然语言引用解析**：能处理“上次去过的那个餐厅”等表达，但真正调用工具仍应落到预定义、可校验的 schema
+
+> **置信度边界**：让 LLM 输出 `confidence: 0.95` 不会自动得到校准概率。阈值决策应在真实 ASR 噪声数据上做 calibration，或结合 N-best 一致性、工具参数完整性和规则校验。
 
 ---
 
@@ -213,7 +215,8 @@ response = llm.generate_with_tools(user_input, tools)
 # → {"tool": "get_weather", "params": {"date": "2026-07-25", "city": "北京"}}
 
 # Agent 执行工具调用
-result = execute_tool(response.tool, response.params)
+validated = validate_schema_and_policy(response.tool, response.params)
+result = execute_tool(validated.tool, validated.params)
 
 # 将结果反馈给 LLM 生成最终回复
 final_reply = llm.generate(f"工具返回: {result}. 请生成自然语言回复。")
@@ -419,7 +422,7 @@ class SpeechAgentPipeline:
 # 策略 1: 预推理——拿到 ASR partial 就开始准备
 async def on_asr_partial(self, partial_text: str):
     # "帮我查一下明..." → 已经开始推理可能的意图
-    self.precompute_intent(partial_text)
+    self.precompute_intent(partial_text)  # 只预计算，不执行有副作用的工具
 
 # 策略 2: 流式生成 TTS 文本
 async def generate_reply_streaming(self):
@@ -450,6 +453,18 @@ dialog_state = {
     "last_agent_action": "replied_weather",  # 上一步做了什么
 }
 ```
+
+### 8.4 工具调用的安全与一致性
+
+LLM 负责提出调用建议，确定性代码负责授权和执行。生产链至少需要：
+
+1. **结构校验**：工具名必须来自 allowlist，参数通过 JSON Schema；日期、设备 ID、数值范围再次规范化。
+2. **权限与确认**：查询类工具可自动执行；支付、开门、删除、发送消息等高风险动作需要明确复述并确认。
+3. **幂等与取消**：每轮调用携带 request/turn ID，重试不能重复创建提醒；barge-in 或新一轮输入到达时取消旧任务并丢弃迟到结果。
+4. **超时与审计**：工具有 deadline、错误分类和结构化日志，回复只能声称实际成功的动作。
+5. **Prompt injection 隔离**：网页/API 返回值是不可信数据，不能让其中的文本改变系统权限或工具策略。
+
+流式管道尤其要维护 revision：ASR partial 可能从“打开灯”修订为“不要打开灯”。partial 可以预热模型、查询只读缓存，但执行副作用必须等 final、稳定前缀或显式确认。
 
 ---
 
@@ -561,6 +576,7 @@ print("超时: listening → idle (节能)")
 | **Memory** | 多轮对话的状态管理——不只是历史文本，是结构化的对话上下文 |
 | **Barge-in** | 用户打断 TTS 播放——Agent 必须丢弃未播放部分并切换到 listening |
 | **流式 Agent** | ASR partial → 预推理 → 边生成边合成——降低用户感知延迟 |
+| **幂等键** | 标识一次逻辑工具调用，保证超时重试或重复事件不会产生两次副作用 |
 
 ---
 

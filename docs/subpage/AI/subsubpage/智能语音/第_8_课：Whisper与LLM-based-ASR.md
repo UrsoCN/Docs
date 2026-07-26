@@ -20,7 +20,7 @@ graph TD
         L1["Pyramidal BLSTM<br/>Encoder"] --> L2["RNN Decoder<br/>+ Cross-Attention"]
     end
     subgraph "Whisper (2022)"
-        W1["Transformer Encoder<br/>(只做局部 attention?)"] --> W2["Transformer Decoder<br/>+ Cross-Attention"]
+        W1["Transformer Encoder<br/>(全局 self-attention)"] --> W2["Transformer Decoder<br/>+ Cross-Attention"]
     end
     subgraph "改进"
         L1 -.->|"BLSTM → Transformer<br/>更高效、可并行"| W1
@@ -96,7 +96,7 @@ Whisper 的输出不是纯文本，而是一个**结构化 token 序列**：
 | `<\|transcribe\|>` | 任务类型 | `transcribe`（同语言识别）或 `translate`（翻译为英语） |
 | `<\|notimestamps\|>` | 时间戳模式 | 控制是否输出逐字时间戳 |
 | `<\|0.00\|>` ~ `<\|30.00\|>` | 时间戳 token | 标记某个词在音频中的起止时间 |
-| `<\|nospeech\|>` | 无语音 | 当 VAD 判定无有效语音时输出（Whisper 内置了 VAD） |
+| `<\|nospeech\|>` | 当前 segment 无语音 | segment 级判断，可辅助跳过静音；不等同于独立逐帧 VAD |
 
 ### 多语言 token
 
@@ -110,12 +110,12 @@ Whisper 用**同一个 token 空间**表示所有语言和任务——99 种语�
 
 ```python
 # Whisper 的时间戳预测（简化）
-# 在所有输出 token 之上加一个额外的线性层
-timestamp_logits = Linear(decoder_hidden)  # [seq_len, num_timestamp_bins]
+# 时间戳与文本 token 共用 decoder 的词表投影
+logits = output_projection(decoder_hidden)  # [seq_len, full_vocab]
 
 # 时间戳被离散化为 N 个 bin（如 1501 个 = 0~30s / 0.02s）
 # bin_index = round(time / 0.02)
-# decoder 在适当位置输出 <|time_bin|> token
+# decoder 在适当位置从同一词表输出 <|time_bin|> token
 ```
 
 **为什么时间戳预测能工作**：Cross-Attention 的注意力权重天然包含"decoder 现在在关注 encoder 的哪几帧"的信息。Whisper 在训练时要求 decoder 同时输出文本和时间戳，迫使 Cross-Attention 学到更精确的对齐。
@@ -126,7 +126,7 @@ timestamp_logits = Linear(decoder_hidden)  # [seq_len, num_timestamp_bins]
 
 ### 数据：68 万小时弱监督音频
 
-Whisper 没有使用人工精标注的 ASR 数据集（如 LibriSpeech 的 1000 小时），而是使用了从互联网爬取的**弱标注**数据——音频+标题/字幕对。这种数据噪声大（标题可能不完整、有错别字、时间不对齐），但**规模碾压**。
+Whisper 使用了从互联网收集的大规模音频与人类生成转写配对，其中包含多语言转写和语音翻译数据。标签质量和对齐精度不一，因此称为**弱监督**；不能简化成“音频+网页标题”，也不表示完全没有人工产生的字幕/转写。
 
 ```
 LibriSpeech:               1,000 小时（精标注，干净）
@@ -169,7 +169,7 @@ Whisper Encoder: "请给我全部 30 秒的音频，我现在就要"
 
 **2. Decoder 的 Cross-Attention**
 
-Decoder 需要**整个 encoder 输出**才能做 Cross-Attention。即使 encoder 被改成流式的，decoder 仍要等 encoder 处理完整个序列。
+原模型训练时让 decoder attend 完整 segment。工程上可以只提供当前已编码前缀，但输出会随新上下文反复修订，并产生 chunk 拼接、重复和确认策略问题；这是训练分布与稳定性问题，并非 cross-attention 算子必须等待完整序列。
 
 **3. 训练策略**
 
@@ -186,7 +186,7 @@ Whisper 在训练时使用 30 秒固定长度的音频窗口（padding 或截断
 社区有一些"让 Whisper 流式化"的努力：
 
 - **whisper-streaming**：把音频分成有重叠的 chunk，每个 chunk 独立过 Whisper，然后合并重叠部分的输出。本质上是用 offline 模型模拟流式——精度损失 5-10%。
-- **Distil-Whisper**：蒸馏到更小的模型（如 tiny），推理速度提高 6×，间接改善流式体验。
+- **Distil-Whisper**：保留强 encoder、减少 decoder 层并蒸馏，主要优化长音频离线推理；它不是简单蒸馏成 tiny，也不会自动获得严格流式能力。
 - **Whisper-tiny + CTC head**：在 encoder 上加 CTC 头做流式 decode，decoder 做离线 refine。
 
 但这些都不是 OpenAI 官方支持的方案——Whisper 的流式化目前更像是"hack"而非"feature"。
@@ -223,7 +223,7 @@ Whisper 在训练时使用 30 秒固定长度的音频窗口（padding 或截断
 LLM-based ASR 时代：
 ```
 音频 → Audio Encoder → 音频 token → LLM → 文本
-                        (和文本 token 在同一个空间中)
+                        (经 projector 映射到 LLM 可接收的表示)
 ```
 
 ```mermaid
@@ -306,7 +306,7 @@ def whisper_encoder_sim(audio_length_s=10, sample_rate=16000):
     
     # Step 2: 卷积下采样 (2×)
     # Patch embedding: 用 stride=2 的卷积将时间维减半
-    # 实际 Whisper 用 2 层 stride=2 的卷积 → T/4
+    # 实际 Whisper 有两层卷积，其中第二层 stride=2 → 总下采样 2×
     downsampled = mel_spec[::2, :]  # 简化: 每 2 帧取 1 帧
     print(f"After 2× downsampling: {downsampled.shape}")
     
@@ -411,7 +411,7 @@ print(f"      Zipformer 量化后只有 30MB——是 Whisper tiny 的 1/2.5")
 | **Whisper** | OpenAI 的多语言多任务 ASR 模型——68 万小时弱监督数据训练的 Encoder-Decoder Transformer |
 | **多任务 Token** | `<\|transcribe\|>` / `<\|translate\|>` / `<\|lang_id\|>`——用特殊 token 切换任务 |
 | **弱监督数据** | 音频+标题/字幕对——不精确但规模巨大（680k 小时） |
-| **时间戳 Token** | `<\|0.00\|>` ~ `<\|30.00\|>`——模型学会输出逐字对齐时间 |
+| **时间戳 Token** | `<\|0.00\|>` ~ `<\|30.00\|>`——与文本共享词表，通常标记 segment 边界而非保证逐字对齐 |
 | **RTF** | Real-Time Factor = 处理时间 / 音频时长。RTF < 1 = 比实时快 |
 | **TTFP** | Time to First Partial——第一个字出现的延迟（流式指标） |
 | **LLM-based ASR** | 将音频编码为 token 后输入 LLM，ASR 成为 LLM 的一个感知模态 |

@@ -19,7 +19,7 @@ tags: [type/learning, topic/speech, topic/audio, topic/ml]
 | **运行模式** | 按需启动（说话时） | **常驻运行**（always-on） |
 | **核心约束** | 精度（CER）、延迟 | **功耗、内存、虚警率** |
 | **典型硬件** | GPU / NPU | MCU / DSP / 低功耗协处理器 |
-| **训练数据** | 海量配对数据（音频+文本） | 少量关键词录音 + 大量负样本（背景噪声） |
+| **训练数据** | 海量配对数据（音频+文本） | 关键词正样本 + 大量困难负样本（近音词、连续语音、音乐、噪声、回声） |
 
 ```mermaid
 graph LR
@@ -41,9 +41,9 @@ graph LR
 
 | 指标 | 全称 | 含义 | 目标 |
 |:---:|------|------|:---:|
-| **FAR** | False Alarm Rate | 误唤醒率——没说话时系统错误触发 | < 1 次/小时 |
+| **FAR** | False Alarm Rate | 通常报告 false accepts/hour；也可报告负样本比例，但必须注明单位 | 由产品场景定义 |
 | **FRR** | False Reject Rate | 漏检率——说出唤醒词但系统没反应 | < 5% |
-| **ROC 曲线** | Receiver Operating Characteristic | FAR vs FRR 的 tradeoff 曲线 | 曲线下面积 (AUC) 越大越好 |
+| **DET/ROC 曲线** | 阈值扫描 | KWS 常画 FRR vs false accepts/hour 的 DET；样本级 ROC 不能替代长音频虚警测试 | 在目标 FAR 处比较 FRR |
 
 **FAR 和 FRR 是跷跷板**：降低检测阈值 → FRR 下降（更容易唤醒），但 FAR 上升（更容易误唤醒）。KWS 模型设计的核心就是**在给定 FAR 约束下最小化 FRR**。
 
@@ -292,8 +292,8 @@ graph TD
 你的硬件是？
 ├── MCU 级别 (ESP32, < 1MB RAM)
 │   └── 需要可扩展？
-│       ├── 是 → GMM-HMM (L0) ← 唯一可行选择
-│       └── 否 → TC-ResNet (L4) ← 精度最高
+│       ├── 是 → 音素/embedding 匹配或小型混合方案，按实测选型
+│       └── 否 → 量化 CNN/TC-ResNet 等固定词模型
 │
 ├── 低端 Linux (树莓派, < 1GB RAM)
 │   └── DNN-HMM (L1) 或 Zipformer KWS 量化版 (L2)
@@ -383,12 +383,14 @@ for thresh in thresholds:
     far_rates.append(far)
     frr_rates.append(frr)
 
-# 找出 FAR < 0.01 时的最佳 FRR
+# 这里计算的是负样本误判比例，不是每小时虚警次数
+# 在约束内选最低阈值，才能使 FRR 最小
 best_idx = np.where(np.array(far_rates) < 0.01)[0]
 if len(best_idx) > 0:
-    best_thresh = thresholds[best_idx[-1]]
-    best_frr = frr_rates[best_idx[-1]]
-    print(f"FAR < 1% 时: threshold={best_thresh:.2f}, FRR={best_frr:.1%}")
+    chosen = best_idx[0]
+    best_thresh = thresholds[chosen]
+    best_frr = frr_rates[chosen]
+    print(f"负样本误判比例 < 1% 时: threshold={best_thresh:.2f}, FRR={best_frr:.1%}")
 
 # 对应本项目的 kws_keywords_threshold = 0.19
 print(f"本项目 threshold = 0.19")
@@ -430,7 +432,7 @@ print("  3. KWS 输出的是音素序列，不是完整的中文字符")
 
 | 术语 | 一句话定义 |
 |------|-----------|
-| **FAR** | False Alarm Rate——误唤醒率（没说话时系统触发），目标 < 1 次/小时 |
+| **FAR** | False Alarm Rate——需明确是 false accepts/hour 还是样本级误判比例，二者不可混用 |
 | **FRR** | False Reject Rate——漏检率（说出唤醒词但没反应），目标 < 5% |
 | **ROC 曲线** | FAR vs FRR 的 tradeoff——KWS 模型设计的核心可视化工具 |
 | **Always-on** | 常驻运行的极低功耗模式——KWS 区别于 ASR 的核心运行特征 |

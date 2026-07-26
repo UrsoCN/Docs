@@ -19,7 +19,7 @@ tags: [type/learning, topic/speech, topic/ml]
 | 架构 | Encoder → Decoder 的信息传递 | 瓶颈在哪里？ |
 |------|---------------------------|------------|
 | **CTC** | Encoder → softmax → 逐帧独立输出 | 根本没有 Decoder（只依赖声学帧） |
-| **RNN-T** | Encoder 输出 + Prediction Net 输出 → Joint Network | Joint Network 是一个窄的线性层，信息压缩严重 |
+| **RNN-T** | 当前 encoder 状态 + Prediction Net 状态 → Joiner | 每个格点只融合当前时间位置与标签历史 |
 
 **Attention 的核心思想**：Decoder 的每一步，可以**直接访问** Encoder 的**全部输出**，并自己学习"此时应该关注哪一部分音频"。
 
@@ -30,7 +30,7 @@ graph TD
         P1["Prediction Net 输出<br/>[1, 256]"] --> J1
         J1 --> O1["输出分布"]
     end
-    subgraph "Attention (无瓶颈)"
+    subgraph "Attention (内容寻址)"
         E2["Encoder 输出<br/>[T, 512]"] -->|"全部可访问"| A2["Attention<br/>decoder 自己选择关注哪里"]
         D2["Decoder 状态<br/>[1, 512]"] --> A2
         A2 --> O2["输出分布"]
@@ -107,7 +107,7 @@ def multi_head_attention(X):
 
 ### 2.3 Positional Encoding：给序列注入位置信息
 
-Self-Attention 本身是**置换不变**的——打乱输入顺序，输出也打乱（但值不变）。需要显式注入位置：
+不带位置编码的 Self-Attention 对输入排列是**置换等变**的：输入怎样重排，输出随之同样重排，网络无法仅从内容知道顺序。需要显式注入位置：
 
 $$PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right)$$
 
@@ -152,7 +152,7 @@ graph LR
     end
 ```
 
-**Cross-Attention 的注意力权重，本质上就是"软对齐"**——Decoder 输出 "好" 时，注意力权重的峰值落在 Encoder 的哪几帧，就代表 "好" 在音频中的时间位置。这与第 4 课的"对齐问题"直接对偶——Attention 提供了一种**可微分**的对齐方式，不需要强制对齐。
+Cross-Attention 权重常呈现近似“软对齐”，但它是中间计算权重，不是受监督的边界概率。多头、多层 attention 可能分散、偏移或关注非局部上下文，因此不能直接把某个峰值当成可靠字词时间戳。
 
 ---
 
@@ -182,7 +182,7 @@ graph TD
 
 **三个关键设计**：
 
-1. **Pyramidal Encoder**：BLSTM 每层将时间维度缩减为一半。$T$ 帧音频 → $T/8$ 帧 encoder 输出。这是必须的——如果不做降采样，Transformer 的 Self-Attention 在 $T=500$ 帧上是 $O(T^2)$ 的计算灾难。
+1. **Pyramidal Encoder**：BLSTM 层间拼接/抽取相邻时间步，使 $T$ 帧缩短到约 $T/8$。LAS 的 listener 是 BLSTM，并没有 Transformer self-attention；降采样主要减少 recurrent encoder 与 decoder attention 的序列长度。
 
 2. **Cross-Attention 对齐**：Decoder 每输出一个字符，都用 cross-attention 在 encoder 输出中找到"最相关的声学帧"。这产生了一个**自然的软对齐**。
 
@@ -258,13 +258,13 @@ for chunk_i in range(num_chunks):
 
 **Zipformer 就是这种方案**——使用 chunk-based 的注意力机制，每个 chunk 有固定的 left context 和 right context。这直接就是第 5 课"流式 CTC"中讨论的同一机制，只不过换成了 attention 算子。
 
-### 5.2 Triggered Attention
+### 5.2 单调与触发式 Attention
 
-不是逐帧或逐 chunk 触发，而是**当 decoder 的注意力权重出现"峰值"时，才允许从 encoder 读取新帧**：
+这类方法需要额外的单调边界机制，而不是等普通 attention “先出现峰值再触发”。MoChA 学习从左到右的单调选择点，并在附近小窗口做 soft attention；Triggered Attention 可借助 CTC spike/对齐决定 decoder 当前可见的 encoder 前缀。
 
 ```
 标准: 每收到一帧 → decoder 尝试输出 → cross-attention 到所有已编码帧
-Triggered: 收到了 N 帧 → attention 权重在某几帧形成峰值 → 触发输出 → 等待下一个峰值
+Triggered: CTC/单调边界到达 → 开放有限 encoder 前缀 → attention decoder 输出
 ```
 
 这种方案更接近 RNN-T 的"帧-输出"异步模型，但保留了 attention 的可解释性。
@@ -276,19 +276,19 @@ Triggered: 收到了 N 帧 → attention 权重在某几帧形成峰值 → 触�
 | **Full Attention** | ❌ | 0% (基准) | LAS, Whisper (offline) |
 | **Chunk-wise** | ✅ | 2-5% | **Zipformer** (本项目), Conformer |
 | **Causal Attention** | ✅ | 5-10% | 因果 Conformer |
-| **Triggered Attention** | ✅ | 3-6% | MoChA |
+| **单调/触发式 Attention** | ✅ | 依实现与数据而定 | MoChA、CTC-triggered attention |
 
 ---
 
 ## 六、Zipformer 中的 Attention 设计
 
-本项目 Zipformer 的名字本身就是 "Zippy Transformer" 的缩写——它是一系列注意力效率优化的集合：
+Zipformer 是为语音识别设计的高效 encoder，不应仅从名字推导其结构。其关键点包括多尺度时间分辨率、Zipformer blocks 与有限上下文配置：
 
 | 优化 | 相对于标准 Transformer 的改进 |
 |------|---------------------------|
 | **Chunk-based attention** | 将全局 $O(T^2)$ 降到 $O(T \cdot \text{chunk\_size})$ |
-| **Downsampling layers** | 时间维度每层减半，进一步降低 attention 计算量 |
-| **非对称结构** | U-Net 风格的 encoder 设计——先降采样再升采样，保留多尺度信息 |
+| **多尺度帧率** | 不同 encoder stack 在不同时间分辨率工作，减少高帧率计算 |
+| **跨 stack 融合** | 在降采样与上采样路径间融合多尺度表示 |
 | **Bias-free 设计** | 去除部分 bias 参数，减少内存占用 |
 
 > Zipformer 本质上是对 Transformer 做了"为语音任务+边缘设备"的**裁缝式优化**。它不是全注意力（像 Whisper），也不是纯卷积（像传统 CNN），而是在两者之间找到了一个工程友好的平衡点——这正是第 8 课 Whisper 对比的伏笔。

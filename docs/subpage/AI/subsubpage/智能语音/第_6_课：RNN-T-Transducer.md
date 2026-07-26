@@ -14,7 +14,7 @@ tags: [type/learning, topic/speech, topic/ml]
 
 ### CTC 的问题回顾
 
-$$\text{CTC: } P(\pi_t | o_t) \quad \text{——第 } t \text{ 帧输出什么，只看第 } t \text{ 帧的声学特征}$$
+$$\text{CTC: } P(\pi_t | O) \quad \text{——给定输入后，各对齐位置的输出之间没有显式标签依赖}$$
 
 这意味着 CTC 无法区分 "a" 和 "the"（都需要语言上下文），也无法修正自己输出的拼写错误。
 
@@ -122,7 +122,7 @@ $$\alpha(t, u) = \underbrace{\alpha(t-1, u) \cdot P(\epsilon \mid t-1, u)}_{\tex
 
 **边界条件**：$\alpha(0, 0) = 1$，$\alpha(t, -1) = \alpha(-1, u) = 0$
 
-**终止**：$P(\mathbf{y}|\mathbf{o}) = \alpha(T, U) \cdot P(\epsilon \mid T, U)$ （最后必须以 blank 结尾）
+**终止**：不同实现对最后一个 blank 的索引约定略有差异。公式、tensor 的 $T$ 维和实现必须一致，不能在不存在的 $t=T$ encoder 输出上再取一次概率。
 
 ```python
 # RNN-T 前向算法的伪代码
@@ -136,7 +136,7 @@ for t in range(T+1):
         if u > 0:
             α[t, u] += α[t, u-1] * P(y[u-1] | t, u-1)
 
-loss = -log(α[T, U] * P(blank | T, U))
+loss = -log(final_probability)  # 按所用实现的终止约定计算
 ```
 
 > **对比 CTC 的前向算法**：CTC 的前向格子是 1D 的（只有时间轴），每一步的前驱数量有限（自环、前进一步、跳过 blank）。RNN-T 的格子是 2D 的，每个格子点恰好有 2 个前驱（左、下），结构更规整。
@@ -147,11 +147,11 @@ loss = -log(α[T, U] * P(blank | T, U))
 
 ```python
 # 核心思路：只计算"合理"的路径
-# 如果 P(y_u | t, u-1) 太小（< 阈值），跳过这个格子点
-# 等价于在格子上做 beam pruning
+# 用较便宜的对齐/简单 loss 找到每个时间步附近的 label range
+# 只在该窄带内计算昂贵的 joiner logits 与 transducer loss
 ```
 
-这种剪枝是**安全**的——被剪掉的路径概率贡献可以忽略不计。sherpa-onnx 的 Zipformer 使用 pruned RNN-T loss 训练，大幅减少了训练时间。
+这里的 pruned 主要是**训练 loss 的近似计算**，不是推理解码的 beam pruning。它节省 $T\times U\times V$ 计算，但并非严格无损，剪枝范围需要验证。
 
 ---
 
@@ -173,7 +173,7 @@ for u in range(U):
 
 ### 无状态 (Stateless) Prediction Network
 
-现代 Transducer（包括本项目 Zipformer）的 Prediction Network 更常用 **stateless** 形式——一个简单的 **look-ahead 卷积**或 **transformer decoder**：
+部分现代 Transducer 使用 **stateless** Prediction Network，例如只在最近有限个 token embedding 上做一维卷积：
 
 ```python
 # Stateless: 只看最近的几个 token
@@ -182,9 +182,9 @@ h_u = Conv1D(embed)             # or self-attention with causal mask
 ```
 
 **优点**：
-1. beam search 时不需要维护逐个候选的状态——所有候选共享同一个 network 调用
+1. 不需要为每个候选保存和复制 LSTM 隐状态；候选状态由最近 $N$ 个 token 唯一确定
 2. 推理更简单，可以批量处理
-3. 实际上，语言模型的收益主要来自**最近几个词**——长距离依赖的贡献很小
+3. 代价是内部语言上下文受限；长距离依赖是否重要取决于任务
 
 **本项目**的 `decoder.onnx` 就是 stateless prediction network。由于预测仅依赖最近几个 token 的 embedding，beam search 时可以通过 batching 大幅加速（与第 5 课 beam search 优化策略 4 呼应）。
 
@@ -198,7 +198,7 @@ CTC 的逐帧独立假设导致它在每一帧都面临"现在要不要输出字
 
 RNN-T 的 **Prediction Network** 给了模型"已经输出了什么"的信息。这使得：
 
-1. **Encoder 不需要 lookahead**：因为语言上下文由 Prediction Network 提供，encoder 可以安全地限制为因果（causal）
+1. **允许因果或有限右上下文 encoder**：Prediction Network 不能替代未来声学证据，实际 RNN-T 常保留少量 lookahead
 2. **自然处理可变帧率**：一个声学帧可以输出 0 个或多个字符——没有"帧-字符对齐"的刚性约束
 3. **流式解码友好**：beam search 沿时间轴逐帧推进（水平移动），不需要访问未来帧
 
@@ -207,9 +207,9 @@ RNN-T 的 **Prediction Network** 给了模型"已经输出了什么"的信息。
 | 维度 | 流式 CTC (Chunk-based) | RNN-T |
 |------|----------------------|-------|
 | **语言上下文** | 需要外部 LM | 内置 Prediction Network |
-| **流式解码** | 需要 chunk 缓存和边界处理 | 逐帧自回归，天然流式 |
+| **流式解码** | encoder 需 chunk 缓存，decoder 保存前缀状态 | encoder 同样需缓存；搜索还要限制单帧最大符号数 |
 | **空白帧处理** | 依赖 blank token 消耗时间 | 水平移动自然吸收空白帧 |
-| **工程复杂度** | 需要处理 chunk 重叠/边界 | 一帧一帧推，简单直接 |
+| **工程复杂度** | 解码较简单，外部 LM 融合另计 | joiner 调用与二维搜索更复杂 |
 
 ---
 
@@ -242,7 +242,7 @@ flowchart TD
         BZ --> CZ["Zipformer Encoder<br/>chunk-based, 右context=2"]
         CZ -->|"h_enc"| DZ["Joiner (Joint Network)"]
         EZ["Decoder<br/>(stateless Prediction Net)"] -->|"h_pred"| DZ
-        DZ -->|"P(y_u|t,u)"| FZ["Modified Beam Search<br/>K=8 + LM shallow fusion"]
+        DZ -->|"P(y_u|t,u)"| FZ["Modified Beam Search<br/>K=8；外部 LM 可选"]
         FZ --> GZ["文本"]
     end
 
@@ -374,7 +374,7 @@ print("→ 这是第 5 课 beam search 优化策略 4 的理论基础")
 | **Stateless Decoder** | Prediction Network 的简化——只看最近 N 个 token，不维护跨时间隐状态 |
 | **Pruned RNN-T** | 限制格子搜索范围（beam pruning），$O(T \cdot U)$ → 可控的计算量 |
 | **CTC 辅助 Loss** | $L = L_{\text{RNN-T}} + \lambda L_{\text{CTC}}$——加速收敛、正则化、精度提升 |
-| **Modified Beam Search** | sherpa-onnx 的 Transducer 解码实现——beam search + LM shallow fusion（本项目默认） |
+| **Modified Beam Search** | sherpa-onnx 的 Transducer 解码实现；是否融合外部 LM 取决于额外配置 |
 
 ---
 
