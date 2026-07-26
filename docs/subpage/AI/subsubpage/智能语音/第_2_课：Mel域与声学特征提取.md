@@ -26,13 +26,13 @@ tags: [type/learning, topic/speech, topic/audio]
   └──────────────────┘    └──────────────────────┘
 ```
 
-**临界带宽**是人耳将两个邻近频率感知为"同一个声音"的频率间隔。它不是常数——随中心频率增大而增大：
+**临界带宽**更准确地说，是听觉系统中一个听觉滤波器的有效带宽：落在同一带宽内的能量会强烈相互掩蔽。它与“两音是否能分开听见”的频率选择性有关，但不等同于一个固定的可辨阈值；可辨性还取决于声压、时长、相位和实验任务。临界带宽随中心频率增大而增大：
 
-| 中心频率 | 临界带宽 (近似) | 你能分辨吗？ |
-|---------|:-------------:|:----------:|
-| 100 Hz | ~30 Hz | 100 vs 130 Hz → 能分辨 |
-| 1000 Hz | ~130 Hz | 1000 vs 1130 Hz → 刚能分辨 |
-| 5000 Hz | ~700 Hz | 5000 vs 5700 Hz → 几乎不能 |
+| 中心频率 | 临界带宽 (近似) | 工程含义 |
+|---------|:-------------:|:--------:|
+| 100 Hz | ~30 Hz | 低频听觉滤波器较窄 |
+| 1000 Hz | ~130 Hz | 分析带宽随频率增加 |
+| 5000 Hz | ~700 Hz | 高频可用更宽的滤波器聚合能量 |
 
 > **物理本质**：低频区，一个临界带宽覆盖基底膜上约 1.3mm；高频区需要更长的基底膜距离才能产生可分辨的兴奋模式差异。这就是"频率分辨率随频率升高而下降"的生理学根源。
 
@@ -52,7 +52,7 @@ $$f_{\text{mel}} = 1127 \cdot \ln\left(1 + \frac{f_{\text{Hz}}}{700}\right)$$
 
 $$f_{\text{Hz}} = 700 \cdot \left(10^{f_{\text{mel}}/2595} - 1\right)$$
 
-**关键参数 700**：当 $f = 700\text{Hz}$ 时，$f_{\text{mel}} \approx 1000$。700Hz 是 Mel 尺度的"拐点"——低于此频率近似线性（$f_{\text{mel}} \approx f_{\text{Hz}}$），高于此频率呈对数压缩。
+**关键参数 700**：它控制线性到对数压缩的过渡尺度，并不表示 700Hz = 1000mel。代入公式可得 700Hz 约为 781mel；该公式按约定使 1000Hz 约等于 1000mel。低频段近似线性，但斜率约为 1.61mel/Hz，也不是数值上严格相等。
 
 ```mermaid
 graph LR
@@ -76,7 +76,7 @@ Bark 尺度是另一种基于临界带宽的感知频率尺度，由 Zwicker 提
 |------|---------|----------|
 | **公式** | $2595\log_{10}(1+f/700)$ | $13\arctan(0.00076f)+3.5\arctan((f/7500)^2)$ |
 | **实验基础** | 音高感知（pitch） | 临界带宽（critical band） |
-| **语音社区** | ✅ **主流**（sherpa-onnx、Kaldi、Whisper 都用 Mel） | 偶尔出现在 TTS 中 |
+| **语音社区** | ✅ **主流**（sherpa-onnx、Kaldi、Whisper 都使用 Mel 类前端） | 常见于感知音频编码、响度与掩蔽模型，也用于部分语音系统 |
 | **1 Bark** | — | 约等于 1 个临界带宽 |
 | **0~16kHz** | 0~3920 mel | 0~24 Bark |
 
@@ -128,7 +128,7 @@ $$S_m = \sum_{k=0}^{N/2} |X[k]|^2 \cdot H_m(k)$$
 | **sample_rate** | 16000 | Nyquist = 8000 Hz |
 | **n_fft** | 512 | → 257 个线性频点（含 DC 和 Nyquist） |
 
-**为什么是 80 维？** 这是一个经验约定。Whisper 用 80 维，Kaldi 默认 80 维，sherpa-onnx 默认 80 维。太多（256）→计算量倍增但收益递减，太少（40）→频率分辨率不足，高频辅音特征丢失。
+**为什么是 80 维？** 这是随模型一同确定的经验超参数，不是工具链的统一默认值。经典 Kaldi FBank 配置常见 23 或 40 维，许多现代 E2E 模型使用 80 维；Whisper 原始模型使用 80 维，而 large-v3 改为 128 维。维数改变后 encoder 输入形状和训练分布都会变化，推理时不能自行替换。
 
 **为什么 high_freq = Nyquist - 400Hz？** 抗混叠滤波器的过渡带。8000-400 = 7600Hz，给滤波器留出 400Hz 的衰减空间，避免混叠分量漏入特征。
 
@@ -165,7 +165,7 @@ log-FBank:
 
 **3. 统计分布友好**：线性域 FBank 的分布高度偏态（大部分值很小，少数值巨大），严重违反 GMM 的高斯假设。取 log 后分布趋近正态分布（中心极限定理效应），这对 GMM-HMM 的训练收敛至关重要。
 
-> **为什么现代 ASR (Zipformer/Whisper) 仍然用 log？** 即使 DNN 理论上能学任何非线性变换，log 压缩让输入数据分布更友好（零均值附近、单位量级），大幅加速收敛。这一步不是 GMM 时代的遗产，而是**信号处理的物理必然**——除非你用原始波形端到端建模（如 wav2vec 2.0、Whisper 的一些变体），否则 log 压缩都会保留。
+> **为什么现代 ASR (Zipformer/Whisper) 仍然用 log？** 即使 DNN 可以逼近非线性变换，log 压缩显著缩小动态范围，使优化更容易。它是有效的工程先验，但不是“物理必然”：原始波形模型也可用可学习卷积前端学出替代表征。Whisper 本身使用 log-Mel，不属于原始波形变体。
 >
 > 在特征提取的讨论中，"FBank" 几乎总是指 **log-FBank**（包括本文前面和后续所有提到的地方都是 log 压缩后的特征）。严格来说 FBank = Filterbank 线性能量，log-FBank = 对数压缩后的 Filterbank 特征。学术界和工程中默认省略 "log" 前缀——但你必须知道这一步存在且为什么存在。
 
@@ -186,12 +186,12 @@ $$c_n = \sum_{m=0}^{M-1} \log(S_m) \cdot \cos\left(\frac{\pi n (m + 0.5)}{M}\rig
 **DCT 的三个作用**：
 1. **去相关**：将高度相关的 FBank 向量映射到近似独立的空间（DCT ≈ PCA 在平稳信号上的近似）
 2. **压缩**：能量集中在低频系数（$c_0, c_1, c_2$），后面的系数几乎为零→可以截断
-3. **降维**：80 维 FBank → 13 维 MFCC，1/6 的数据量
+3. **降维**：例如 40 维 FBank → 13 维 MFCC；具体输入维数由配置决定
 
 ```
 FBank (80 维):  [0.3, 0.29, 0.31, 0.28, ...]  ← 相邻维高度相关
        ↓ DCT
-MFCC (13 维):  [c0=大, c1=中, c2=小, c3, c4, ..., c12≈0]  ← 能量集中在前几维
+MFCC (13 维):  [c0, c1, c2, c3, ..., c12]  ← 沿 Mel 轴变化较慢的包络通常集中在低阶系数
 ```
 
 ### MFCC vs FBank：选择的时代变迁
@@ -207,7 +207,7 @@ MFCC (13 维):  [c0=大, c1=中, c2=小, c3, c4, ..., c12≈0]  ← 能量集中
 
 ## 四、GMM-HMM 声学模型：为什么 MFCC 需要去相关
 
-第 三 节反复提到 GMM-HMM 和对角协方差，但从未解释这是什么。这里建立一个理解——它在课程 4 和 9 中会再次出现。
+第三节反复提到 GMM-HMM 和对角协方差，但从未解释这是什么。这里建立一个理解——它在课程 4 和 9 中会再次出现。
 
 ### ASR 的概率框架
 
@@ -286,7 +286,7 @@ $$P(o_t | s_j) = \sum_{k=1}^{K} w_{jk} \cdot \mathcal{N}(o_t; \mu_{jk}, \Sigma_{
  
  特征: MFCC      特征: FBank    特征: FBank      特征: FBank
  模型: GMM       模型: DNN      模型: 单一网络    模型: E2E Enc-Dec
- 对齐: 强制对齐  对齐: 强制对齐  对齐: 自动学习    对齐: 不需要
+ 对齐: 隐变量求和  对齐: 强制对齐  对齐: 自动学习    对齐: 自动学习
                 (课程4详述)    (课程5-6详述)     (课程7-8详述)
 ```
 
@@ -333,7 +333,7 @@ $$f' = f \cdot \alpha \quad \text{或更复杂的 warping 函数}$$
 
 其中弯曲因子 $\alpha$ 在 [0.85, 1.15] 之间，通过最大似然估计（对 GMM-HMM）或与说话人 embedding 联合学习（对 DNN）。
 
-> 在现代系统中，VTLN 逐渐被 **speaker embedding**（如 x-vector、i-vector）替代——让神经网络自己去学说话人归一化，而不是在特征层手工做频率弯曲。本项目的 Zipformer ASR 没有使用 VTLN 特征层处理。
+> 在现代系统中，数据增强、大规模多说话人训练和网络归一化通常降低了显式 VTLN 的必要性；i-vector 等说话人自适应特征也曾广泛使用。x-vector 主要为说话人识别/分离而设计，不能笼统视为 VTLN 的直接替代。本项目的 Zipformer ASR 没有使用 VTLN 特征层处理。
 
 ---
 
@@ -349,9 +349,11 @@ graph TD
     D -->|"补零到 512点 → FFT"| E["257 bins 功率谱"]
     E -->|"Mel Filterbank<br/>257 bins → 80 bins"| F["80维 FBank"]
     F -->|"log"| G["80维 log-Mel FBank"]
-    G -->|"全局均值方差归一化 (CMVN)"| H["输入 Tensor [T, 80]"]
+    G -->|"模型配置指定的归一化"| H["输入 Tensor [T, 80]"]
     H --> I["Zipformer Encoder"]
 ```
+
+> 上图是概念管线，不应仅凭常见默认值断言某个导出模型启用了预加重、dither 或 CMVN。最可靠的方法是读取模型随附配置和训练 recipe，并用同一段波形对比训练端与部署端的前几帧特征。前端哪怕只差窗函数、能量下限或是否 snip edges，也会形成系统性的训练/推理偏移。
 
 ### Povey 窗
 
@@ -418,10 +420,8 @@ for m in range(n_mels):
         for k in range(k_start, k_end):
             fbank[m, k] = (right - k) / (right - center)
 
-    # 确保 center bin 处峰值为 1（上升沿和下降沿交汇处）
-    c = int(np.floor(center))
-    if 0 <= c < n_freq_bins and left < center and center < right:
-        fbank[m, c] = 1.0
+    # center 往往落在两个离散 FFT bin 之间，因此离散采样后的峰值可以小于 1。
+    # 不要强行把 floor(center) 设为 1，否则会改变滤波器形状。
 
 # 4. 可视化滤波器组
 plt.figure(figsize=(12, 5))
@@ -469,15 +469,16 @@ data_pre = np.append(data[0], data[1:] - preemph * data[:-1])
 # STFT → FBank（复用上面的 fbank 矩阵）
 n_fft = 512
 hop = 160  # 10ms
-window = 0.5 - 0.5 * np.cos(2 * np.pi * np.arange(n_fft) / (n_fft - 1))
+frame_length = 400  # 25ms；随后零填充到 n_fft=512
+window = 0.5 - 0.5 * np.cos(2 * np.pi * np.arange(frame_length) / (frame_length - 1))
 window = window ** 0.85  # Povey 窗
 
-n_frames = (len(data_pre) - n_fft) // hop + 1
+n_frames = (len(data_pre) - frame_length) // hop + 1
 fbank_feats = np.zeros((n_frames, n_mels))
 
 for i in range(n_frames):
-    frame = data_pre[i*hop : i*hop+n_fft] * window
-    power_spec = np.abs(np.fft.rfft(frame)) ** 2
+    frame = data_pre[i*hop : i*hop+frame_length] * window
+    power_spec = np.abs(np.fft.rfft(frame, n=n_fft)) ** 2
     fbank_feats[i] = np.dot(fbank, power_spec)
 
 # log
@@ -526,17 +527,17 @@ plt.tight_layout()
 plt.savefig('fbank_vs_mfcc.png', dpi=150)
 print("已保存 fbank_vs_mfcc.png")
 
-# Sanity check: MFCC c0 应该在所有帧上都显著大于其他系数
+# Sanity check：观察各阶系数的 RMS；不要用带符号均值判断“能量”
 print(f"\nMFCC c0 均值: {mfcc[:, 0].mean():.2f}")
 print(f"MFCC c1 均值: {mfcc[:, 1].mean():.2f}")
-print(f"MFCC c12 均值: {mfcc[:, 11].mean():.4f}")
-print(f"→ 能量集中在低阶系数（DCT 的压缩效果）")
+print(f"MFCC c12 均值: {mfcc[:, 12].mean():.4f}")
+print("各阶 RMS:", np.sqrt(np.mean(mfcc**2, axis=0)))
 ```
 
 **预期观察**：
 1. FBank 相邻维度曲线高度重叠（相关性强）——见子图右上
 2. MFCC 各维度曲线分离（DCT 去相关成功）——见子图右下
-3. MFCC 的 c0 远大于 c12（能量集中在低阶）
+3. 低阶系数的 RMS 往往较大，但 c0 不保证在每帧都大于其余系数
 4. Log-FBank 频谱图比第 1 课的线性频谱图更"干净"——Mel 压缩消除了高频的视觉噪声
 
 ### 实验 3：对比有无预加重
@@ -587,7 +588,23 @@ plt.savefig('preemphasis.png', dpi=150)
 
 ---
 
-## 十、下一步
+## 十、自问自答：特征前端最容易踩的坑
+
+### Q1：既然神经网络能学习特征，为什么不把 80 维改成 128 维试试？
+
+训练和推理必须使用同一前端。改变 Mel bin 数不仅改变 tensor 形状，也改变每一维的中心频率和统计分布；除非重新训练或模型明确支持，否则不是一个可独立调节的推理超参数。
+
+### Q2：在线 ASR 如何做全局 CMVN，它还没看到整句话？
+
+可以使用训练集预估的固定均值/方差，也可以做滑动或累计归一化；后者在句首统计不稳定，还必须保证只使用过去信息。很多 E2E recipe 只做每句均值归一化、固定缩放或根本不做传统 CMVN，因此要看训练配置，不能从“用了 FBank”推断。
+
+### Q3：如何确认自己的前端没有悄悄实现错？
+
+建立 golden test：固定一小段 PCM，同时从训练工具链和部署工具链导出特征，逐帧比较 shape、时间戳、最大绝对误差和前几维数值。先检查采样归一化、端点策略、dither、DC offset、预加重、窗、功率/幅度、Mel 公式、能量下限和 log 底数。
+
+---
+
+## 十一、下一步
 
 ### 推荐阅读
 
