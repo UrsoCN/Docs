@@ -21,19 +21,24 @@
   - [CtsStrictJavaPackagesTestCases问题解决记录](./subpage/AOSP/subsubpage/CtsStrictJavaPackagesTestCases问题解决记录.md)
   - [Bluetooth SBC Dual Channel HD audio mode](./subpage/AOSP/subsubpage/SBC_HD.md)
 
-- [C&C++](./subpage/C&C++/_C&C++.md)
-  - [华为OD机试](./subpage/C&C++/subsubpage/华为OD机试.md)
-  - [机试中读取被分割开的数据的方法](./subpage/C&C++/subsubpage/机试中读取被分割开的数据的方法.md)
-  - [Understanding lvalues and rvalues in C and C++ 理解C和C++中的左值和右值](./subpage/C&C++/subsubpage/理解C和C++中的左值和右值.md)
-  - [mhy面试题](./subpage/C&C++/subsubpage/面试题.md)
-  - [C语言中的零长数组](./subpage/C&C++/subsubpage/C语言中的零长数组.md)
-  - [关于局部静态（Local Static）](./subpage/C&C++/subsubpage/Local_static-单例.md)
-  - [NotesofCherno](./subpage/C&C++/subsubpage/NotesofCherno.md)
-  - [C++ Tips of the Week](./subpage/C&C++/subsubpage/TotW.md)
-
-- [C#](./subpage/Csharp/_Csharp.md)
-  - [.config in C#](./subpage/Csharp/subsubpage/config_in_CSharp.md)
-  - [DataTime in C#](./subpage/Csharp/subsubpage/DateTime_in_CSharp.md)
+- [coding](./subpage/coding/_coding.md)
+  - c-cpp
+    - [华为OD机试](./subpage/coding/subsubpage/c-cpp/华为OD机试.md)
+    - [机试中读取被分割开的数据的方法](./subpage/coding/subsubpage/c-cpp/机试中读取被分割开的数据的方法.md)
+    - [Understanding lvalues and rvalues in C and C++ 理解C和C++中的左值和右值](./subpage/coding/subsubpage/c-cpp/理解C和C++中的左值和右值.md)
+    - [mhy面试题](./subpage/coding/subsubpage/c-cpp/面试题.md)
+    - [C语言中的零长数组](./subpage/coding/subsubpage/c-cpp/C语言中的零长数组.md)
+    - [关于局部静态（Local Static）](./subpage/coding/subsubpage/c-cpp/Local_static-单例.md)
+    - [NotesofCherno](./subpage/coding/subsubpage/c-cpp/NotesofCherno.md)
+    - [C++ Tips of the Week](./subpage/coding/subsubpage/c-cpp/TotW.md)
+  - csharp
+    - [.config in C#](./subpage/coding/subsubpage/csharp/config_in_CSharp.md)
+    - [DataTime in C#](./subpage/coding/subsubpage/csharp/DateTime_in_CSharp.md)
+  - rust
+    - [常见编程概念](./subpage/coding/subsubpage/rust/常见编程概念.md)
+    - [所有权](./subpage/coding/subsubpage/rust/所有权.md)
+    - [guessing_game](./subpage/coding/subsubpage/rust/guessing_game.md)
+    - [Hello, Cargo!](./subpage/coding/subsubpage/rust/Hello,Cargo!.md)
 
 - [日志](./subpage/diary/_diary.md)
   - [TODO](./subpage/diary/subsubpage/TODO.md)
@@ -105,12 +110,6 @@
 - [OpenGL](./subpage/OpenGL/_OpenGL.md)
   - [在c++中使用现代OpenGL](./subpage/OpenGL/subsubpage/在c++中使用现代OpenGL.md)
   - [OpenGL配置](./subpage/OpenGL/subsubpage/OpenGL配置.md)
-
-- [Rust](./subpage/Rust/_Rust.md)
-  - [常见编程概念](./subpage/Rust/subsubpage/常见编程概念.md)
-  - [所有权](./subpage/Rust/subsubpage/所有权.md)
-  - [guessing_game](./subpage/Rust/subsubpage/guessing_game.md)
-  - [Hello, Cargo!](./subpage/Rust/subsubpage/Hello,Cargo!.md)
 
 - [WSL](./subpage/WSL/_WSL.md)
   - [记载一次安装miniconda以及jupyter notebook](./subpage/WSL/subsubpage/记载一次安装miniconda以及jupyternotebook.md)
