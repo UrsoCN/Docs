@@ -7,7 +7,7 @@ tags:
   - lang/rust
   - type/moc
 ---
-# 编程语言
+# coding
 
 ## C&C++
 

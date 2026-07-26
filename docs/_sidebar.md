@@ -56,7 +56,7 @@
   - [CtsStrictJavaPackagesTestCases问题解决记录](./subpage/AOSP/subsubpage/CtsStrictJavaPackagesTestCases问题解决记录.md)
   - [Bluetooth SBC Dual Channel HD audio mode](./subpage/AOSP/subsubpage/SBC_HD.md)
 
-- [编程语言](./subpage/coding/_coding.md)
+- [coding](./subpage/coding/_coding.md)
   - c-cpp
     - [华为OD机试](./subpage/coding/subsubpage/c-cpp/华为OD机试.md)
     - [机试中读取被分割开的数据的方法](./subpage/coding/subsubpage/c-cpp/机试中读取被分割开的数据的方法.md)

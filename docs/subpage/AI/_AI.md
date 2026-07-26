@@ -44,14 +44,11 @@ tags:
 - [目标检测Demo](./subsubpage/CV/目标检测Demo.md)
 - [目标检测人行道定制](./subsubpage/CV/目标检测人行道定制.md)
 
-## 论文笔记
+## 论文
 
 - [Sequence to Sequence Learning with Neural Networks (Seq2Seq)](./subsubpage/论文/Seq2Seq学习与神经网络.md)
 - [Scaling Laws for Neural Language Models](./subsubpage/论文/Scaling_Laws神经语言模型.md)
 - [Fast Inference via Speculative Decoding](./subsubpage/论文/Speculative_Decoding推测解码.md)
 - [Better & Faster LLMs via Multi-token Prediction](./subsubpage/论文/Multi_Token_Prediction多token预测.md)
-
-## 学术 / 文献管理
-
 - [导出JabRef引文到Word](./subsubpage/论文/导出JabRef引文到Word.md)
 - [JabRef预览引用及在Word添加GB格式参考文献](./subsubpage/论文/JabRef预览引用及在Word添加GB格式参考文献.md)
