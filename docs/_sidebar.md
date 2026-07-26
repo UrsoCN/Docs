@@ -18,9 +18,9 @@
     - [Scaling Laws for Neural Language Models](./subpage/AI/subsubpage/论文笔记/Scaling_Laws神经语言模型.md)
     - [Sequence to Sequence Learning with Neural Networks](./subpage/AI/subsubpage/论文笔记/Seq2Seq学习与神经网络.md)
     - [Fast Inference from Transformers via Speculative Decoding](./subpage/AI/subsubpage/论文笔记/Speculative_Decoding推测解码.md)
-  - 学术_文献管理
-    - [导出JabRef引文到Word](./subpage/AI/subsubpage/学术_文献管理/导出JabRef引文到Word.md)
-    - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/AI/subsubpage/学术_文献管理/JabRef预览引用及在Word添加GB格式参考文献.md)
+  - 论文
+    - [导出JabRef引文到Word](./subpage/AI/subsubpage/论文/导出JabRef引文到Word.md)
+    - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/AI/subsubpage/论文/JabRef预览引用及在Word添加GB格式参考文献.md)
   - 智能语音
     - [第 1 课：数字音频基础与频谱分析](./subpage/AI/subsubpage/智能语音/第_1_课：数字音频基础与频谱分析.md)
     - [第 2 课：Mel 域与声学特征提取](./subpage/AI/subsubpage/智能语音/第_2_课：Mel域与声学特征提取.md)
@@ -35,10 +35,10 @@
     - [第 11 课：神经语音合成 (TTS)](./subpage/AI/subsubpage/智能语音/第_11_课：神经语音合成-TTS.md)
     - [第 12 课：语音 NLU 与 LLM Agent](./subpage/AI/subsubpage/智能语音/第_12_课：语音-NLU与LLM-Agent.md)
     - [智能语音服务学习笔记](./subpage/AI/subsubpage/智能语音/智能语音服务学习笔记.md)
-  - AI_机器学习
-    - [目标检测人行道定制](./subpage/AI/subsubpage/AI_机器学习/目标检测人行道定制.md)
-    - [目标检测](./subpage/AI/subsubpage/AI_机器学习/目标检测Demo.md)
-    - [pytorchMobile源码解读](./subpage/AI/subsubpage/AI_机器学习/pytorchMobile源码解读.md)
+  - CV
+    - [目标检测人行道定制](./subpage/AI/subsubpage/CV/目标检测人行道定制.md)
+    - [目标检测](./subpage/AI/subsubpage/CV/目标检测Demo.md)
+    - [pytorchMobile源码解读](./subpage/AI/subsubpage/CV/pytorchMobile源码解读.md)
   - d2l
     - [3 线性神经网络](./subpage/AI/subsubpage/d2l/3_线性神经网络.md)
     - [4 多层感知机](./subpage/AI/subsubpage/d2l/4_多层感知机.md)

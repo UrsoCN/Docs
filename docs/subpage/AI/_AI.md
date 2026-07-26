@@ -38,11 +38,11 @@ tags:
   - [第 11 课：神经语音合成 (TTS)](./subsubpage/智能语音/第_11_课：神经语音合成-TTS.md)
   - [第 12 课：语音 NLU 与 LLM Agent](./subsubpage/智能语音/第_12_课：语音-NLU与LLM-Agent.md)
 
-## AI / 机器学习
+## CV
 
-- [pytorchMobile源码解读](./subsubpage/AI_机器学习/pytorchMobile源码解读.md)
-- [目标检测Demo](./subsubpage/AI_机器学习/目标检测Demo.md)
-- [目标检测人行道定制](./subsubpage/AI_机器学习/目标检测人行道定制.md)
+- [pytorchMobile源码解读](./subsubpage/CV/pytorchMobile源码解读.md)
+- [目标检测Demo](./subsubpage/CV/目标检测Demo.md)
+- [目标检测人行道定制](./subsubpage/CV/目标检测人行道定制.md)
 
 ## 论文笔记
 
@@ -53,5 +53,5 @@ tags:
 
 ## 学术 / 文献管理
 
-- [导出JabRef引文到Word](./subsubpage/学术_文献管理/导出JabRef引文到Word.md)
-- [JabRef预览引用及在Word添加GB格式参考文献](./subsubpage/学术_文献管理/JabRef预览引用及在Word添加GB格式参考文献.md)
+- [导出JabRef引文到Word](./subsubpage/论文/导出JabRef引文到Word.md)
+- [JabRef预览引用及在Word添加GB格式参考文献](./subsubpage/论文/JabRef预览引用及在Word添加GB格式参考文献.md)
