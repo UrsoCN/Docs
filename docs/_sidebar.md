@@ -13,6 +13,11 @@
   - [XVF3800 ESP32-S3 固件性能优化](./subpage/Agent_summary/subsubpage/XVF3800_ESP32-S3_固件性能优化.md)
 
 - [AI & 机器学习](./subpage/AI/_AI.md)
+  - 论文笔记
+    - [Better & Faster Large Language Models via Multi-token Prediction](./subpage/AI/subsubpage/论文笔记/Multi_Token_Prediction多token预测.md)
+    - [Scaling Laws for Neural Language Models](./subpage/AI/subsubpage/论文笔记/Scaling_Laws神经语言模型.md)
+    - [Sequence to Sequence Learning with Neural Networks](./subpage/AI/subsubpage/论文笔记/Seq2Seq学习与神经网络.md)
+    - [Fast Inference from Transformers via Speculative Decoding](./subpage/AI/subsubpage/论文笔记/Speculative_Decoding推测解码.md)
   - 学术_文献管理
     - [导出JabRef引文到Word](./subpage/AI/subsubpage/学术_文献管理/导出JabRef引文到Word.md)
     - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/AI/subsubpage/学术_文献管理/JabRef预览引用及在Word添加GB格式参考文献.md)
