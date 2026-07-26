@@ -26,17 +26,6 @@ tags:
 - [别再自我摆烂](subsubpage/文档整理_随笔/别再自我摆烂.md)
 - [我的根本意见](subsubpage/文档整理_随笔/我的根本意见.md)
 
-## AI / 机器学习
-
-- [pytorchMobile源码解读](subsubpage/AI_机器学习/pytorchMobile源码解读.md)
-- [目标检测Demo](subsubpage/AI_机器学习/目标检测Demo.md)
-- [目标检测人行道定制](subsubpage/AI_机器学习/目标检测人行道定制.md)
-
-## 学术 / 文献管理
-
-- [导出JabRef引文到Word](subsubpage/学术_文献管理/导出JabRef引文到Word.md)
-- [JabRef预览引用及在Word添加GB格式参考文献](subsubpage/学术_文献管理/JabRef预览引用及在Word添加GB格式参考文献.md)
-
 ## 物理 / 模拟
 
 - [电磁场模拟](subsubpage/物理_模拟/电磁场模拟.md)

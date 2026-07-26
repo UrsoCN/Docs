@@ -12,6 +12,37 @@
   - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subpage/Agent_summary/subsubpage/reflect-hpp静态反射与JSON序列化.md)
   - [XVF3800 ESP32-S3 固件性能优化](./subpage/Agent_summary/subsubpage/XVF3800_ESP32-S3_固件性能优化.md)
 
+- [AI & 机器学习](./subpage/AI/_AI.md)
+  - 学术_文献管理
+    - [导出JabRef引文到Word](./subpage/AI/subsubpage/学术_文献管理/导出JabRef引文到Word.md)
+    - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/AI/subsubpage/学术_文献管理/JabRef预览引用及在Word添加GB格式参考文献.md)
+  - 智能语音
+    - [第 1 课：数字音频基础与频谱分析](./subpage/AI/subsubpage/智能语音/第_1_课：数字音频基础与频谱分析.md)
+    - [第 2 课：Mel 域与声学特征提取](./subpage/AI/subsubpage/智能语音/第_2_课：Mel域与声学特征提取.md)
+    - [第 3 课：语音前端信号处理](./subpage/AI/subsubpage/智能语音/第_3_课：语音前端信号处理.md)
+    - [第 4 课：ASR 问题建模](./subpage/AI/subsubpage/智能语音/第_4_课：ASR问题建模.md)
+    - [第 5 课：CTC——无对齐的端到端训练](./subpage/AI/subsubpage/智能语音/第_5_课：CTC无对齐的端到端训练.md)
+    - [第 6 课：RNN-T (Transducer)](./subpage/AI/subsubpage/智能语音/第_6_课：RNN-T-Transducer.md)
+    - [第 7 课：注意力机制与 Encoder-Decoder ASR](./subpage/AI/subsubpage/智能语音/第_7_课：注意力机制与Encoder-Decoder-ASR.md)
+    - [第 8 课：Whisper 与 LLM-based ASR](./subpage/AI/subsubpage/智能语音/第_8_课：Whisper与LLM-based-ASR.md)
+    - [第 9 课：Kaldi 与 WFST 解码](./subpage/AI/subsubpage/智能语音/第_9_课：Kaldi与WFST解码.md)
+    - [第 10 课：关键词检测 (KWS)](./subpage/AI/subsubpage/智能语音/第_10_课：关键词检测-KWS.md)
+    - [第 11 课：神经语音合成 (TTS)](./subpage/AI/subsubpage/智能语音/第_11_课：神经语音合成-TTS.md)
+    - [第 12 课：语音 NLU 与 LLM Agent](./subpage/AI/subsubpage/智能语音/第_12_课：语音-NLU与LLM-Agent.md)
+    - [智能语音服务学习笔记](./subpage/AI/subsubpage/智能语音/智能语音服务学习笔记.md)
+  - AI_机器学习
+    - [目标检测人行道定制](./subpage/AI/subsubpage/AI_机器学习/目标检测人行道定制.md)
+    - [目标检测](./subpage/AI/subsubpage/AI_机器学习/目标检测Demo.md)
+    - [pytorchMobile源码解读](./subpage/AI/subsubpage/AI_机器学习/pytorchMobile源码解读.md)
+  - d2l
+    - [3 线性神经网络](./subpage/AI/subsubpage/d2l/3_线性神经网络.md)
+    - [4 多层感知机](./subpage/AI/subsubpage/d2l/4_多层感知机.md)
+    - [深度学习计算](./subpage/AI/subsubpage/d2l/5_深度学习计算.md)
+    - [6 卷积神经网络](./subpage/AI/subsubpage/d2l/6_卷积神经网络.md)
+    - [7 现代卷积神经网络](./subpage/AI/subsubpage/d2l/7_现代卷积神经网络.md)
+    - [8 循环神经网络](./subpage/AI/subsubpage/d2l/8_循环神经网络.md)
+    - [13 计算机视觉](./subpage/AI/subsubpage/d2l/13_计算机视觉.md)
+
 - [AOSP](./subpage/AOSP/_AOSP.md)
   - [刷机](./subpage/AOSP/subsubpage/刷机.md)
   - [Android编译系统-Android.bp篇](./subpage/AOSP/subsubpage/Android编译系统-Android.bp篇.md)
@@ -21,7 +52,7 @@
   - [CtsStrictJavaPackagesTestCases问题解决记录](./subpage/AOSP/subsubpage/CtsStrictJavaPackagesTestCases问题解决记录.md)
   - [Bluetooth SBC Dual Channel HD audio mode](./subpage/AOSP/subsubpage/SBC_HD.md)
 
-- [coding](./subpage/coding/_coding.md)
+- [编程语言](./subpage/coding/_coding.md)
   - c-cpp
     - [华为OD机试](./subpage/coding/subsubpage/c-cpp/华为OD机试.md)
     - [机试中读取被分割开的数据的方法](./subpage/coding/subsubpage/c-cpp/机试中读取被分割开的数据的方法.md)
@@ -55,13 +86,6 @@
     - [我的根本意见](./subpage/diary/subsubpage/文档整理_随笔/我的根本意见.md)
   - 物理_模拟
     - [电磁场模拟](./subpage/diary/subsubpage/物理_模拟/电磁场模拟.md)
-  - 学术_文献管理
-    - [导出JabRef引文到Word](./subpage/diary/subsubpage/学术_文献管理/导出JabRef引文到Word.md)
-    - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/diary/subsubpage/学术_文献管理/JabRef预览引用及在Word添加GB格式参考文献.md)
-  - AI_机器学习
-    - [目标检测人行道定制](./subpage/diary/subsubpage/AI_机器学习/目标检测人行道定制.md)
-    - [目标检测](./subpage/diary/subsubpage/AI_机器学习/目标检测Demo.md)
-    - [pytorchMobile源码解读](./subpage/diary/subsubpage/AI_机器学习/pytorchMobile源码解读.md)
 
 - [Linux&嵌入式](./subpage/Linux&嵌入式/_Linux&嵌入式.md)
   - [第 1 课：嵌入式系统是什么 + 本项目全局地图](./subpage/Linux&嵌入式/subsubpage/第_1_课：嵌入式系统是什么+本项目全局地图.md)
@@ -83,29 +107,6 @@
     - [Linux操作系统2](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业2.md)
     - [Linux操作系统3](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业3.md)
     - [Linux操作系统4](./subpage/Linux&嵌入式/subsubpage/Linux作业/Linux作业4.md)
-
-- [MachineLearning](./subpage/MachineLearning/_MachineLearning.md)
-  - [第 1 课：数字音频基础与频谱分析](./subpage/MachineLearning/subsubpage/第_1_课：数字音频基础与频谱分析.md)
-  - [第 2 课：Mel 域与声学特征提取](./subpage/MachineLearning/subsubpage/第_2_课：Mel域与声学特征提取.md)
-  - [第 3 课：语音前端信号处理](./subpage/MachineLearning/subsubpage/第_3_课：语音前端信号处理.md)
-  - [第 4 课：ASR 问题建模](./subpage/MachineLearning/subsubpage/第_4_课：ASR问题建模.md)
-  - [第 5 课：CTC——无对齐的端到端训练](./subpage/MachineLearning/subsubpage/第_5_课：CTC无对齐的端到端训练.md)
-  - [第 6 课：RNN-T (Transducer)](./subpage/MachineLearning/subsubpage/第_6_课：RNN-T-Transducer.md)
-  - [第 7 课：注意力机制与 Encoder-Decoder ASR](./subpage/MachineLearning/subsubpage/第_7_课：注意力机制与Encoder-Decoder-ASR.md)
-  - [第 8 课：Whisper 与 LLM-based ASR](./subpage/MachineLearning/subsubpage/第_8_课：Whisper与LLM-based-ASR.md)
-  - [第 9 课：Kaldi 与 WFST 解码](./subpage/MachineLearning/subsubpage/第_9_课：Kaldi与WFST解码.md)
-  - [第 10 课：关键词检测 (KWS)](./subpage/MachineLearning/subsubpage/第_10_课：关键词检测-KWS.md)
-  - [第 11 课：神经语音合成 (TTS)](./subpage/MachineLearning/subsubpage/第_11_课：神经语音合成-TTS.md)
-  - [第 12 课：语音 NLU 与 LLM Agent](./subpage/MachineLearning/subsubpage/第_12_课：语音-NLU与LLM-Agent.md)
-  - [智能语音服务学习笔记](./subpage/MachineLearning/subsubpage/智能语音服务学习笔记.md)
-  - d2l
-    - [3 线性神经网络](./subpage/MachineLearning/subsubpage/d2l/3_线性神经网络.md)
-    - [4 多层感知机](./subpage/MachineLearning/subsubpage/d2l/4_多层感知机.md)
-    - [深度学习计算](./subpage/MachineLearning/subsubpage/d2l/5_深度学习计算.md)
-    - [6 卷积神经网络](./subpage/MachineLearning/subsubpage/d2l/6_卷积神经网络.md)
-    - [7 现代卷积神经网络](./subpage/MachineLearning/subsubpage/d2l/7_现代卷积神经网络.md)
-    - [8 循环神经网络](./subpage/MachineLearning/subsubpage/d2l/8_循环神经网络.md)
-    - [13 计算机视觉](./subpage/MachineLearning/subsubpage/d2l/13_计算机视觉.md)
 
 - [OpenGL](./subpage/OpenGL/_OpenGL.md)
   - [在c++中使用现代OpenGL](./subpage/OpenGL/subsubpage/在c++中使用现代OpenGL.md)
