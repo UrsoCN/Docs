@@ -3,11 +3,10 @@ title: DSpark：置信度调度的半自回归推测解码
 created: 2026-07-27
 modified: 2026-07-27
 tags:
-  - AI
-  - LLM推理加速
-  - 推测解码
-  - DeepSeek
-  - 论文笔记
+  - type/article
+  - topic/ai
+  - topic/ml
+  - lang/python
 ---
 
 # DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation
