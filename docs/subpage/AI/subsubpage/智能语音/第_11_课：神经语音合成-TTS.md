@@ -789,9 +789,134 @@ graph TD
 
 > **规律**：生成模型中，凡是能做好"从低维到高维映射"的技术（Flow、GAN、Diffusion），都会先在 TTS 中成功，再被移植到 ASR 的特征增强/域适应任务中。凡是能做好"序列建模"的技术（Transformer、LLM），都会从 ASR 开始，再影响 TTS。
 
+
 ---
 
-## 十一、流式 TTS 的工程挑战
+## 十一、TTS 完整推理流水线与架构演进反思
+
+> **深度视角**：在前几节中，我们重点讨论了神经声码器与生成模型数学（VAE/Flow/GAN/OT-CFM）。在工程实践中，TTS 是一个从“文本符号”到“模拟声波”的端到端系统。必须清晰理解**前端文本处理（TN/G2P）**、**声学模型 (Text2Mel)** 与 **神经声码器 (Vocoder)** 的完整接力关系，以及两阶段（第二代）架构在工业落地中的不可替代性。
+
+### 11.1 TTS 完整的八步推理流水线
+
+以项目中的 Matcha + Vocos / Kokoro 为例，一段原始文本转化为声音要经历以下八个步骤：
+
+```mermaid
+graph TD
+    A["1. 原始文本输入<br/>'2026年7月31日，Hello ROS!'"] --> B["2. 文本正则化 (TN)<br/>(调用 rule_fsts)"]
+    B --> C["'二零二六年七月三十一日，Hello ROS!'"]
+    
+    C --> D["3. 字词转音素 G2P<br/>(Lexicon 优先 -> espeak-ng 降级)"]
+    
+    subgraph "G2P 引擎处理"
+        D1["中文词汇查 lexicon.txt<br/>'二零二六' -> er4 ling2..."]
+        D2["英文/未登录词查 espeak-ng-data<br/>'Hello' -> /həˈloʊ/"]
+    end
+    D --> D1
+    D --> D2
+    
+    D1 --> E["4. 音素序列 (Phoneme Tokens)<br/>[er4, ling2, ..., h, ə, l, oʊ]"]
+    D2 --> E
+    
+    E --> F["5. Token ID 编码<br/>(对比 tokens.txt 查表映射为整数 ID)"]
+    
+    F --> G["6. 声学模型 (Acoustic Model / Matcha ONNX)<br/>输入: Token ID 序列<br/>输出: 80 维 Mel 频谱特征矩阵 [T_frames, 80]"]
+    
+    G --> H["7. 神经声码器 (Vocoder / Vocos ONNX)<br/>输入: Mel 频谱特征矩阵<br/>输出: 连续 PCM 浮点音频波形 [T_samples]"]
+    
+    H --> I["8. 播放与输出<br/>(写入 alsa / tee_playback 硬件设备)"]
+```
+
+#### 步骤详解：
+1. **文本正则化 (Text Normalization, TN)**：使用 `rule_fsts`（如 `date-zh.fst`, `number-zh.fst`）将未展开的数字、日期、符号**确定性**地翻译为可读拼音文本（如 `"2026年"` $\to$ `"二零二六年"`）。
+2. **字词转音素 (G2P, Grapheme-to-Phoneme)**：
+   * 优先检索 `lexicon.txt`（解决中文多音字、固定词组发音）；
+   * 对于英文单词或未登录词，降级（Fallback）调用 **`espeak-ng-data`** 中的规则与字典，将其转为国际音标（IPA）或 espeak 音素。
+3. **Token ID 编码**：将音素字符映射为模型词表 `tokens.txt` 里的整数 ID 数组。
+4. **声学模型推理 (Acoustic Model / Text2Mel)**：Matcha 或 Tacotron2/FastSpeech 接收音素 ID 序列，预测音素时长并生成 80 维 Mel 频谱。
+5. **声码器波形还原 (Vocoder / Mel2Wave)**：Vocos 或 HiFi-GAN 接收 80 维 Mel 频谱，执行 160-300 倍上采样，生成 PCM 浮点音频采样点。
+
+---
+
+### 11.2 G2P 前端 (espeak-ng) 与 Vocoder 的职责界定
+
+两个组件在 TTS 管道中位于首尾两端，解决完全不同的物理与数学问题：
+
+| 维度 | G2P 前端 (`espeak-ng-data` / `lexicon.txt`) | 神经声码器 (Vocoder / HiFi-GAN / Vocos) |
+|------|------------------------------------------|-----------------------------------------|
+| **位置** | TTS 最前端（文本预处理） | TTS 最后端（信号生成） |
+| **解决问题** | **“这个字/词发什么音？”** | **“如何把频谱变成声波？”** |
+| **输入** | 原始文本字符 (`"Hello"`, `"保存为"`) | 80 维连续 Mel 频谱矩阵 |
+| **输出** | 离散音素序列 (`/h ə l oʊ/`, `bǎo cún wèi`) | 16kHz / 24kHz 连续 PCM 音频采样点 |
+| **物理本质** | 离散符号逻辑变换（查表与规则匹配） | 高维连续信号重建（逆变换与上采样卷积） |
+
+#### 为什么有了 Vocoder 还需要 `espeak-ng-data`？
+Vocoder 只认识 80 维的 Mel 频谱，完全不理解任何文字或音素。如果不经过 `espeak-ng-data` 和 `lexicon.txt` 将文本转成音素，神经网络声学模型就无法获取输入 Embedding；`espeak-ng-data` 为未登录词和英文单词提供了独立于系统环境的确定性 G2P 转换能力。
+
+---
+
+### 11.3 第二代（两阶段）TTS 架构的独特工程优势
+
+尽管以 VITS、VALL-E 为代表的第三代端到端模型在自然度上进一步提升，但在工业界与边缘端部署中，**第二代两阶段架构（Text2Mel + Vocoder）** 依然占据统治地位：
+
+```
+第二代 (两阶段): 文本 ──> [声学模型] ──> Mel 频谱 ──> [声码器] ──> 波形
+                                    ↑ 显式交接点 (可监控/可编辑)
+```
+
+1. **解耦与极佳的可调试性 (Debuggability)**：
+   * 出现“吐字不清、语速异常”时，可直接可视化 Mel 频谱。能一眼判定是声学模型预测错了时长/音高，还是声码器产生了噪声。第三代端到端黑箱模型极难定位故障点。
+2. **显式可控性 (Explicit Prosody & Duration Control)**：
+   * 第二代声学模型（如 FastSpeech2、Matcha）拥有独立的 **Duration Predictor** 与 **Pitch/Energy Predictor**。
+   * **工程调整极简**：调语速只需给 Duration 乘以系数；改音高直接抬高 Pitch 曲线；增加停顿只需插入空白 Mel 帧。在端到端模型中调整这些参数非常困难。
+3. **计算资源与模型复用优势**：
+   * **Vocoder 全局共享**：只需训练一个通用的高品质 Vocoder（如 Vocos/HiFi-GAN），即可搭配 100 个轻量级的不同说话人声学模型。
+   * **训练与部署成本低**：两阶段声学模型参数量小（几十 MB），可在边缘端 CPU/GPU 上轻松达到极高的 RTF。
+
+---
+
+### 11.4 新增音色工程实践：声学模型微调与声码器复用
+
+在实际工程中，如果需要为系统添加一个特定的新音色（如专属客服音色、特定角色语音），操作关键在于明确**模型模块的替换边界**。
+
+#### 1. 核心原理：为什么只需要重新训练声学模型，而声码器可以直接复用？
+
+* **声学模型 (Matcha-TTS: Text $\to$ Mel 频谱)**：
+  * **决定音色与韵律**。说话人的声音特征（基频分布、声道共振峰、发音习惯、语速）完全编码在声学模型的 Speaker Embedding 与 Flow Decoder 参数中。
+  * **结论**：添加/改变音色，**必须重新训练或微调声学模型**。
+* **神经声码器 (Vocoder / Vocos / HiFi-GAN: Mel 频谱 $\to$ PCM 波形)**：
+  * **说话人无关 (Speaker-Agnostic)**。声码器是一个通用的信号重建引擎，它的唯一任务是把给定的 80 维 Mel 频谱还原为无杂音的物理声波。
+  * **结论**：工程中使用的 `vocos-16khz-univ.onnx`（`univ` 即 Universal 通用）无需重新训练。只要 Matcha 导出的 Mel 频谱格式一致（16kHz，80 维），**通用声码器 100% 可以无缝复用**。
+
+#### 2. 基于 Matcha-TTS 添加新音色的四步落地流程
+
+```mermaid
+graph LR
+    A["Step 1: 准备数据<br/>15~30分钟 16kHz WAV<br/>+ 文本/音素标注"] --> B["Step 2: 冻结微调<br/>冻结 Text Encoder<br/>微调 Embedding & Flow Decoder"]
+    B --> C["Step 3: ONNX 导出<br/>导出 model-new-voice.onnx"]
+    C --> D["Step 4: ROS 部署<br/>修改 matcha_tts_config.yaml<br/>复用通用 Vocos 声码器"]
+```
+
+* **Step 1: 准备目标说话人数据**
+  * 采集目标说话人 15 分钟 ~ 1 小时的清晰朗读音频（16kHz, 16bit, 单声道 PCM WAV），切分为 2~10 秒的独立短句。
+  * 使用前端工具生成匹配的文本标注与拼音/音素序列文件。
+* **Step 2: 冻结微调 Matcha-TTS**
+  * 加载官方开源预训练权重。
+  * **冻结** Text Encoder（保留强大的通用文本语义理解能力）。
+  * **仅微调** Speaker Embedding 矩阵、Duration Predictor 与 CFM Flow Matching Decoder。在单卡 GPU 上微调 1~2 小时即可收敛。
+* **Step 3: 导出为 ONNX 格式**
+  * 使用 Matcha 导出脚本将 PyTorch 权重导出为 `model-new-voice.onnx`。
+* **Step 4: 部署到 `chenxing_agent_ros` 工程**
+  * 将 `model-new-voice.onnx` 放入 `res/matcha-icefall-zh-en/` 目录。
+  * 修改 `config/matcha_tts_config.yaml`：
+    ```yaml
+    model_path: "matcha-icefall-zh-en/model-new-voice.onnx"   # 替换为新声学模型
+    voices_path: "matcha-icefall-zh-en/vocos-16khz-univ.onnx" # 保持复用通用 Vocos!
+    ```
+  * 重新启动 `tts_node`，系统即可输出全新的专属音色。
+
+---
+
+## 十二、流式 TTS 的工程挑战
 
 这是课程 17（端到端延迟）的前置知识——此处只点题。
 
@@ -819,7 +944,7 @@ TTS 播放中 → 用户说话 → KWS 检测到 →
 
 ---
 
-## 十二、实践环节
+## 十三、实践环节
 
 ### 实验 1：TTS 引擎对比
 
