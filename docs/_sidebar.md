@@ -11,6 +11,7 @@
   - [Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨](./subpage/Agent_summary/subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
   - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subpage/Agent_summary/subsubpage/reflect-hpp静态反射与JSON序列化.md)
   - [XVF3800 ESP32-S3 固件性能优化](./subpage/Agent_summary/subsubpage/XVF3800_ESP32-S3_固件性能优化.md)
+  - [XVF3800 ESP32-S3 UAC + Custom HID + BLE 复合网关需求澄清与选型决策记录](./subpage/Agent_summary/subsubpage/XVF3800_ESP32-S3_UAC_HID_BLE复合网关需求澄清与选型决策记录.md)
 
 - [AI & 机器学习](./subpage/AI/_AI.md)
   - 论文
