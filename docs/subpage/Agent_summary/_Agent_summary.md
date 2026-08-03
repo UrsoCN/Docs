@@ -22,3 +22,4 @@ tags:
   - [gguf_mix_inference: Fun-ASR-GGUF C++ 原生实现分析](./subsubpage/gguf_mix_inference_Fun-ASR-GGUF-C++原生实现分析.md)
   - [代码检索工具选型对比：codegraph vs codebase-memory-mcp vs rg vs LSP](./subsubpage/代码检索工具选型对比_codegraph_vs_codebase_memory_vs_rg.md)
   - [XVF3800 ESP32-S3 固件性能优化](./subsubpage/XVF3800_ESP32-S3_固件性能优化.md)
+  - [XVF3800_ESP32-S3_UAC_HID_BLE复合网关需求澄清与选型决策记录](./subsubpage/XVF3800_ESP32-S3_UAC_HID_BLE复合网关需求澄清与选型决策记录.md)
