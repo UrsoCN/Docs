@@ -35,6 +35,7 @@
     - [第 10 课：关键词检测 (KWS)](./subpage/AI/subsubpage/智能语音/第_10_课：关键词检测-KWS.md)
     - [第 11 课：神经语音合成 (TTS)](./subpage/AI/subsubpage/智能语音/第_11_课：神经语音合成-TTS.md)
     - [第 12 课：语音 NLU 与 LLM Agent](./subpage/AI/subsubpage/智能语音/第_12_课：语音-NLU与LLM-Agent.md)
+    - [第 13 课：Matcha-TTS 训练全流程与工程实战](./subpage/AI/subsubpage/智能语音/第_13_课：Matcha-TTS训练全流程与工程实战.md)
     - [智能语音服务学习笔记](./subpage/AI/subsubpage/智能语音/智能语音服务学习笔记.md)
   - CV
     - [目标检测人行道定制](./subpage/AI/subsubpage/CV/目标检测人行道定制.md)
