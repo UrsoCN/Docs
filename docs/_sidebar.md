@@ -22,6 +22,7 @@
     - [Scaling Laws for Neural Language Models](./subpage/AI/subsubpage/论文/Scaling_Laws神经语言模型.md)
     - [Sequence to Sequence Learning with Neural Networks](./subpage/AI/subsubpage/论文/Seq2Seq学习与神经网络.md)
     - [Fast Inference from Transformers via Speculative Decoding](./subpage/AI/subsubpage/论文/Speculative_Decoding推测解码.md)
+    - [τ0-VLA: a Hierarchical Robot Foundation Model with World-Model-Guided Test-Time Computation](./subpage/AI/subsubpage/论文/Tau0-VLA_世界模型引导测试时计算的分层机器人基础模型.md)
   - 智能语音
     - [第 1 课：数字音频基础与频谱分析](./subpage/AI/subsubpage/智能语音/第_1_课：数字音频基础与频谱分析.md)
     - [第 2 课：Mel 域与声学特征提取](./subpage/AI/subsubpage/智能语音/第_2_课：Mel域与声学特征提取.md)
