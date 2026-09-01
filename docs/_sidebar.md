@@ -10,6 +10,7 @@
   - [Loop Engineering: 从提示词工程到循环设计](./subpage/Agent_summary/subsubpage/Loop-Engineering_从提示词工程到循环设计.md)
   - [Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨](./subpage/Agent_summary/subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
   - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subpage/Agent_summary/subsubpage/reflect-hpp静态反射与JSON序列化.md)
+  - [ROS 2 IDL 动态解析、Bridge 网关与多语言 SDK 架构设计](./subpage/Agent_summary/subsubpage/ROS2_IDL动态解析_Bridge网关与多语言SDK架构设计.md)
   - [XVF3800 ESP32-S3 固件性能优化](./subpage/Agent_summary/subsubpage/XVF3800_ESP32-S3_固件性能优化.md)
   - [XVF3800 ESP32-S3 UAC + Custom HID + BLE 复合网关需求澄清与选型决策记录](./subpage/Agent_summary/subsubpage/XVF3800_ESP32-S3_UAC_HID_BLE复合网关需求澄清与选型决策记录.md)
 
