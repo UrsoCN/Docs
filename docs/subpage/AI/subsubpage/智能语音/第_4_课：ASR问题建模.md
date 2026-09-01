@@ -40,9 +40,9 @@ graph TD
 
 **数据效率**：
 
-| 如果直接建模 $P(W|O)$ | 拆成 $P(O|W) \cdot P(W)$ |
-|----------------------|--------------------------|
-| 需要大量**配对**数据（音频+文本） | 声学模型 $P(O|W)$：需要配对数据 |
+| 如果直接建模 $P(W \mid O)$ | 拆成 $P(O \mid W) \cdot P(W)$ |
+|--------------------------|------------------------------|
+| 需要大量**配对**数据（音频+文本） | 声学模型 $P(O \mid W)$：需要配对数据 |
 | 每一对新词都需要新的配对标注 | 语言模型 $P(W)$：只需要纯文本（维基百科、新闻、图书——几乎是无限的） |
 
 语言模型的训练数据可以比声学模型大几个数量级。拆开这两者，就是在利用"几乎免费"的纯文本数据来约束搜索空间——即使声学上听起来像 "two bee or not two bee"，语言模型会告诉你 $P(\text{to be or not to be}) \gg P(\text{two bee or not two bee})$。
@@ -73,15 +73,19 @@ $$P(\text{recognize speech} | \text{音频}) \text{ vs } P(\text{wreck a nice be
 即使音素粒度仍然太粗——一个音素持续 50-200ms，在此期间频谱一直在变化。HMM 把每个音素进一步拆成 **3-5 个隐状态**：
 
 ```mermaid
-graph LR
-    subgraph 词 "cat"
-        subgraph 音素 "/k/"
+graph TB
+    subgraph word_cat["词 cat"]
+        direction LR   %% 音素块内部横向，但块与块之间纵向堆叠
+        subgraph ph_k["音素 /k/"]
+            direction LR
             K1((k1)) --> K2((k2)) --> K3((k3))
         end
-        subgraph 音素 "/æ/"
+        subgraph ph_ae["音素 /æ/"]
+            direction LR
             AE1((æ1)) --> AE2((æ2)) --> AE3((æ3))
         end
-        subgraph 音素 "/t/"
+        subgraph ph_t["音素 /t/"]
+            direction LR
             T1((t1)) --> T2((t2)) --> T3((t3))
         end
     end

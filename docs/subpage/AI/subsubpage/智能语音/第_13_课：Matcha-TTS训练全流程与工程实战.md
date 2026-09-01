@@ -344,7 +344,109 @@ logw_ = torch.log(1e-8 + duration_gt_clamped) * x_mask
 
 ---
 
-## 七、实践环节
+## 七、声码器选型实战：HiFiGAN vs Vocos 与 16kHz 边缘部署
+
+> **核心问题**：为什么同一个 Matcha 模型，用 HiFiGAN 声码器输出干净、用 Vocos 却发闷发脏？在需要 16kHz 输出的边缘设备（如 RK3588）上，应该如何选择声码器？本节约你从 **mel 空间** 的视角理解声码器选型的本质，并给出可落地的 16kHz 部署路线。
+>
+> **学习目标**：
+> 1. 理解"mel 空间"概念，以及为什么声码器必须与声学模型共享同一 mel 空间；
+> 2. 掌握 vocos 音质劣化的根因（mel 分布失配）与修复思路（仿射映射）；
+> 3. 了解 HiFiGAN 与 Vocos 的架构差异与性能对比；
+> 4. 掌握 16kHz 输出的三条路线及 RK3588 边缘部署的可行性评估。
+
+### 7.1 核心知识点：声码器与"mel 空间"绑定
+
+> [!IMPORTANT]
+> **一句话原理**：声码器（Vocoder）不是通用的"mel→波形"黑盒，它只在自己训练时的 mel 空间里表现最佳。mel 空间由滤波器组参数（`n_fft / hop / win / n_mels / fmin / fmax`）与归一化方式共同决定。
+
+**为什么 HiFiGAN 效果最好？**
+* icefall 的 Matcha-TTS recipe 从数据特征层面就是为 HiFiGAN 量身定制的：`fbank.py` 的 mel 参数 `n_fft=1024, hop=256, win=1024, 80mel, fmin=0, fmax=8000` **逐字照抄 HiFiGAN 配置**；
+* `generator_v2`（universal HiFiGAN）正是同一套 mel 空间训练的（22050 / 80mel / hop256 / fmax8000）；
+* 因此 Matcha 模型从训练第一天就在 HiFiGAN 的"母语"mel 空间里，mel → HiFiGAN 是"母语对母语"，天然干净。
+
+**为什么 vocos 会"发脏"？** 因为 `vocos-16khz-univ.onnx` 是在**它自己的 mel 空间**训练的（滤波器组、增益、动态范围都不同）。即使做分布映射把谱相关拉到 0.90，逐 bin 的滤波器组形状与动态范围差异无法用全局变换消除——vocos 学到的 `mag=exp(mel)` 映射会"用力过猛/不足"，听感粗糙。**这不是代码 bug，而是"领域失配"的固有代价。**
+
+### 7.2 知识点：mel 分布失配的根因与修复
+
+**根因**：vocos 内部 `mag ≈ exp(mel)`，对输入 mel 的电平极其敏感。对比两个模型的 mel 分布：
+
+| 模型 | mel 均值 | mel 标准差 | vocos 输出 |
+|---|---|---|---|
+| 作者原版模型（vocos 训练配套） | ≈ -1.98 | ≈ 3.54 | 干净（rms 0.129）|
+| 我们的 Matcha 模型 | ≈ -5.6 | ≈ 2.7 | 静音/发闷 |
+
+> 我们的 mel 比 vocos 期望的低约 3.6 → 幅度小约 45 倍，这就是"发闷发脏"的数学根源。
+
+**修复思路（仿射映射）**：给 mel 加一个到 vocos 期望分布的仿射变换：
+
+$$mel' = \frac{mel - mean}{std} \times \text{author\_std} + \text{author\_mean}$$
+
+用相位不变的**频谱相关**验证（波形相关对相位极敏感，不适合评估重建质量）：
+
+| 方案 | 重建 RMS | 谱相关 |
+|---|---|---|
+| vocos raw（不处理） | 0.0017 | 0.888 |
+| vocos + 全局仿射映射 | 0.32 | **0.900** |
+| HiFiGAN 22050→16k（对照） | 0.046 | 0.501 |
+
+> 结论：vocos 其实完全理解我们的 mel（谱相关 0.90 高于 HiFiGAN 对照），问题只是**电平**。修复后 vocos 可正常出声，但听感仍略逊于 HiFiGAN——因为逐 bin 的滤波器组差异无法用全局变换完全消除。
+
+### 7.3 知识点：HiFiGAN vs Vocos 架构与性能对比
+
+| 维度 | HiFiGAN v2 | Vocos |
+|---|---|---|
+| 架构 | GAN 生成器（转置卷积 + ResBlock） | 1D 卷积主干 + 显式相位估计 + istft |
+| 参数量 | **0.93M** | **13.46M**（约 14 倍）|
+| 本机 CPU RTF（4 线程） | 0.020（~566× 实时） | 0.004（~3264× 实时）|
+| 依赖 | 自带 Denoiser | 需额外 istft（已内置）|
+| 对 mel 空间敏感度 | 极高（跨域易劣化） | 相对鲁棒 |
+
+> **反直觉结论**：更轻的 HiFiGAN 反而更难训练好、更难跨域（对 mel 空间极度敏感）；Vocos 理论上更鲁棒，但 universal 版为通用性牺牲了对单一 mel 空间的精度。
+
+### 7.4 知识点：16kHz HiFiGAN 的生态现状
+
+> [!IMPORTANT]
+> **sherpa-onnx 与 icefall 生态内不存在 16kHz 的 HiFiGAN。**
+> * sherpa-onnx `vocoder-models` release 只有 `hifigan_v1/v2/v3.onnx`（全部 22050Hz）+ `vocos-16khz-univ.onnx`（唯一 16kHz 声码器）；
+> * sherpa-onnx 源码（`offline-tts-matcha-impl.h`）对 16kHz 中英 Matcha 模型写死提示："You should use vocos-16khz-univ.onnx"——官方 16kHz 方案就是 vocos；
+> * icefall 的 `generator_v1/v2/v3` 也全是 22050。
+
+**生态外唯一真正的 16kHz HiFiGAN**：`speechbrain/tts-hifigan-libritts-16kHz`（SpeechBrain 官方，LibriTTS 多说话人，Apache-2.0，mel 配置 hop=256/80mel/0-8kHz 与 icefall 一致）。
+
+下载链接（国内可用 hf-mirror）：
+```
+https://hf-mirror.com/speechbrain/tts-hifigan-libritts-16kHz/resolve/main/generator.ckpt      (55.8 MB)
+https://hf-mirror.com/speechbrain/tts-hifigan-libritts-16kHz/resolve/main/hyperparams.yaml    (1 KB)
+```
+原页面：`https://huggingface.co/speechbrain/tts-hifigan-libritts-16kHz`
+
+> ⚠️ 注意：SpeechBrain 的 HiFiGAN 用**它自己的 mel** 训练（带 `min_max_energy_norm=True`），与 icefall mel 有分布差异，接入时很可能需要类似 vocos 的分布映射。
+
+### 7.5 知识点：RK3588 边缘部署可行性
+
+* 本机 CPU RTF：HiFiGAN 0.020 / Vocos 0.004；RK3588（A76 大核，比本机慢约 3~5 倍）预计 **RTF 0.06~0.10**——合成 1 秒语音约需 60~100ms CPU 时间，**远低于实时**。
+* **Matcha 模型本身（CFM decoder + Transformer）才是推理大头**，声码器占比很小。
+* HiFiGAN 仅 0.93M 参数，内存占用可忽略。
+* RK3588 的 6 TOPS NPU 若用于跑 Matcha 的卷积/注意力，CPU 只跑声码器，完全无压力。
+
+### 7.6 本节小结：16kHz 干净输出的三条路线
+
+| 路线 | 音质 | 采样率 | 说明 |
+|---|---|---|---|
+| **A. HiFiGAN 22050 + 重采样到 16k** | ⭐ 最干净 | 16k | 音高正确（按 22050 解释）+ 重采样，重采样开销可忽略 |
+| **B. vocos-16khz-univ + 分布映射** | 良好 | 16k 原生 | sherpa-onnx 官方 16k 方案，需仿射映射修复电平 |
+| **C. SpeechBrain 16k HiFiGAN** | 待验证 | 16k 原生 | 生态外唯一真 16k HiFiGAN，可能需 mel 映射 |
+
+> ⚠️ **易错点**：不能把 22050 的 HiFiGAN 输出直接按 16000 解释——HiFiGAN 是纯 256× 上采样，音高按 22050 校准，按 16k 解释会让所有声音音调降低 $16000/22050 \approx 0.73$ 倍（听起来全是低沉男声）。
+
+**思考题**：
+1. 为什么"波形相关"不适合评估声码器重建质量，而"频谱相关"可以？
+2. 如果要把 vocos 换成 24kHz 版本，需要重新检查哪些参数？
+3. 在 RK3588 上，为什么说"声码器不是瓶颈"？
+
+---
+
+## 八、实践环节
 
 ### 实验 1：模拟 MAS 单调对齐搜索与 Duration 提取
 
@@ -386,7 +488,7 @@ print("总帧数校验:", durations.sum(), "== T_mel:", T_mel)
 
 ---
 
-## 八、关键术语速查
+## 九、关键术语速查
 
 | 术语 | 一句话定义 |
 |---|---|
@@ -399,10 +501,14 @@ print("总帧数校验:", durations.sum(), "== T_mel:", T_mel)
 | **Duration Collapse** | 时长坍塌——非自回归 TTS 中 Duration Predictor 对特定音素预测出接近 0 帧导致“吞字”的缺陷 |
 | **Asymmetric Duration Loss** | 非对称时长损失——对预测时长偏短赋予更高惩罚权重的损失函数，用于根治吞字现象 |
 | **Single-Token OOD** | 孤立词分布外失真——模型在长句数据集训练后，输入单个字/字母时由于缺乏上下文导致的音质劣化 |
+| **HiFiGAN** | 基于 GAN 的神经声码器——用转置卷积 + ResBlock 学习 mel→波形端到端映射，icefall 生态默认声码器（22050Hz） |
+| **Vocos** | 基于显式相位估计 + istft 的轻量声码器，sherpa-onnx 生态 16kHz 官方推荐（`vocos-16khz-univ.onnx`） |
+| **RTF (Real-Time Factor)** | 实时率——合成 1 秒音频所需的推理时间，RTF < 1 即满足实时 |
+| **Mel 分布失配** | 声码器训练时的 mel 空间与模型输出 mel 空间不一致导致的音质劣化，可通过仿射映射缓解 |
 
 ---
 
-## 九、下一步
+## 十、下一步
 
 ### 推荐阅读
 
