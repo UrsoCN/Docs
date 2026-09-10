@@ -7,14 +7,19 @@ tags:
   - topic/robotics
   - lang/cpp
 ---
-# OpenTera WebRTC：机器人遥操作的音视频流框架
+# OpenTera WebRTC 生态：音视频框架 + ROS 2 遥操作集成
 
-> **项目地址**: [introlab/opentera-webrtc](https://github.com/introlab/opentera-webrtc)（注：非 `-core` 后缀）
+> 本文覆盖 IntRoLab 的两个姊妹仓库：
+>
+> | 仓库 | 定位 | 版本/状态 |
+> |------|------|-----------|
+> | [introlab/opentera-webrtc](https://github.com/introlab/opentera-webrtc) | **基础层**：C++/Python/JS 客户端库 + 信令服务器 | 1.2.6（2025-04） |
+> | [introlab/opentera-webrtc-ros](https://github.com/introlab/opentera-webrtc-ros) | **集成层**：ROS 2 (Humble) 节点封装，9 个 ROS 包 | 活跃开发中 |
+>
 > **机构**: IntRoLab, Université de Sherbrooke（加拿大舍布鲁克大学智能机器人实验室）
-> **版本**: 1.2.6（最后提交 2025-04）
 > **授权**: Apache 2.0（注意：默认构建的 libwebrtc 含非自由编解码器）
-> **语言**: C++14 核心 + Python 3 绑定（pybind11）+ JavaScript
-> **依赖**: libwebrtc（Google 原生）、GStreamer（可选）、IXWebSocket、OpenCV、pybind11、nlohmann/json
+> **语言**: C++14（核心）+ Python 3（pybind11 / 节点脚本）+ JavaScript + CMake
+> **依赖**: libwebrtc（Google 原生）、GStreamer（可选）、IXWebSocket、OpenCV、pybind11、nlohmann/json、protobuf、Qt5、RTAB-Map、audio_utils、ODAS
 
 ---
 
@@ -417,15 +422,293 @@ audio_source.send_frame(audio_frame)                      # int16 PCM
 
 ---
 
-## 八、与 ROS 2 的集成
+## 八、ROS 2 集成层（opentera-webrtc-ros）
 
-配套项目 [opentera-webrtc-ros](https://github.com/introlab/opentera-webrtc-ros)（ROS 2 Humble）：
+这是把上面那套 WebRTC 能力**真正接到机器人上**的一层。相比基础库，它的工程量更大也更有参考价值——9 个 ROS 2 包，覆盖从推流、遥操作、导航到隐私保护的全链路。
 
-- 把 ROS topic 上的 `sensor_msgs/Image` 直接推入 `VideoSource`
-- 提供 C++ 和 Python 两种 ROS 节点封装
-- 支持硬件加速与编解码器选择
+### 8.1 包结构总览
 
-这对机器人遥操作是完整闭环：**ROS 采图 → WebRTC 推流 → 浏览器实时显示 + 反向控制指令走数据通道**。
+| 包 | 语言 | 职责 |
+|----|------|------|
+| **opentera_webrtc_ros** | C++ | ⭐ 核心桥接：流节点、数据通道、JSON 指令分发 |
+| **opentera_webrtc_ros_msgs** | msg | 24 个消息定义（Peer*/OpenTeraEvent/Waypoint/Label 等） |
+| **opentera_client_ros** | Python | 连接 OpenTera 云平台，接收云端呼叫事件 |
+| **opentera_protobuf_messages** | proto | 与 OpenTera 平台通信的 protobuf 定义 |
+| **opentera_webrtc_robot_gui** | C++/Qt5 | 机器人端触屏 GUI（视频显示、麦克风/摄像头控制） |
+| **opentera_webrtc_demos** | launch | Gazebo 仿真演示（含 TurtleBot3） |
+| **map_image_generator** | C++ | 把导航地图 + 激光 + 机器人位姿绘制成 2D 图像推流 |
+| **face_cropping** | C++/LibTorch | ⭐ 人脸检测裁剪，隐私保护 + 带宽优化 |
+| **turtlebot3_beam_description** | URDF | 演示用机器人模型 |
+
+### 8.2 核心设计：RosWebRTCBridge 模板基类
+
+整个集成层最精妙的地方是一个 **543 行的模板基类**，把"ROS 节点"与"WebRTC 客户端"嫁接起来：
+
+```cpp
+template<typename T>
+class RosWebRTCBridge : public rclcpp::Node
+{
+    static_assert(std::is_base_of<WebrtcClient, T>::value,
+                  "T must inherit from opentera::WebrtcClient");
+    ...
+    std::unique_ptr<T> m_signalingClient;   // 由子类决定是 StreamClient 还是 DataChannelClient
+};
+```
+
+对比基础库的 `WebrtcClient` 用**虚函数工厂**（运行期多态），这里用**模板参数**（编译期多态）——因为节点类型在编译期就确定了，省掉虚函数开销，也让编译器能内联全部回调。
+
+**双向事件桥**：
+
+```
+ROS 侧                          WebrtcClient 侧
+─────────────────────────────────────────────────
+订阅 "events"（云端事件）  →  onDeviceEvents / onJoinSessionEvents /
+                              onParticipantEvents / onStopSessionEvents ...
+                              → connect() / disconnect() 信令连接
+
+发布 "webrtc_peer_status"  ←  onSignalingConnectionOpened / onClientConnected /
+                              onClientDisconnected / onClientConnectionFailed
+```
+
+**云端事件全集**（`opentera_webrtc_ros_msgs`）：
+
+`OpenTeraEvent`(总容器) → `DatabaseEvent` / `DeviceEvent` / `JoinSessionEvent` / `JoinSessionReplyEvent` / `LeaveSessionEvent` / `LogEvent` / `ParticipantEvent` / `StopSessionEvent` / `UserEvent`
+
+这是**会话状态机**——不是简单的 p2p 呼叫，而是完整的"用户/设备/参与者"三方会话模型。
+
+### 8.3 RosStreamBridge：音视频双向桥
+
+**订阅**：`ros_image` (`sensor_msgs/Image`)、`audio_in` (`audio_utils_msgs/AudioFrame`)
+**发布**：`webrtc_image` (`PeerImage`)、`webrtc_audio` (`PeerAudio`)、`audio_mixed` (`AudioFrame`)
+
+参数体系（ROS param XML）：
+
+```xml
+<param name="is_stand_alone" value="true"/>          <!-- 独立模式 vs 云平台模式 -->
+<param name="stream">
+  <param name="can_send_audio_stream"    value="true"/>   <!-- 四路能力开关 -->
+  <param name="can_receive_audio_stream" value="true"/>
+  <param name="can_send_video_stream"    value="true"/>
+  <param name="can_receive_video_stream" value="true"/>
+  <param name="is_screen_cast"           value="false"/>  <!-- 屏幕共享 vs 摄像头 -->
+  <param name="needs_denoising"          value="false"/>
+</param>
+<param name="signaling">
+  <param name="server_url"    value="http://localhost:8080"/>
+  <param name="client_name"   value="streamer"/>
+  <param name="room_name"     value="chat"/>
+  <param name="room_password" value="abc"/>
+</param>
+```
+
+> 设计亮点：`can_send/receive_*_stream` 四个开关决定 `VideoSource`/`AudioSource` 是否被创建 —— 收流端不需要构造发送源，省内存。
+
+**音频处理参数**（直接透传给 WebRTC 音频模块）：
+
+```cpp
+m_nodeParameters.loadAudioStreamParams(
+    m_canSendAudioStream, m_canReceiveAudioStream,
+    soundCardTotalDelayMs,      // 声卡总延迟（AEC 参考信号对齐关键！）
+    echoCancellation,           // 回声消除
+    autoGainControl,            // 自动增益
+    noiseSuppression,           // 降噪
+    highPassFilter,             // 高通滤波
+    stereoSwapping,
+    transientSuppression);      // 瞬态抑制
+```
+
+> **`soundCardTotalDelayMs` 是 AEC 能工作的前提**——它告诉 WebRTC 扬声器信号到麦克风的延迟，用来对齐参考信号。这个值和硬件的 buffer 深度强相关。
+
+### 8.4 RosVideoSource：ROS 图像的预处理
+
+```cpp
+void RosVideoSource::sendFrame(const sensor_msgs::msg::Image::ConstSharedPtr& msg)
+{
+    cv::Mat bgr;
+    if (msg->encoding.find("F") != std::string::npos)   // 判断是否是"浮点"图像
+    {
+        // 浮点图（如深度图/归一化图）需要先按最大值缩放到 [0,255]
+        cv::Mat_<float> float_image = cv_bridge::toCvShare(msg, msg->encoding)->image;
+        double max_val;
+        cv::minMaxIdx(float_image, 0, &max_val);
+        if (max_val > 0) float_image *= (255 / max_val);
+        cv::Mat orig;
+        float_image.convertTo(orig, CV_8U);
+        cv::cvtColor(orig, bgr, CV_GRAY2BGR);
+    }
+    else
+    {
+        bgr = cv_bridge::toCvShare(msg, "bgr8")->image;
+    }
+    int64_t camera_time_us = to_microseconds(msg->header.stamp);
+    VideoSource::sendFrame(bgr, camera_time_us);   // 时间戳用 ROS 的！不是本地时间
+}
+```
+
+> 两个关键点：① 支持 float 图像自动归一化（深度图可直接推流）；② **时间戳透传 ROS header stamp**，保证多路流的时间一致性。
+
+### 8.5 遥操作协议：JSON over DataChannel
+
+`RosDataChannelBridge` 负责 `std_msgs/String` ↔ WebRTC 数据通道搬运，`RosJsonDataHandler` 把 JSON 分发到具体 ROS 话题/服务。
+
+**完整的指令集**（`RosJsonDataHandler.cpp` 实录）：
+
+| `type` | 字段 | 映射目标 |
+|--------|------|----------|
+| `stop` / `start` | `state` | `std_msgs/Bool` → 导航启停 |
+| `velCmd` | `x`, `yaw` | `geometry_msgs/Twist` → **`cmd_vel` 遥控** |
+| `waypointArray` | `array[{coordinate{x,y,yaw}}]` | `WaypointArray` → 多点导航 |
+| `action` | `action: dock` | 服务 `do_docking` |
+| `action` | `action: localizationMode` / `mappingMode` | 服务 `/rtabmap/rtabmap/set_mode_*` |
+| `action` | `action: setMovementMode` / `doMovement` | 服务 `set_movement_mode` / `do_movement` |
+| `micVolume` / `volume` | 值 | `std_msgs/Float32` → 音量控制 |
+| `enableCamera` | 值 | `std_msgs/Bool` |
+| `changeMapView` | — | 服务 `change_map_view` |
+| `goToLabel` / `removeLabel` / `addLabel` / `editLabel` | 标签信息 | 语义导航点管理 |
+
+速度遥控的核心逻辑：
+
+```cpp
+else if (serializedData["type"] == "velCmd")
+{
+    geometry_msgs::msg::Twist twist;
+    // Multiply by 0.15 in order to control the speed of the movement
+    twist.linear.x  = static_cast<double>(serializedData["x"])   * m_linear_multiplier;   // 默认 0.15
+    twist.angular.z = static_cast<double>(serializedData["yaw"]) * m_angular_multiplier;  // 默认 0.15
+    m_cmdVelPublisher->publish(twist);
+}
+```
+
+> **安全设计**：前端（浏览器摇杆）发来的是 **-1.0 ~ 1.0 的归一化值**，节点侧乘以 `linear_multiplier`(0.15) 转换成实际速度。这样"最大速度"由机器人侧参数决定，**前端无法越权发送超速指令**。yaw 用 `M_PI/180` 做角度→弧度转换。
+
+### 8.6 map_image_generator：把导航状态画成图推流
+
+这是本项目的另一个巧思：**不做 3D 可视化，而是把地图渲染成一张 2D 图像直接推流**。
+
+```
+订阅: /map (OccupancyGrid)     → OccupancyGridImageDrawer  栅格地图
+      /scan (LaserScan)        → LaserScanImageDrawer      激光点
+      /odom, /tf               → RobotImageDrawer          机器人位姿
+      /global_plan             → GlobalPathImageDrawer     全局路径
+      /goal_pose               → GoalImageDrawer           目标点
+      /sound_source_localization → SoundSourceImageDrawer  声源定位(ODAS)
+      标签                     → LabelImageDrawer          语义标签
+
+发布: 一张合成好的 sensor_msgs/Image → 喂给 RosVideoSource → WebRTC 推流
+服务: 图像坐标 ↔ 地图坐标转换（供 goal_manager / labels_manager 使用）
+```
+
+> 为什么这么做？**因为浏览器端不需要装 RViz**——一张图就能让操作员看到地图、机器人位置、路径规划和声源方向。代价是失去交互性和 3D 视角，换来极低的实现与带宽成本。README 说明"暂时以 2D 图像流简化处理"。
+
+### 8.7 导航目标管理：goal_manager 与 labels_manager
+
+两个 Python 节点，共用 `libnavigation` 库：
+
+- **`goal_manager`**：接收前端发来的多个图像坐标航点 → 通过 `map_image_generator` 的服务转成地图坐标 → **逐个**发给 nav2，到达后发布 `waypoint_reached`（JSON）通知前端
+- **`labels_manager`**：管理**语义标签**（名字 + 位姿 + 描述），存 YAML（`libyamldatabase`）。支持按名字导航、增删改。⚠️ 标签绑定地图坐标系，**地图变了数据库必须清理**
+
+> 这两个节点实现了"**点击地图 → 机器人自动导航**"的完整体验：操作员在浏览器地图上点几个点，机器人就依次跑过去。
+
+### 8.8 face_cropping：隐私保护 + 带宽优化（很有想法）
+
+远程康复场景涉及真实患者/家属，直接推完整画面有隐私风险。这个节点**检测画面中最大的人脸并裁剪输出**。
+
+**模型选型与性能实测**（AMD Ryzen 7 3700X @ 30Hz，WIDER FACE 子集）：
+
+| 模型 | 需 LibTorch | CPU (%/核) | 内存 (MB) | AP@0.25 | AP@0.50 | AP@0.75 |
+|------|------------|-----------|----------|---------|---------|---------|
+| haarcascade | ✗ | 220.4 | 299.7 | 0.5973 | 0.5649 | 0.0314 |
+| lbpcascade | ✗ | 154.7 | 299.1 | 0.4141 | 0.4014 | 0.0705 |
+| **small_yunet_0.5_320** | ✓ | **20.2** | 282.2 | **0.8622** | **0.8034** | 0.4840 |
+| small_yunet_0.5_640 | ✓ | 50.1 | 315.8 | 0.8780 | 0.8466 | **0.6018** |
+| small_yunet_0.25_160 | ✓ | 11.4 | 273.9 | 0.6896 | 0.4940 | 0.1298 |
+
+> **结论**：传统 Haar/LBP 级联（`haarcascade` 用 220% CPU！）在现代分辨率下已经不可用；自研的 `small_yunet_*` 用**知识蒸馏**压缩骨干网（ImageNet 预训练 + 蒸馏），`0.5_320` 型号在 **20% CPU** 下拿到 0.80 AP@0.5 —— 比 haarcascade 准得多还快 10 倍。
+>
+> 模型训练代码在 `dnn_training/`（含 SimOTA 正负样本分配，取自 MMDetection）。Jetson 上需自行编译 LibTorch + torchvision，或用 `FACE_CROPPER_USE_CUDA=ON` 走 GPU。
+
+参数：`min_face_width/height`（过滤小脸）、`output_width/height`、`adjust_brightness`（提亮）、`use_gpu_if_available`。可由机器人 GUI 的按钮实时开关。
+
+### 8.9 opentera_client_ros：云端接入
+
+不再是"局域网里连信令服务器"，而是作为**设备**注册到 OpenTera 云平台：
+
+```json
+// config/client_config.json
+{
+  "client_token": "JWT token generated from the OpenTera server",
+  "url": "https://server:port"
+}
+```
+
+响应 7 类平台事件：`DeviceEvent`（设备上下线）、`JoinSessionEvent` / `JoinSessionReplyEvent`（会话加入）、`ParticipantEvent` / `UserEvent`（参与者/用户在线状态）、`StopSessionEvent`（会话终止）、`LeaveSessionEvent`（离开）。
+
+会话由 [opentera-teleop-service](https://github.com/introlab/opentera-teleop-service) 的 webportal 发起 —— 即**治疗师在网页上发起呼叫，机器人被叫响**。
+
+### 8.10 机器人端 GUI（Qt5）
+
+`opentera_webrtc_robot_gui`：机器人本体的触摸屏界面。展示远端视频流、本地摄像头画中画（可拖动/缩放、透明度可调）、显示呼叫信息、控制麦克风/摄像头/人脸裁剪开关。
+
+通过 `deviceProperties` JSON 适配不同屏幕（分辨率、对角尺寸、画中画位置），可用 ROS 参数 `device_properties_path` 覆盖。README 坦承"GUI 尚未完成，但已能显示基本视频流"。
+
+### 8.11 快速上手（Gazebo 仿真）
+
+```bash
+# 依赖（Ubuntu 22.04 + ROS 2 Humble）
+sudo apt install ros-humble-rtabmap-ros ros-humble-turtlebot3-gazebo \
+                 ros-humble-turtlebot3-navigation2 libprotobuf-dev \
+                 python3-protobuf portaudio19-dev nodejs npm \
+                 libqt5charts5-dev libgstreamer1.0-dev ...
+
+# 拉取（含依赖包）
+cd ~/teleop_ws/src
+git clone https://github.com/Kapernikov/cv_camera.git
+git clone https://github.com/introlab/audio_utils.git --recurse-submodules
+git clone https://github.com/introlab/odas_ros.git --recurse-submodules
+git clone https://github.com/introlab/opentera-webrtc-ros.git --recurse-submodules
+
+# 构建
+cd ~/teleop_ws
+colcon build --symlink-install --cmake-args -DPYTHON_EXECUTABLE=/usr/bin/python3
+
+# 跑仿真演示
+source install/setup.bash
+ros2 launch opentera_webrtc_demos demo.launch.xml is_stand_alone:=true
+# 浏览器打开 http://localhost:8080/index.html#/user?name=dev&pwd=abc&robot=BEAM
+```
+
+> 需要 CMake ≥ 3.22（Ubuntu 22.04 自带 3.22 需按官方指引升级）。
+
+---
+
+## 八·补、两仓库的调用栈关系
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ opentera-webrtc-ros （ROS 2 集成层）                          │
+│                                                              │
+│  RosWebRTCBridge<T>  ← 模板基类，ROS 节点 × WebrtcClient      │
+│    ├── RosStreamBridge        → StreamClient                 │
+│    └── RosDataChannelBridge   → DataChannelClient            │
+│                                                              │
+│  RosVideoSource → VideoSource      RosAudioSource → AudioSource│
+│  RosJsonDataHandler（JSON → cmd_vel / nav2 / rtabmap）         │
+│  goal_manager / labels_manager（导航与语义点）                 │
+│  map_image_generator（地图渲染成图推流）                        │
+│  face_cropping（隐私裁剪，LibTorch）                           │
+│  opentera_client_ros（OpenTera 云端设备接入）                  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ 直接依赖（源码级，非 ROS 包）
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│ opentera-webrtc （基础层）                                     │
+│  StreamClient / DataChannelClient / WebrtcClient            │
+│  WebSocketSignalingClient（信令协议 v2）                      │
+│  GStreamer 编解码工厂（硬件加速）                               │
+└──────────────────────────┬──────────────────────────────────┘
+                           ▼
+        libwebrtc (Google) + 信令服务器 (Python/aiohttp)
+```
 
 ---
 
@@ -455,6 +738,23 @@ audio_source.send_frame(audio_frame)                      # int16 PCM
 8. **懒初始化 asyncio.Lock**
    `asyncio.Lock()` 绑定事件循环，必须在循环内创建 —— `_create_lock_if_none()` 是标准解法。
 
+### 来自 ROS 集成层的补充启示
+
+9. **编译期多态 vs 运行期多态的选择**
+   基础库 `WebrtcClient` 用虚工厂（运行期多态）让用户自选 client 类型；集成层 `RosWebRTCBridge<T>` 改用模板参数（编译期多态），因为节点类型编译期已知。**同一套代码，不同的多态策略**——这是很好的设计取舍案例。
+
+10. **安全边界前移到机器人侧**
+    前端发归一化值（-1.0~1.0），机器人侧乘 `linear_multiplier` 才变成实际速度。**"最大速度"永远由被控端决定**，前端即使被篡改也无法让机器人超速。这个模式可推广到任何远程控制协议。
+
+11. **用"图像流"替代 3D 可视化客户端**
+    `map_image_generator` 把地图/激光/位姿/路径画成一张图推流，浏览器端不需要 RViz 或任何地图引擎。**牺牲交互性换实现与带宽成本**——在"看得到就行"的遥操作场景是明智取舍。
+
+12. **推流链路上做隐私过滤**
+    `face_cropping` 在 ROS→WebRTC 之间插入一道人脸检测裁剪。相比在客户端做模糊（视频已出网），**在源头裁剪才是真隐私保护**。同时顺带降低带宽。
+
+13. **时间戳必须透传源头**
+    `RosVideoSource` 用 `msg->header.stamp` 而非本地时钟。多路流（摄像头/地图）要能对齐，时间源必须统一。
+
 ---
 
 ## 十、构建与依赖速查
@@ -476,18 +776,47 @@ opentera-webrtc-native-client/3rdParty/
 
 ---
 
-## 十一、对这个项目的评价
+## 十一、总结与评价
 
-**优点**
+### 分层价值
+
+| 层 | 你能学到什么 |
+|----|-------------|
+| **opentera-webrtc**（基础层） | 如何封装 libwebrtc：线程模型、回调设计、配置对象、跨语言统一协议、硬件加速工厂注入 |
+| **opentera-webrtc-ros**（集成层） | 如何把 WebRTC 落到 ROS 2 机器人上：模板化节点桥接、JSON 遥操作协议、导航可视化、隐私过滤、云端会话模型 |
+
+### 优点
+
+- **两个仓库职责清晰**：基础层与 ROS 层解耦，基础层可复用于非 ROS 场景（如纯 Python 服务）
 - 三端统一协议，工程完成度高（含测试、CI、Doxygen 文档）
 - 硬件加速支持矩阵覆盖主流嵌入式平台（Jetson 全家桶 + 树莓派 + VA-API + Apple）
 - 回调 + 线程模型设计规范，是学习 C++ 异步封装的良好范本
-- 与 ROS 2 生态有现成集成
+- **ROS 层有真实场景沉淀**：远程康复（患者隐私、治疗师遥操作、语义导航点）——不是玩具 demo
+- `face_cropping` 的模型对比数据（CPU/AP 权衡）是可复用的工程选型参考
 
-**局限**
+### 局限
+
 - **VP9 硬编码缺失**，嵌入式端实际只能用 H.264
-- 信令服务器功能朴素（`README` 直接写着 "TODO documentation"），无持久化、无鉴权体系（仅全局口令）
-- 最后提交 2025-04，活跃度已下降
-- 构建链重（需预编译 libwebrtc），不适合轻量场景
+- 基础库最后提交 **2025-04**，活跃度已下降（ROS 仓库仍在开发）
+- 信令服务器功能朴素（`README` 直接写着 "TODO documentation"），**无持久化、无细粒度鉴权**（仅全局口令）
+- **云端会话能力依赖 OpenTera 平台**：`opentera_client_ros` 需要 OpenTera 服务器 + teleop-service，不接入平台时只能用 stand-alone 模式
+- 构建链重（预编译 libwebrtc + protobuf + RTAB-Map + Qt5 + GStreamer 一整套），不适合轻量场景
+- 部分组件自认未完成：robot_gui "unfinished"、VP9 编码开发中
 
-**适用判断**：如果目标是在嵌入式平台上做**机器人 ↔ 浏览器的低延迟音视频遥操作**，且需要硬件编码，这个项目是目前开源方案里最完整的之一。若只需数据交换（不需要音视频），用现成的 WebSocket/MQTT 更简单。
+### 适用判断
+
+| 场景 | 建议 |
+|------|------|
+| 嵌入式平台上做**机器人 ↔ 浏览器低延迟音视频遥操作 + 硬件编码** | ✅ 目前开源方案里最完整的之一 |
+| 需要**语音交互 + 声源定位**（ODAS 集成） | ✅ 有现成集成，可参考 |
+| ROS 2 机器人要做**云端远程诊疗/运维** | ✅ opentera_client_ros + teleop-service 是完整参考实现 |
+| 只需要传数据（无音视频） | ❌ 用 WebSocket/MQTT 更简单 |
+| 需要 VP8/VP9 硬件编码 | ❌ 只有 H.264 可用 |
+| 轻量/快速集成 | ❌ 构建链太重 |
+
+### 与本项目的相关点（机器狗 / 语音交互）
+
+- **`soundCardTotalDelayMs`**：音频 AEC 参数——与语音交互系统的回声消除直接相关，值需按硬件 buffer 实测调整
+- **`AudioSource`/`AudioSink` 接口设计**：可参考其"推帧/收帧 + 时间戳"的音频抽象
+- **ODAS 声源定位集成**（`demo_odas.launch.xml`）：与多麦阵列（如 XVF3800）方案可对照
+- **`can_send/receive_*` 四开关**：能力开关式参数设计，值得在自己项目里借鉴

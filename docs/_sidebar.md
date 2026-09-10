@@ -8,7 +8,7 @@
   - [CodeGraph: AI 代码知识图谱工具](./subpage/Agent_summary/subsubpage/CodeGraph_代码知识图谱工具.md)
   - [gguf_mix_inference — Fun-ASR-GGUF C++ 原生推理实现分析](./subpage/Agent_summary/subsubpage/gguf_mix_inference_Fun-ASR-GGUF-C++原生实现分析.md)
   - [Loop Engineering: 从提示词工程到循环设计](./subpage/Agent_summary/subsubpage/Loop-Engineering_从提示词工程到循环设计.md)
-  - [OpenTera WebRTC：机器人遥操作的音视频流框架](./subpage/Agent_summary/subsubpage/opentera-webrtc_机器人遥操作音视频流框架分析.md)
+  - [OpenTera WebRTC 生态：音视频框架 + ROS 2 遥操作集成](./subpage/Agent_summary/subsubpage/opentera-webrtc_机器人遥操作音视频流框架分析.md)
   - [Qwen3-ASR-GGUF 架构与 LLM-based ASR 技术探讨](./subpage/Agent_summary/subsubpage/Qwen3-ASR-GGUF_架构与LLM-based-ASR技术探讨.md)
   - [reflect-hpp: C++14 静态反射与 JSON 序列化库](./subpage/Agent_summary/subsubpage/reflect-hpp静态反射与JSON序列化.md)
   - [ROS 2 IDL 动态解析、Bridge 网关与多语言 SDK 架构设计](./subpage/Agent_summary/subsubpage/ROS2_IDL动态解析_Bridge网关与多语言SDK架构设计.md)
