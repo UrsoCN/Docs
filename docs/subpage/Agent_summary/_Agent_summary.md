@@ -25,3 +25,4 @@ tags:
   - [XVF3800_ESP32-S3_UAC_HID_BLE复合网关需求澄清与选型决策记录](./subsubpage/XVF3800_ESP32-S3_UAC_HID_BLE复合网关需求澄清与选型决策记录.md)
   - [ROS 2 IDL 动态解析、Bridge 网关与多语言 SDK 架构设计](./subsubpage/ROS2_IDL动态解析_Bridge网关与多语言SDK架构设计.md)
   - [opentera-webrtc 生态: 音视频框架与 ROS 2 遥操作集成](./subsubpage/opentera-webrtc_机器人遥操作音视频流框架分析.md)
+  - [WebRTC 通览: 协议原理、机器人/ROS 实践与 libwebrtc 重构](./subsubpage/WebRTC_协议原理_机器人遥操作与libwebrtc重构通览.md)

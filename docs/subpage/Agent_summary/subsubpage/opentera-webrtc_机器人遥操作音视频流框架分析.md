@@ -43,25 +43,21 @@ WebRTC 是浏览器里的实时音视频标准，但**机器人端不能只依�
 
 ## 二、整体架构
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    信令服务器 (Python/aiohttp)                  │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │ WebSocket /signaling  ← 事件路由（join-room, call-peer） │  │
-│  │ HTTP   /iceservers    ← STUN/TURN 配置下发              │  │
-│  │ RoomManager           ← 房间/成员/名称映射               │  │
-│  │ WebSocketClientManager ← 连接池、消息收发                │  │
-│  └────────────────────────────────────────────────────────┘  │
-└───────────▲──────────────────────────▲───────────────────────┘
-            │ WebSocket（仅信令，JSON）  │
-            │                          │
-   ┌────────┴────────┐        ┌────────┴─────────┐
-   │  机器人端        │        │   浏览器端        │
-   │ Native Client   │◄──────►│  Web Client      │
-   │ (C++/Python)    │  P2P   │  (JavaScript)    │
-   │                 │ WebRTC │                  │
-   │ 音视频流 + 数据通道      │  RTCPeerConnection│
-   └─────────────────┘  直连   └──────────────────┘
+```mermaid
+graph TB
+    subgraph Server["信令服务器 (Python / aiohttp)"]
+        WS["WebSocket /signaling<br/>事件路由（join-room / call-peer）"]
+        ICE["HTTP /iceservers<br/>STUN/TURN 配置下发"]
+        RM["RoomManager<br/>房间 / 成员 / 名称映射"]
+        WCM["WebSocketClientManager<br/>连接池、消息收发"]
+    end
+
+    Robot["机器人端 Native Client<br/>(C++ / Python)<br/>音视频流 + 数据通道"]
+    Browser["浏览器端 Web Client<br/>(JavaScript)<br/>RTCPeerConnection"]
+
+    Robot -- "WebSocket 仅信令 JSON" --> Server
+    Browser -- "WebSocket 仅信令 JSON" --> Server
+    Robot == "P2P WebRTC 媒体直连（不经服务器）" ==> Browser
 ```
 
 **核心设计：信令与媒体彻底分离。**
@@ -109,27 +105,34 @@ WebRTC 是浏览器里的实时音视频标准，但**机器人端不能只依�
 
 ### 3.4 建立连接的完整时序
 
-```
-机器人端A                信令服务器                 浏览器端B
-   │                        │                        │
-   │──join-room(name,room)─►│                        │
-   │◄─join-room-answer(id)──│                        │
-   │                        │◄──join-room────────────│
-   │◄──room-clients([A,B])──│───room-clients([A,B])─►│
-   │                        │                        │
-   │──call-ids([B])────────►│                        │
-   │                        │──make-peer-call([B])──►│  （服务器分发"该调用谁"）
-   │                        │                        │
-   │     ══════ WebRTC 协商（SDP offer/answer + ICE）══════
-   │──call-peer(B, offer)──►│──peer-call-received───►│
-   │                        │                        │
-   │                        │◄─make-peer-call-answer─│
-   │◄─peer-call-answer-received─────────────────────│
-   │                        │                        │
-   │──send-ice-candidate───►│──ice-candidate-received►│
-   │◄─ice-candidate-received│◄─send-ice-candidate────│
-   │                        │                        │
-   │◄════════ P2P 媒体流直连（不再经过服务器）════════►│
+```mermaid
+sequenceDiagram
+    participant A as 机器人端 A
+    participant S as 信令服务器
+    participant B as 浏览器端 B
+
+    A->>S: join-room(name, room)
+    S-->>A: join-room-answer(id)
+    B->>S: join-room
+    S-->>A: room-clients([A, B])
+    S-->>B: room-clients([A, B])
+
+    A->>S: call-ids([B])
+    Note over S,B: 服务器分发"该调用谁"，避免呼叫风暴
+    S->>B: make-peer-call([B])
+
+    Note over A,B: WebRTC 协商（SDP offer/answer + ICE）
+    A->>S: call-peer(B, offer)
+    S->>B: peer-call-received
+    B->>S: make-peer-call-answer
+    S-->>A: peer-call-answer-received
+
+    A->>S: send-ice-candidate
+    S->>B: ice-candidate-received
+    B->>S: send-ice-candidate
+    S-->>A: ice-candidate-received
+
+    Note over A,B: P2P 媒体流直连（不再经过服务器）
 ```
 
 **关键洞察**：`make-peer-call` 事件由服务器主动下发，是为了避免 N 个客户端同时向 M 个 peer 发起呼叫产生的连接风暴 —— 服务器用 `itertools.combinations(ids, 2)` 计算出**不重复的呼叫对**并分派。
@@ -169,14 +172,12 @@ _lock = asyncio.Lock()  # 延迟创建（首次访问时）
 
 ### 4.1 类层次
 
-```
-SignalingClient (抽象)
-  └── WebSocketSignalingClient   ← IXWebSocket 实现
-
-WebrtcClient (抽象基类)
-  ├── StreamClient          ← 音视频流（VideoSource/AudioSource → 远端）
-  └── DataChannelClient     ← 数据通道（任意字符串/二进制）
-            └── (JS 侧还有 StreamDataChannelClient 混合体)
+```mermaid
+graph TD
+    SC["SignalingClient（抽象）"] --> WSC["WebSocketSignalingClient<br/>IXWebSocket 实现"]
+    WC["WebrtcClient（抽象基类）"] --> SCL["StreamClient<br/>音视频流（VideoSource/AudioSource → 远端）"]
+    WC --> DCC["DataChannelClient<br/>数据通道（任意字符串/二进制）"]
+    DCC -.-> JS["JS 侧还有 StreamDataChannelClient 混合体"]
 ```
 
 两者通过虚函数 `createPeerConnectionHandler()` 实现多态：
@@ -459,15 +460,20 @@ class RosWebRTCBridge : public rclcpp::Node
 
 **双向事件桥**：
 
-```
-ROS 侧                          WebrtcClient 侧
-─────────────────────────────────────────────────
-订阅 "events"（云端事件）  →  onDeviceEvents / onJoinSessionEvents /
-                              onParticipantEvents / onStopSessionEvents ...
-                              → connect() / disconnect() 信令连接
+```mermaid
+graph LR
+    subgraph ROS["ROS 侧（rclcpp::Node）"]
+        EV["订阅 events<br/>云端会话事件"]
+        ST["发布 webrtc_peer_status"]
+    end
 
-发布 "webrtc_peer_status"  ←  onSignalingConnectionOpened / onClientConnected /
-                              onClientDisconnected / onClientConnectionFailed
+    subgraph WC["WebrtcClient 侧"]
+        CB1["onDeviceEvents / onJoinSessionEvents<br/>onParticipantEvents / onStopSessionEvents ..."]
+        CB2["onSignalingConnectionOpened / onClientConnected<br/>onClientDisconnected / onClientConnectionFailed"]
+    end
+
+    EV -->|"触发 connect() / disconnect()"| CB1
+    CB2 -->|"发布连接状态"| ST
 ```
 
 **云端事件全集**（`opentera_webrtc_ros_msgs`）：
@@ -683,31 +689,36 @@ ros2 launch opentera_webrtc_demos demo.launch.xml is_stand_alone:=true
 
 ## 八·补、两仓库的调用栈关系
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ opentera-webrtc-ros （ROS 2 集成层）                          │
-│                                                              │
-│  RosWebRTCBridge<T>  ← 模板基类，ROS 节点 × WebrtcClient      │
-│    ├── RosStreamBridge        → StreamClient                 │
-│    └── RosDataChannelBridge   → DataChannelClient            │
-│                                                              │
-│  RosVideoSource → VideoSource      RosAudioSource → AudioSource│
-│  RosJsonDataHandler（JSON → cmd_vel / nav2 / rtabmap）         │
-│  goal_manager / labels_manager（导航与语义点）                 │
-│  map_image_generator（地图渲染成图推流）                        │
-│  face_cropping（隐私裁剪，LibTorch）                           │
-│  opentera_client_ros（OpenTera 云端设备接入）                  │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ 直接依赖（源码级，非 ROS 包）
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│ opentera-webrtc （基础层）                                     │
-│  StreamClient / DataChannelClient / WebrtcClient            │
-│  WebSocketSignalingClient（信令协议 v2）                      │
-│  GStreamer 编解码工厂（硬件加速）                               │
-└──────────────────────────┬──────────────────────────────────┘
-                           ▼
-        libwebrtc (Google) + 信令服务器 (Python/aiohttp)
+```mermaid
+graph TB
+    subgraph ROS["opentera-webrtc-ros（ROS 2 集成层）"]
+        BRIDGE["RosWebRTCBridge&lt;T&gt;<br/>模板基类：ROS 节点 × WebrtcClient"]
+        SB["RosStreamBridge"]
+        DCB["RosDataChannelBridge"]
+        VS["RosVideoSource → VideoSource<br/>RosAudioSource → AudioSource"]
+        JH["RosJsonDataHandler<br/>JSON → cmd_vel / nav2 / rtabmap"]
+        NAV["goal_manager / labels_manager<br/>导航与语义点"]
+        MAP["map_image_generator<br/>地图渲染成图推流"]
+        FACE["face_cropping<br/>隐私裁剪（LibTorch）"]
+        CLOUD["opentera_client_ros<br/>OpenTera 云端设备接入"]
+
+        BRIDGE --> SB
+        BRIDGE --> DCB
+    end
+
+    subgraph BASE["opentera-webrtc（基础层）"]
+        SC["StreamClient / DataChannelClient / WebrtcClient"]
+        WS["WebSocketSignalingClient<br/>信令协议 v2"]
+        GS["GStreamer 编解码工厂<br/>硬件加速"]
+    end
+
+    BOTTOM["libwebrtc (Google) + 信令服务器 (Python / aiohttp)"]
+
+    SB -->|"StreamClient"| SC
+    DCB -->|"DataChannelClient"| SC
+    VS --> BASE
+    ROS -->|"直接依赖（源码级，非 ROS 包）"| BASE
+    BASE --> BOTTOM
 ```
 
 ---
