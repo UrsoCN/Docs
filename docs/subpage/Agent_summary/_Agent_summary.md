@@ -26,3 +26,6 @@ tags:
   - [ROS 2 IDL 动态解析、Bridge 网关与多语言 SDK 架构设计](./subsubpage/ROS2_IDL动态解析_Bridge网关与多语言SDK架构设计.md)
   - [opentera-webrtc 生态: 音视频框架与 ROS 2 遥操作集成](./subsubpage/opentera-webrtc_机器人遥操作音视频流框架分析.md)
   - [WebRTC 通览: 协议原理、机器人/ROS 实践与 libwebrtc 重构](./subsubpage/WebRTC_协议原理_机器人遥操作与libwebrtc重构通览.md)
+  - [四轮独立驱动/转向底盘轮式里程计算法（ROS 2 Humble）](./subsubpage/四轮独立驱动转向底盘轮式里程计算法_ROS2.md)
+  - [eBPF 可编程网络仿真: 原理、实现路径与生态](./subsubpage/eBPF_可编程网络仿真_原理与实现路径.md)
+  - [Algorithmica《面向现代硬件的算法》: 性能工程导读](./subsubpage/Algorithmica_面向现代硬件的性能工程导读.md)
