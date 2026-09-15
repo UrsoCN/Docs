@@ -29,3 +29,4 @@ tags:
   - [四轮独立驱动/转向底盘轮式里程计算法（ROS 2 Humble）](./subsubpage/四轮独立驱动转向底盘轮式里程计算法_ROS2.md)
   - [eBPF 可编程网络仿真: 原理、实现路径与生态](./subsubpage/eBPF_可编程网络仿真_原理与实现路径.md)
   - [Algorithmica《面向现代硬件的算法》: 性能工程导读](./subsubpage/Algorithmica_面向现代硬件的性能工程导读.md)
+  - [Xiaomi-CocktailASR-1：目标说话人 ASR 的 LLM 化路径](./subsubpage/Xiaomi-CocktailASR-1_目标说话人ASR的LLM化路径.md)
