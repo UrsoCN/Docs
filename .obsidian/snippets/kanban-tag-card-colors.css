@@ -1,0 +1,15 @@
+/* Kanban 看板：按父项目标签给整张卡片上底色
+ * 插件会给带标签的卡片附加 has-tag-<标签名> 类名（如 has-tag-南水北调梯控），
+ * 因此 待办(大类) 的父卡片与 已归档 中同标签的卡片会自动获得一致的底色/左边条。
+ * 颜色需与「看板设置 → Tag colors」中的标签片颜色保持一致（设置里存于文件尾部 %% kanban:settings %%）。
+ */
+
+.kanban-plugin__item.has-tag-南水北调梯控 {
+  background-color: rgba(45, 125, 210, 0.12) !important;
+  border-left: 3px solid #2d7dd2;
+}
+
+.kanban-plugin__item.has-tag-双向对讲功能 {
+  background-color: rgba(142, 68, 173, 0.12) !important;
+  border-left: 3px solid #8e44ad;
+}

@@ -1,1 +1,6 @@
-{}
+{
+  "enabledCssSnippets": [
+    "kanban-tag-card-colors"
+  ],
+  "theme": "system"
+}
