@@ -30,3 +30,4 @@ tags:
   - [eBPF 可编程网络仿真: 原理、实现路径与生态](./subsubpage/eBPF_可编程网络仿真_原理与实现路径.md)
   - [Algorithmica《面向现代硬件的算法》: 性能工程导读](./subsubpage/Algorithmica_面向现代硬件的性能工程导读.md)
   - [Xiaomi-CocktailASR-1：目标说话人 ASR 的 LLM 化路径](./subsubpage/Xiaomi-CocktailASR-1_目标说话人ASR的LLM化路径.md)
+  - [sherpa-onnx 端侧 ASR 工程剖析: APK 构建、体积构成与流式化方案](./subsubpage/sherpa-onnx_端侧ASR的流式化工程路径.md)
