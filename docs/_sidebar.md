@@ -25,6 +25,7 @@
   - 论文
     - [导出JabRef引文到Word](./subpage/AI/subsubpage/论文/导出JabRef引文到Word.md)
     - [DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation](./subpage/AI/subsubpage/论文/DSpark_Confidence_Scheduled_Speculative_Decoding.md)
+    - [Acoustic echo cancellation with the dual-signal transformation LSTM network](./subpage/AI/subsubpage/论文/DTLN-aec_双信号变换LSTM网络的实时回声消除.md)
     - [JabRef预览引用及在Word添加GB格式参考文献](./subpage/AI/subsubpage/论文/JabRef预览引用及在Word添加GB格式参考文献.md)
     - [Better & Faster Large Language Models via Multi-token Prediction](./subpage/AI/subsubpage/论文/Multi_Token_Prediction多token预测.md)
     - [Scaling Laws for Neural Language Models](./subpage/AI/subsubpage/论文/Scaling_Laws神经语言模型.md)
