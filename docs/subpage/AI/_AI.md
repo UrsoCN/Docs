@@ -52,5 +52,6 @@ tags:
 - [Better & Faster LLMs via Multi-token Prediction](./subsubpage/论文/Multi_Token_Prediction多token预测.md)
 - [τ0-VLA：世界模型引导测试时计算的分层机器人基础模型](./subsubpage/论文/Tau0-VLA_世界模型引导测试时计算的分层机器人基础模型.md)
 - [DTLN-aec：双信号变换 LSTM 网络的实时回声消除](./subsubpage/论文/DTLN-aec_双信号变换LSTM网络的实时回声消除.md)
+- [H-GTCRN：低信噪比下的轻量混合双通道语音增强](./subsubpage/论文/H-GTCRN_低信噪比下的轻量混合双通道语音增强.md)
 - [导出JabRef引文到Word](./subsubpage/论文/导出JabRef引文到Word.md)
 - [JabRef预览引用及在Word添加GB格式参考文献](./subsubpage/论文/JabRef预览引用及在Word添加GB格式参考文献.md)
