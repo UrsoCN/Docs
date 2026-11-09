@@ -39,7 +39,7 @@ tags: [type/learning, topic/speech, topic/llm, topic/audio]
 | 用途 | 在哪跑 | 说明 |
 |---|---|---|
 | 代码走读 + CPU 推理 | 本机 | 0.1B + 425M 冻结，CPU 能出结果，只是慢；**用来验证正确性，不用来测性能** |
-| 训练（mini 全链 2h） | 租 3090/4090 | 按小时计费，别在 Orin NX 上训 |
+| 训练（mini 全链 2h） | 训练服务器 | 3090 级单卡约 2h 跑通；full 数据另算。别在 Orin NX 上训 |
 | 部署验证（RTF/内存） | Orin NX | 538M runtime 是它相对 Qwen3-Omni 的核心优势，要尽早验证 |
 
 ### 1.2 依赖与资产
