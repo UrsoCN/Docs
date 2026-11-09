@@ -60,6 +60,9 @@
     - [7 现代卷积神经网络](./subpage/AI/subsubpage/d2l/7_现代卷积神经网络.md)
     - [8 循环神经网络](./subpage/AI/subsubpage/d2l/8_循环神经网络.md)
     - [13 计算机视觉](./subpage/AI/subsubpage/d2l/13_计算机视觉.md)
+  - omni-LLM
+    - [第 1 课：MiniMind-O 架构解剖与基线测量](./subpage/AI/subsubpage/omni-LLM/第_1_课：MiniMind-O架构解剖与基线测量.md)
+    - [端到端语音大模型学习笔记](./subpage/AI/subsubpage/omni-LLM/端到端语音大模型学习笔记.md)
 
 - [AOSP](./subpage/AOSP/_AOSP.md)
   - [刷机](./subpage/AOSP/subsubpage/刷机.md)
