@@ -59,7 +59,7 @@
     - [深度学习计算](./subpage/AI/subsubpage/d2l/5_深度学习计算.md)
     - [6 卷积神经网络](./subpage/AI/subsubpage/d2l/6_卷积神经网络.md)
     - [7 现代卷积神经网络](./subpage/AI/subsubpage/d2l/7_现代卷积神经网络.md)
-    - [8 循环神经网络](./subpage/AI/subsubpage/d2l/8_循环神经网络.md)
+    - [8 循环神经网络：从 RNN 到 LSTM、GRU](./subpage/AI/subsubpage/d2l/8_循环神经网络.md)
     - [13 计算机视觉](./subpage/AI/subsubpage/d2l/13_计算机视觉.md)
   - omni-LLM
     - [第 0 课：LLM 基础——从音频工程到语言模型](./subpage/AI/subsubpage/omni-LLM/第_0_课：LLM基础_从音频工程到语言模型.md)

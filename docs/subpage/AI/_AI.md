@@ -19,7 +19,7 @@ tags:
 - [5 深度学习计算](./subsubpage/d2l/5_深度学习计算.md)
 - [6 卷积神经网络](./subsubpage/d2l/6_卷积神经网络.md)
 - [7 现代卷积神经网络](./subsubpage/d2l/7_现代卷积神经网络.md)
-- [8 循环神经网络](./subsubpage/d2l/8_循环神经网络.md)
+- [8 循环神经网络：从 RNN 到 LSTM、GRU](./subsubpage/d2l/8_循环神经网络.md)
 - [13 计算机视觉](./subsubpage/d2l/13_计算机视觉.md)
 
 ## 智能语音服务

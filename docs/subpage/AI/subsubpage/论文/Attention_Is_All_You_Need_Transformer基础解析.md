@@ -8,13 +8,16 @@ tags: [type/article, topic/ai, topic/llm, topic/ml]
 
 这篇笔记是[第 0 课：LLM 基础](../omni-LLM/第_0_课：LLM基础_从音频工程到语言模型.md)的前置阅读。目标是让你能沿着数据流解释 Transformer 怎样工作，再回去理解语言模型的训练与生成。暂时不需要阅读 MiniMind 源码，也不需要启动训练。
 
-| 论文信息 | 内容 |
-|---|---|
-| 标题 | Attention Is All You Need |
-| 作者 | Ashish Vaswani、Noam Shazeer、Niki Parmar、Jakob Uszkoreit、Llion Jones、Aidan N. Gomez、Łukasz Kaiser、Illia Polosukhin |
-| 发表 | 2017 年，NIPS 2017（会议现称 NeurIPS）；主要工作来自 Google Brain / Google Research |
-| 原文 | [本地 PDF：会议正式版，11 页](./articles/attention_is_all_you_need_1706.03762.pdf ':ignore') · [官方会议 PDF](https://papers.nips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) · [arXiv:1706.03762](https://arxiv.org/abs/1706.03762) |
-| 本文依据 | 会议正式版的章节、图表与页码；arXiv 修订版本的页数和内容可能不同 |
+> [!tip] 更早一步的前置知识：RNN、LSTM、GRU
+> 如果对“上一时刻的隐藏状态”“循环依赖”或 LSTM 的记忆机制还不熟悉，先读[《循环神经网络：从 RNN 到 LSTM、GRU》](../d2l/8_循环神经网络.md)，再回来理解 Transformer 为什么改变了序列的信息交互方式。
+
+| 论文信息 | 内容                                                                                                                                                                                                                                                    |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 标题   | Attention Is All You Need                                                                                                                                                                                                                             |
+| 作者   | Ashish Vaswani、Noam Shazeer、Niki Parmar、Jakob Uszkoreit、Llion Jones、Aidan N. Gomez、Łukasz Kaiser、Illia Polosukhin                                                                                                                                     |
+| 发表   | 2017 年，NIPS 2017（会议现称 NeurIPS）；主要工作来自 Google Brain / Google Research                                                                                                                                                                                  |
+| 原文   | [本地 PDF：会议正式版，11 页](./articles/attention_is_all_you_need_1706.03762.pdf ':ignore') · [官方会议 PDF](https://papers.nips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) · [arXiv:1706.03762](https://arxiv.org/abs/1706.03762) |
+| 本文依据 | 会议正式版的章节、图表与页码；arXiv 修订版本的页数和内容可能不同                                                                                                                                                                                                                   |
 
 > [!tip] 分三次读，不必一次记住所有公式
 > 第一次读第 1–5 节：理解“输入向量 → 计算权重 → 混合信息”，跟完一次手算。
