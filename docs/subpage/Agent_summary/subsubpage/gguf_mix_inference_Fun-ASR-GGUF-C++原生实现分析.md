@@ -2,6 +2,7 @@
 created: '2026-06-09'
 modified: '2026-06-09'
 tags:
+  - type/article
   - topic/ai
   - lang/cpp
 ---

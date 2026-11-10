@@ -29,108 +29,68 @@
 
 ## Math and Callouts
 
-Use LaTeX math and Obsidian callouts in notes and course material.
+Notes use LaTeX math and Obsidian callouts; docsify renders both through plugins in `docs/index.html`.
 
 ### Math
 
-- Inline: wrap in `$...$`, e.g. `$O(n \log n)$`.
-- Display: wrap in `$$`, delimiters on their own lines with a blank line before and after.
-- `$` delimits math only; put shell variables and prices in backticks (`` `$HOME` ``).
-- Never write `$$...$$` mid-sentence, and keep inline math on one line.
-- Do not add fenced `tex` blocks; use the math delimiters above.
+docsify-latex + KaTeX:
+
+- Inline: `$O(n \log n)$`, on one line.
+- Display: `$$` alone on a line, blank line before and after.
+- `$` delimits math only — put prices and shell variables in backticks (`` `$HOME` ``).
+- `tex`-fenced blocks also render through the code hook in `docs/index.html`, but prefer `$$`.
 
 ### Callouts
 
-Syntax reference: [Obsidian callouts](https://obsidian.md/zh/help/callouts).
-
 ```markdown
 > [!warning] Title is optional
-> Body text, every line prefixed with `>`.
+> Body text — every line, blank ones included, starts with `> `.
 ```
 
-- `[!type]` goes on the first line, right after `> `; prefix every line, blank lines included, with `>`.
-- Put a `>` blank line before lists and code blocks.
-- Types: `note` `info` `todo` `tip` `success` `question` `warning` `danger` `failure` `bug` `example` `quote`.
-- Fold with `> [!note]-` (collapsed) or `+` (expanded).
-- For asides only — caveats, prerequisites, summaries. No nesting, never wrap body text.
-- Docsify rendering is provided by `docs/assets/obsidian-callouts.js` and its companion CSS.
+- `[!type]` goes first, right after `> `; a line without `>` breaks out of the box.
+- Use a bare `>` line before lists and code inside a callout.
+- 13 [Obsidian types](https://obsidian.md/zh/help/callouts) plus `important` (alias of `tip`); full alias table in `docs/assets/obsidian-callouts.js`.
+- Fold with `[!note]-` (collapsed) or `+` (expanded).
+- Asides only (caveats, prerequisites, summaries). Never nest; never wrap body text.
+- Rendering lives in `docs/assets/obsidian-callouts.js` + `docs/assets/obsidian-callouts.css`.
 
 ## Tag Convention
 
-All notes should use a consistent three-category tag system. Tags go in the YAML frontmatter `tags:` field.
+Tags go in the YAML frontmatter `tags:` field: exactly one `type/`, one to three `lang/` or `topic/`, and optionally one `status/`.
 
-### Categories
+| Namespace | Purpose | Values in use |
+|-----------|---------|---------------|
+| `type/` (required, 1) | Note kind | `article` `learning` `moc` `howto` `survey` `comparison` |
+| `status/` (optional) | Maturity | `draft` `evergreen` |
+| `lang/` | Programming language | `python` `cpp` `rust` `csharp` `javascript` |
+| `topic/` | Everything else | see below |
 
-Each note gets **3–5 tags** total:
+- Lowercase kebab-case (`topic/embedded-linux`, not `topic/embeddedLinux`); singular (`type/article`).
+- Two levels max: `lang/rust` ✅, `topic/programming/languages/rust` ❌.
+- Reuse an established tag before inventing a synonym (`topic/speech`, not `topic/audio-ml`). Current `topic/` tags: `ai` `ml` `llm` `speech` `audio` `linux` `embedded` `embedded-linux` `esp32` `xvf3800` `aosp` `robotics` `ros2` `cuda` `cv` `graphics` `opengl` `docsify` `obsidian` `wsl` `testing` `network` `webrtc` `ble` `bluetooth` `ebpf` `performance` `computer-architecture` `academic` `investment` `stock` `interview` `latex` `dev-tools` `android-flashing` `physics`.
+- `node scripts/list-tags.js --check` prints the live inventory and flags notes missing a `type/` tag or carrying malformed tags.
 
-| Category | Format | Purpose | Examples |
-|----------|--------|---------|---------|
-| Type (1) | `type/xxx` | What kind of note | `type/article`, `type/moc`, `type/howto`, `type/diary`, `type/survey`, `type/comparison` |
-| Status (optional) | `status/xxx` | How mature it is | `status/draft`, `status/evergreen` |
-| Topic(s) (1–3) | `lang/xxx` or `topic/xxx` | What it's about | `lang/rust`, `topic/embedded`, `topic/ai` |
+### Granularity
 
-### Naming Rules
+- **1–2 notes**: too narrow — use a `[[wikilink]]` or full-text search instead, unless it is a new area expected to grow.
+- **>30 notes**: too broad — split it (e.g. `topic/ai` into `llm` / `speech` / `cv`).
+- New `topic/` tags are fine at **≥3 notes**; below that, reuse the nearest parent tag.
 
-- **All lowercase**, kebab-case (`topic/embedded-linux`, not `topic/embeddedLinux`)
-- **Singular** (`type/article` not `type/articles`)
-- **Max 2 levels deep** (`lang/rust` ✅, `topic/embedded-linux` ✅, `topic/programming/languages/rust` ❌)
-- **Namespaces**: `lang/` for programming languages, `topic/` for everything else, `type/` for note classification
-
-### Current Tag Inventory
-
-After the migration (July 2026):
-
-```
-Type tags:
-  type/article (68), type/moc (10), type/learning (4),
-  type/survey (1), type/comparison (1)
-
-Language tags:
-  lang/python (12), lang/cpp (10), lang/rust (5),
-  lang/csharp (3), lang/javascript (3)
-
-Topic tags:
-  topic/linux (20), topic/docsify (13), topic/ai (13),
-  topic/embedded-linux (12), topic/ml (12), topic/embedded (10),
-  topic/aosp (8), topic/cuda (6), topic/esp32 (5), topic/wsl (5),
-  topic/testing (4), topic/xvf3800 (4), topic/academic (3),
-  topic/cv (3), topic/graphics (3), topic/interview (3),
-  topic/obsidian (3), topic/opengl (3), topic/bluetooth (2),
-  topic/latex (2), topic/robotics (2), topic/android-flashing (2),
-  topic/audio (1), topic/dev-tools (1)
-```
-
-### Granularity Rules of Thumb
-
-Good tags sit in the **5–30 note** sweet spot:
-- **≤2 notes**: too specific → delete the tag, use `[[wikilinks]]` or full-text search instead
-- **≥50 notes**: too broad → split into more specific tags
-- **New topic tags** are fine at 1 note initially; they'll grow as related notes accumulate
-
-Only add a specific sub-tag (e.g. `topic/tokio` instead of just `lang/rust`) when you have **≥3 notes** that warrant it.
+3–5 tags is the usual count: short notes may carry 2, and MOCs often carry 4–6.
 
 ### Examples
 
 ```yaml
-# A Rust tutorial note
 ---
-tags: [type/article, lang/rust, topic/embedded]
+tags: [type/learning, lang/rust, topic/embedded]   # tutorial
 ---
-
-# Topic landing page (Map of Content)
 ---
-tags: [type/moc, topic/aosp, topic/linux]
+tags: [type/moc, topic/aosp, topic/linux]          # topic landing page (MOC)
 ---
-
-# Personal journal entry
 ---
-tags: [type/diary]
+tags: [type/survey, topic/ml, status/draft]        # in-progress survey
 ---
 ```
-
-### Migration Note
-
-The vault was migrated from flat tags to this convention in July 2026. The migration script is at `/tmp/migrate_tags.py`. Do not re-run it — future tags should be added directly following this convention.
 
 ## Useful References
 

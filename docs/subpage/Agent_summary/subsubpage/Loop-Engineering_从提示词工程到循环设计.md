@@ -2,6 +2,7 @@
 created: '2026-06-09'
 modified: '2026-06-09'
 tags:
+  - type/article
   - topic/ai
 ---
 # Loop Engineering: 从提示词工程到循环设计

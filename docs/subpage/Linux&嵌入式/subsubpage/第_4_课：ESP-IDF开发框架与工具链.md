@@ -1,6 +1,6 @@
 ---
 created: 2026-07-13
-tags: [embedded, esp32, learning, xvf3800, lesson-4]
+tags: [type/learning, topic/embedded, topic/esp32, topic/xvf3800]
 ---
 
 # 第 4 课：ESP-IDF 开发框架与工具链
