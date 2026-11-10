@@ -37,6 +37,7 @@ Use LaTeX math and Obsidian callouts in notes and course material.
 - Display: wrap in `$$`, delimiters on their own lines with a blank line before and after.
 - `$` delimits math only; put shell variables and prices in backticks (`` `$HOME` ``).
 - Never write `$$...$$` mid-sentence, and keep inline math on one line.
+- Do not add fenced `tex` blocks; use the math delimiters above.
 
 ### Callouts
 
@@ -52,6 +53,7 @@ Syntax reference: [Obsidian callouts](https://obsidian.md/zh/help/callouts).
 - Types: `note` `info` `todo` `tip` `success` `question` `warning` `danger` `failure` `bug` `example` `quote`.
 - Fold with `> [!note]-` (collapsed) or `+` (expanded).
 - For asides only — caveats, prerequisites, summaries. No nesting, never wrap body text.
+- Docsify rendering is provided by `docs/assets/obsidian-callouts.js` and its companion CSS.
 
 ## Tag Convention
 

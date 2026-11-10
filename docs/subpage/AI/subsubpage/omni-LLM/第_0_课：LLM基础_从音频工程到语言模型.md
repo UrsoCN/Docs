@@ -10,6 +10,9 @@ tags: [type/learning, topic/llm, topic/audio, topic/ml]
 > 适用背景：已经做过 ASR/TTS、模型微调与推理部署，希望读懂 LLM 的训练和生成过程。
 > 本课以理解为目标，不要求启动训练、接入 ROS 或替换语音模型。只需要认识向量、矩阵、概率和梯度下降；遇到公式，先读紧接着的解释。
 
+> [!tip] Transformer 前置阅读
+> 如果对向量、Q/K/V、自注意力或 Transformer 结构还不熟悉，先读 [《Attention Is All You Need》基础解析](../论文/Attention_Is_All_You_Need_Transformer基础解析.md)。它从向量与加权求和开始，包含一次完整的注意力手算，再解释训练并行、因果遮罩与原论文结构。
+
 ## 0. 学完后，你应该能解释什么
 
 你已经跑过 MiniMind-O，观察是“响应挺快，但智能和语音质量有限”。这一课先建立判断这些现象的基础：到底是模型没有学会任务，还是输入表示、生成策略或运行方式造成了问题。

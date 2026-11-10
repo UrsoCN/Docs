@@ -1,0 +1,59 @@
+.markdown-section .obsidian-callout {
+  --callout-rgb: 45, 105, 185;
+  margin: 1.25em 0;
+  padding: 0.85em 1em;
+  border-left: 4px solid rgb(var(--callout-rgb));
+  border-radius: 6px;
+  background: rgba(var(--callout-rgb), 0.08);
+  overflow-wrap: anywhere;
+}
+
+.markdown-section .obsidian-callout[data-callout-kind="tip"],
+.markdown-section .obsidian-callout[data-callout-kind="success"] {
+  --callout-rgb: 24, 125, 95;
+}
+
+.markdown-section .obsidian-callout[data-callout-kind="question"],
+.markdown-section .obsidian-callout[data-callout-kind="warning"] {
+  --callout-rgb: 153, 100, 15;
+}
+
+.markdown-section .obsidian-callout[data-callout-kind="danger"] {
+  --callout-rgb: 185, 55, 55;
+}
+
+.markdown-section .obsidian-callout[data-callout-kind="example"] {
+  --callout-rgb: 120, 75, 180;
+}
+
+.markdown-section .obsidian-callout[data-callout-kind="quote"] {
+  --callout-rgb: 100, 108, 118;
+}
+
+.markdown-section .obsidian-callout-title {
+  color: rgb(var(--callout-rgb));
+  font-weight: 600;
+}
+
+.markdown-section summary.obsidian-callout-title {
+  display: list-item;
+  cursor: pointer;
+}
+
+.markdown-section summary.obsidian-callout-title:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.markdown-section .obsidian-callout-body > :first-child {
+  margin-top: 0.6em;
+}
+
+.markdown-section .obsidian-callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-section .obsidian-callout .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}

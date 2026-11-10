@@ -41,8 +41,8 @@ tags:
 ## Omni 与语言模型
 
 - [端到端语音大模型学习笔记](./subsubpage/omni-LLM/端到端语音大模型学习笔记.md)
-- [第 0 课：LLM 基础——从音频工程到语言模型](subsubpage/omni-LLM/第_0_课：LLM基础_从音频工程到语言模型.md)
-- [第 1 课：MiniMind-O 架构解剖与基线测量](./subsubpage/omni-LLM/第_1_课：MiniMind-O架构解剖与基线测量.md)
+  - [第 0 课：LLM 基础——从音频工程到语言模型](subsubpage/omni-LLM/第_0_课：LLM基础_从音频工程到语言模型.md)
+  - [第 1 课：MiniMind-O 架构解剖与基线测量](./subsubpage/omni-LLM/第_1_课：MiniMind-O架构解剖与基线测量.md)
 
 ## CV
 
@@ -52,6 +52,7 @@ tags:
 
 ## 论文
 
+- [Attention Is All You Need：从零读懂 Transformer（第 0 课前置阅读）](./subsubpage/论文/Attention_Is_All_You_Need_Transformer基础解析.md)
 - [Sequence to Sequence Learning with Neural Networks (Seq2Seq)](./subsubpage/论文/Seq2Seq学习与神经网络.md)
 - [Scaling Laws for Neural Language Models](./subsubpage/论文/Scaling_Laws神经语言模型.md)
 - [Fast Inference via Speculative Decoding](./subsubpage/论文/Speculative_Decoding推测解码.md)

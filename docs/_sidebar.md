@@ -24,6 +24,7 @@
 - [AI & 机器学习](./subpage/AI/_AI.md)
   - 论文
     - [导出JabRef引文到Word](./subpage/AI/subsubpage/论文/导出JabRef引文到Word.md)
+    - [Attention Is All You Need：从零读懂 Transformer](./subpage/AI/subsubpage/论文/Attention_Is_All_You_Need_Transformer基础解析.md)
     - [DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation](./subpage/AI/subsubpage/论文/DSpark_Confidence_Scheduled_Speculative_Decoding.md)
     - [Acoustic echo cancellation with the dual-signal transformation LSTM network](./subpage/AI/subsubpage/论文/DTLN-aec_双信号变换LSTM网络的实时回声消除.md)
     - [A Lightweight Hybrid Dual Channel Speech Enhancement System under Low-SNR Conditions](./subpage/AI/subsubpage/论文/H-GTCRN_低信噪比下的轻量混合双通道语音增强.md)
@@ -61,7 +62,7 @@
     - [8 循环神经网络](./subpage/AI/subsubpage/d2l/8_循环神经网络.md)
     - [13 计算机视觉](./subpage/AI/subsubpage/d2l/13_计算机视觉.md)
   - omni-LLM
-    - [第 0 课：LLM 基础——从音频工程到语言模型](subpage/AI/subsubpage/omni-LLM/第_0_课：LLM基础_从音频工程到语言模型.md)
+    - [第 0 课：LLM 基础——从音频工程到语言模型](./subpage/AI/subsubpage/omni-LLM/第_0_课：LLM基础_从音频工程到语言模型.md)
     - [第 1 课：MiniMind-O 架构解剖与基线测量](./subpage/AI/subsubpage/omni-LLM/第_1_课：MiniMind-O架构解剖与基线测量.md)
     - [端到端语音大模型学习笔记](./subpage/AI/subsubpage/omni-LLM/端到端语音大模型学习笔记.md)
 
