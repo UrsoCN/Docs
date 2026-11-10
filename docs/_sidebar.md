@@ -61,6 +61,7 @@
     - [8 循环神经网络](./subpage/AI/subsubpage/d2l/8_循环神经网络.md)
     - [13 计算机视觉](./subpage/AI/subsubpage/d2l/13_计算机视觉.md)
   - omni-LLM
+    - [第 0 课：LLM 基础——从音频工程到语言模型](subpage/AI/subsubpage/omni-LLM/第_0_课：LLM基础_从音频工程到语言模型.md)
     - [第 1 课：MiniMind-O 架构解剖与基线测量](./subpage/AI/subsubpage/omni-LLM/第_1_课：MiniMind-O架构解剖与基线测量.md)
     - [端到端语音大模型学习笔记](./subpage/AI/subsubpage/omni-LLM/端到端语音大模型学习笔记.md)
 

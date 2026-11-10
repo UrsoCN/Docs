@@ -1,6 +1,6 @@
 ---
 created: 2022-03-04
-modified: 2026-07-27
+modified: 2026-11-10
 tags:
   - topic/ai
   - topic/ml
@@ -37,6 +37,12 @@ tags:
   - [第 10 课：关键词检测 (KWS)](./subsubpage/智能语音/第_10_课：关键词检测-KWS.md)
   - [第 11 课：神经语音合成 (TTS)](./subsubpage/智能语音/第_11_课：神经语音合成-TTS.md)
   - [第 12 课：语音 NLU 与 LLM Agent](./subsubpage/智能语音/第_12_课：语音-NLU与LLM-Agent.md)
+
+## Omni 与语言模型
+
+- [端到端语音大模型学习笔记](./subsubpage/omni-LLM/端到端语音大模型学习笔记.md)
+- [第 0 课：LLM 基础——从音频工程到语言模型](subsubpage/omni-LLM/第_0_课：LLM基础_从音频工程到语言模型.md)
+- [第 1 课：MiniMind-O 架构解剖与基线测量](./subsubpage/omni-LLM/第_1_课：MiniMind-O架构解剖与基线测量.md)
 
 ## CV
 
