@@ -19,6 +19,7 @@
 
 - Keep filenames URL-safe. Avoid spaces and special characters such as `#`; prefer underscores or ASCII replacements when renaming files.
 - Keep article images near the article in a local `images/` directory and link them with file-relative paths.
+- Write LaTeX with `$...$` inline on a single line and `$$` as a display block on its own line with a blank line before and after (fenced `tex` also renders, but prefer `$$`), and keep prices and shell variables in backticks since `$` only delimits math.
 - Before changing Markdown links, check `docs/index.html` for `window.$docsify.relativePath`.
 - Current repo state: `relativePath` is enabled, so topic landing pages and article pages under `docs/subpage/**` should use file-relative links.
 - Root docs files such as `docs/README.md` and `docs/_coverpage.md` can keep links relative to the `docs/` directory.
@@ -27,20 +28,9 @@
 - Do not partially mix link schemes during a cleanup. For `docs/subpage/**`, prefer local file-relative links like `./subsubpage/article.md`.
 - Keep `docs/_sidebar.md` aligned with the root navigation file loaded via the alias configured in `docs/index.html`.
 
-## Math and Callouts
+## Callouts
 
-Notes use LaTeX math and Obsidian callouts; docsify renders both through plugins in `docs/index.html`.
-
-### Math
-
-docsify-latex + KaTeX:
-
-- Inline: `$O(n \log n)$`, on one line.
-- Display: `$$` alone on a line, blank line before and after.
-- `$` delimits math only — put prices and shell variables in backticks (`` `$HOME` ``).
-- `tex`-fenced blocks also render through the code hook in `docs/index.html`, but prefer `$$`.
-
-### Callouts
+Note asides use Obsidian callout syntax, rendered as styled boxes by `docs/assets/obsidian-callouts.js` + `docs/assets/obsidian-callouts.css`.
 
 ```markdown
 > [!warning] Title is optional
@@ -49,10 +39,9 @@ docsify-latex + KaTeX:
 
 - `[!type]` goes first, right after `> `; a line without `>` breaks out of the box.
 - Use a bare `>` line before lists and code inside a callout.
-- 13 [Obsidian types](https://obsidian.md/zh/help/callouts) plus `important` (alias of `tip`); full alias table in `docs/assets/obsidian-callouts.js`.
+- 13 Obsidian types plus `important` (alias of `tip`); full alias table in `docs/assets/obsidian-callouts.js`.
 - Fold with `[!note]-` (collapsed) or `+` (expanded).
 - Asides only (caveats, prerequisites, summaries). Never nest; never wrap body text.
-- Rendering lives in `docs/assets/obsidian-callouts.js` + `docs/assets/obsidian-callouts.css`.
 
 ## Tag Convention
 
