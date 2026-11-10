@@ -13,7 +13,20 @@
     example: 'example', quote: 'quote', cite: 'quote'
   };
 
-  function calloutPlugin(hook) {
+  function calloutPlugin(hook, vm) {
+    // Keep the original marker for afterEach. Docsify 5's native callout renderer
+    // consumes it before our title and +/- folding syntax can be interpreted.
+    var markdown = vm.config.markdown;
+    markdown.renderer.blockquote = function (token) {
+      // Match Docsify's heading bookkeeping so quoted headings stay out of the TOC.
+      vm.compiler.blockquoteDepth++;
+      try {
+        return '<blockquote>' + this.parser.parse(token.tokens) + '</blockquote>';
+      } finally {
+        vm.compiler.blockquoteDepth--;
+      }
+    };
+
     hook.afterEach(function (html) {
       var template = document.createElement('template');
       template.innerHTML = html;
