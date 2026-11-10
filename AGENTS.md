@@ -58,25 +58,24 @@ docsify-latex + KaTeX:
 
 Tags go in the YAML frontmatter `tags:` field: exactly one `type/`, one to three `lang/` or `topic/`, and optionally one `status/`.
 
-| Namespace | Purpose | Values in use |
+| Namespace | Purpose | Values |
 |-----------|---------|---------------|
 | `type/` (required, 1) | Note kind | `article` `learning` `moc` `howto` `survey` `comparison` |
-| `status/` (optional) | Maturity | `draft` `evergreen` |
+| `status/` (optional) | Maturity | `draft` (reserved: `evergreen`) |
 | `lang/` | Programming language | `python` `cpp` `rust` `csharp` `javascript` |
 | `topic/` | Everything else | see below |
 
 - Lowercase kebab-case (`topic/embedded-linux`, not `topic/embeddedLinux`); singular (`type/article`).
 - Two levels max: `lang/rust` ✅, `topic/programming/languages/rust` ❌.
-- Reuse an established tag before inventing a synonym (`topic/speech`, not `topic/audio-ml`). Current `topic/` tags: `ai` `ml` `llm` `speech` `audio` `linux` `embedded` `embedded-linux` `esp32` `xvf3800` `aosp` `robotics` `ros2` `cuda` `cv` `graphics` `opengl` `docsify` `obsidian` `wsl` `testing` `network` `webrtc` `ble` `bluetooth` `ebpf` `performance` `computer-architecture` `academic` `investment` `stock` `interview` `latex` `dev-tools` `android-flashing` `physics`.
+- Reuse an established tag before inventing a synonym (`topic/speech`, not `topic/audio-ml`). Refresh this list when you add a tag — current `topic/` tags: `ai` `ml` `llm` `speech` `audio` `linux` `embedded` `embedded-linux` `esp32` `xvf3800` `aosp` `robotics` `ros2` `cuda` `cv` `graphics` `opengl` `docsify` `obsidian` `wsl` `testing` `network` `webrtc` `ble` `bluetooth` `ebpf` `performance` `computer-architecture` `academic` `investment` `stock` `interview` `latex` `dev-tools` `android-flashing` `physics`.
 - `node scripts/list-tags.js --check` prints the live inventory and flags notes missing a `type/` tag or carrying malformed tags.
 
 ### Granularity
 
-- **1–2 notes**: too narrow — use a `[[wikilink]]` or full-text search instead, unless it is a new area expected to grow.
+- **<3 notes**: reuse the nearest parent tag, or use a `[[wikilink]]` / full-text search instead.
 - **>30 notes**: too broad — split it (e.g. `topic/ai` into `llm` / `speech` / `cv`).
-- New `topic/` tags are fine at **≥3 notes**; below that, reuse the nearest parent tag.
 
-3–5 tags is the usual count: short notes may carry 2, and MOCs often carry 4–6.
+3–5 tags is the norm: short notes may carry 2, MOCs often 4–6.
 
 ### Examples
 
