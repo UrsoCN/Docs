@@ -27,6 +27,32 @@
 - Do not partially mix link schemes during a cleanup. For `docs/subpage/**`, prefer local file-relative links like `./subsubpage/article.md`.
 - Keep `docs/_sidebar.md` aligned with the root navigation file loaded via the alias configured in `docs/index.html`.
 
+## Math and Callouts
+
+Use LaTeX math and Obsidian callouts in notes and course material.
+
+### Math
+
+- Inline: wrap in `$...$`, e.g. `$O(n \log n)$`.
+- Display: wrap in `$$`, delimiters on their own lines with a blank line before and after.
+- `$` delimits math only; put shell variables and prices in backticks (`` `$HOME` ``).
+- Never write `$$...$$` mid-sentence, and keep inline math on one line.
+
+### Callouts
+
+Syntax reference: [Obsidian callouts](https://obsidian.md/zh/help/callouts).
+
+```markdown
+> [!warning] Title is optional
+> Body text, every line prefixed with `>`.
+```
+
+- `[!type]` goes on the first line, right after `> `; prefix every line, blank lines included, with `>`.
+- Put a `>` blank line before lists and code blocks.
+- Types: `note` `info` `todo` `tip` `success` `question` `warning` `danger` `failure` `bug` `example` `quote`.
+- Fold with `> [!note]-` (collapsed) or `+` (expanded).
+- For asides only — caveats, prerequisites, summaries. No nesting, never wrap body text.
+
 ## Tag Convention
 
 All notes should use a consistent three-category tag system. Tags go in the YAML frontmatter `tags:` field.
