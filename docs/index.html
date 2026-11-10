@@ -3,25 +3,45 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Docs</title>
-    <meta name="description" content="Description">
+    <title>Urso · Inkspace</title>
+    <meta name="description" content="Urso 的技术笔记、学习记录与日常思考。">
+    <meta name="theme-color" content="#f6f4ed">
+    <!-- Apply the saved color scheme before styles paint. -->
+    <script src="assets/inkspace.js"></script>
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@5.1.0/dist/themes/core.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css">
-    <link rel="stylesheet" href="assets/site.css">
     <link rel="stylesheet" href="assets/obsidian-callouts.css">
+    <link rel="stylesheet" href="assets/site.css">
 </head>
 
 <body>
+    <header class="inkspace-header">
+        <div class="inkspace-identity">
+            <button class="inkspace-nav-toggle" type="button" aria-label="打开笔记目录" aria-expanded="false" aria-controls="__sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <a class="inkspace-brand" href="#/" aria-label="Urso Inkspace首页">
+                <span class="inkspace-mark" aria-hidden="true">u.</span>
+                <span>Inkspace <span class="inkspace-wordmark">URSO / NOTES</span></span>
+            </a>
+        </div>
+        <div class="inkspace-tools">
+            <a class="inkspace-github" href="https://github.com/UrsoCN/Docs" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+            <button class="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false">
+                <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+                <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20.5 14.1A8.5 8.5 0 0 1 9.9 3.5 8.5 8.5 0 1 0 20.5 14.1Z"/></svg>
+                <span class="theme-toggle-label">日间</span>
+            </button>
+        </div>
+    </header>
     <!-- 定义加载时候的动作 -->
     <div id="app">Loading...</div>
     <script>
         window.$docsify = {
             // 项目名称
-            name: 'Docs',
-            // 仓库地址，点击右上角的Github章鱼猫头像会跳转到此地址
-            repo: 'https://github.com/UrsoCN/Docs',
+            name: 'Urso 的笔记',
             // 侧边栏支持，默认加载的是项目根目录下的_sidebar.md文件
             loadSidebar: true,
             // 封面支持，默认加载的是项目根目录下的_coverpage.md文件
@@ -81,7 +101,7 @@
             search: {
                 maxAge: 86400000,
                 paths: 'auto',
-                placeholder: '搜索',
+                placeholder: '搜索笔记…',
                 noData: '找不到结果',
                 depth: 4,
                 hideOtherSidebarContent: false,
@@ -98,10 +118,9 @@
     <!-- Mermaid 图表渲染支持 -->
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.esm.min.mjs";
-      mermaid.initialize({ startOnLoad: false });
       window.mermaid = mermaid;
     </script>
-    <script src="https://unpkg.com/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
+    <script src="assets/inkspace-mermaid.js"></script>
     <!-- Obsidian 标注：保留标题与 +/- 折叠 -->
     <script src="assets/obsidian-callouts.js"></script>
     <script src="assets/sidebar-folding.js"></script>
