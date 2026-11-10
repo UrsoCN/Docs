@@ -98,6 +98,7 @@
     - [工作备份](./subpage/diary/subsubpage/工作_投资/工作备份.md)
     - [恒生科技指数重排](./subpage/diary/subsubpage/工作_投资/恒生科技指数重排.md)
     - [牧原股份（002714）2026H1 深度分析：猪周期底部与寡头逻辑](./subpage/diary/subsubpage/工作_投资/牧原股份2026H1深度分析_猪周期底部与寡头逻辑.md)
+    - [账户资产与持仓诊断：从 10 只持仓到 4 个赌注](./subpage/diary/subsubpage/工作_投资/账户资产与持仓诊断.md)
   - 文档整理_随笔
     - [愚者-如何看待热搜“别再自我摆烂”?](./subpage/diary/subsubpage/文档整理_随笔/别再自我摆烂.md)
     - [关于使用docsify创建一个静态博客](./subpage/diary/subsubpage/文档整理_随笔/关于使用docsify创建一个静态博客.md)
