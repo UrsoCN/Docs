@@ -1,0 +1,82 @@
+:root {
+  --font-family: "Cascadia Code", system-ui, sans-serif;
+}
+
+.sidebar-nav .sidebar-fold-group {
+  position: relative;
+  padding-inline-start: 1.25rem;
+}
+
+.sidebar-nav .sidebar-fold-toggle {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: 1.2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sidebar-fold-toggle::before {
+  content: "▸";
+}
+
+.sidebar-fold-toggle[aria-expanded="true"]::before {
+  content: "▾";
+}
+
+.sidebar-nav ul[hidden] {
+  display: none;
+}
+
+.toc-nav {
+  display: none;
+}
+
+/* Keep a separate page TOC on wide screens, clear of the article and sidebar. */
+@media (min-width: 1300px) {
+  body:has(.toc-nav:not(.nothing)) main > .content {
+    padding-inline-end: 260px;
+  }
+
+  body:not(:has(main.hidden)) .toc-nav:not(.nothing) {
+    display: block;
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 220px;
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+    font-size: 0.875rem;
+  }
+}
+
+.page_toc > div {
+  padding: 0.25em 0.5em;
+  border-inline-start: 2px solid var(--border-color);
+}
+
+.page_toc > div.active {
+  border-color: var(--theme-color);
+}
+
+.page_toc a {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.page_toc a:hover,
+.page_toc .active a {
+  color: var(--theme-color);
+}
+
+.page_toc .lv3 { padding-inline-start: 1em; }
+.page_toc .lv4 { padding-inline-start: 1.5em; }
+.page_toc .lv5 { padding-inline-start: 2em; }
