@@ -13,3 +13,6 @@
 [本站原创主题：Inkspace](assets/INKSPACE.md)
 
 [让docsify支持LaTeX](subpage/diary/subsubpage/文档整理_随笔/让docsify支持LaTeX.md)
+
+> [!important]
+> 感谢大肥鱼 deepseek & 龙娘 GPT

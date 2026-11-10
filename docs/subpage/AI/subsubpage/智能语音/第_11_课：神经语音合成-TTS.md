@@ -509,9 +509,12 @@ VALL-E:    文本 + 3秒参考语音 → EnCodec Tokenizer → 音频 token 序�
 
 **为什么是革命性的**：
 
-1. **只需 3 秒参考语音**：不需要几小时的录音做 fine-tuning。3 秒 → 提取说话人 embedding → 生成的语音音色与参考者几乎一致
+1. **只需 3 秒参考语音**：不需要几小时的录音做 fine-tuning。3 秒 → 编码成 codec token 作为声学前缀（acoustic prompt）→ 生成的语音音色与参考者几乎一致
 2. **零样本音色克隆**：训练时从未见过的说话人，推理时给 3 秒就能复刻
 3. **和 GPT 同架构**：可以复用 LLM 领域的 scaling law、RLHF、prompting 等一切进展
+
+> [!info] 参考音频的两种用法：条件向量与前缀 token
+> speaker embedding 把参考音频压成**定长全局向量**（常见 192–512 维），像把音色收成一个旋钮；VALL-E 把参考音频编成 **codec token 序列拼在输入前面**，模型像读 prompt 一样模仿——后者是 in-context 条件，不是 RNN 的状态续接。两者可叠加，代价不同：向量便宜但丢细节，前缀保真但占上下文。
 
 **VALL-E 的局限**：
 - 计算量巨大（GPT-like decoder，每生成一个 token 查一次整个序列）→ 不支持流式
@@ -552,7 +555,7 @@ graph TD
 | **音频 tokenizer** | EnCodec (CNN-based, 75 tokens/s) | 类似，可能是改进版 |
 | **语言模型** | GPT-like AR decoder | Qwen/LLaMA-based decoder |
 | **instruction 注入** | ❌ 不支持 | ✅ 文本指令 concat 到 prompt 中 |
-| **音色控制** | 3 秒参考语音 (speaker embedding) | 文本指令 + 可选参考语音 |
+| **音色控制** | 3 秒参考语音（codec token 前缀） | 文本指令 + 可选参考语音 |
 | **多语言** | 训练数据支持即可 | 原生多语言 (Qwen 的多语言底座) |
 
 **Voice Design 的本质**：将 TTS 从"选参数"（SID=15, speed=1.3）升级为"描述需求"（"撒娇的萝莉音"）。这是从 **parametric control** 到 **semantic control** 的跃迁——用户不需要理解 SID、pitch、energy 这些内部参数。
